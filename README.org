@@ -1,0 +1,4 @@
+* BPF research
+
+This repository contains notes and other work in progress items for BPF-related
+research project(s).
