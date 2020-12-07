@@ -15,3 +15,18 @@ intervals or when the active queue is empty.
 **** Supports Shaping: yes
 **** Unit of Scheduling: Packets
 **** Programmable: yes, on enqueue
+** [ ] DRR/WDRR: Deficit Round Robin / Weighted DRR
+*** The DRR scheduler is a RR that adds deficit counters in bytes to each queue.
+In each round, the scheduler adds a quantum size in bytes to     the deficit
+counters. It then only dequeues a packet from the queue if the deficit counter
+has enough bytes to dequeue the packet. This arrangement makes sure that the
+fairness of queues/flows also respects packet sizes. The WDRR adds weights to
+the queues that the scheduler uses to multiply the quantum before adding it to
+the deficit counters to add priority to a queue/flow.
+*** Attributes:
+**** Optimized for hardware
+**** Efficiency: O(1)
+**** Work Conserving: yes
+**** Supports Shaping:
+**** Unit of Scheduling: packets
+**** Programmable: no
