@@ -1,0 +1,17 @@
+#+TITLE: Schedulers
+
+This document lists different type of network schedulers and their attributes.
+
+* Schedulers
+** [X] Calendar Queues
+*** The Calendar Queue is a programmable scheduler that schedules packets into
+future dates like a calendar. It consists of multiple FIFO queues where only
+one of the queues is active. The active queue is either rotated at time
+intervals or when the active queue is empty.
+*** Attributes:
+**** Optimized for hardware
+**** Efficiency: O(1)
+**** Work Conserving: yes, using a logical CQ
+**** Supports Shaping: yes
+**** Unit of Scheduling: Packets
+**** Programmable: yes, on enqueue
