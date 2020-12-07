@@ -59,3 +59,17 @@ this queue in hardware.
 **** Supports Shaping: yes
 **** Unit of Scheduling: packets
 **** Programmable: yes, on enqueue
+** [ ] RR/WRR: Round Robin / Weighted RR
+*** The RR scheduler schedules packets into a list of queues depending on their
+priority. The dequeue algorithm then dequeues one packet from each queue in
+a round-robin fashion. This scheduling algorithm makes the traffic fair between
+queues but does not take the fairness of packet sizes into account. The WRR adds
+weight to each queue, determining how many packets the scheduler should dequeue
+from the queue. This weight gives one queue/flow a priority over another.
+*** Attributes:
+**** Optimized for hardware
+**** Efficiency: O(1)
+**** Work Conserving: yes
+**** Supports Shaping:
+**** Unit of Scheduling: packets
+**** Programmable: no
