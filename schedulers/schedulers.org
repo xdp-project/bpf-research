@@ -73,3 +73,17 @@ from the queue. This weight gives one queue/flow a priority over another.
 **** Supports Shaping:
 **** Unit of Scheduling: packets
 **** Programmable: no
+** [X] SP-PIFO: Strict-Priority PIFO
+*** The SP-PIFO is a PIFO that approximates a larger PIFO using fewer queues
+using a per-packet adaption algorithm. The per-packet algorithm consists
+of two steps that update and adapt the queue bounds. A PIFO in hardware
+usually scales to around a thousand queues, which often is not enough for
+some schedulers; therefore, a data structure like an SP-PIFO is desirable,
+even when it is not always on par with a PIFO.
+*** Attributes:
+**** Optimized for hardware
+**** Efficiency: O(1) and O(N) on inversions
+**** Work Conserving: yes
+**** Supports Shaping: yes
+**** Unit of Scheduling: packets
+**** Programmable: yes, on enqueue
