@@ -45,3 +45,17 @@ queues.
 **** Supports Shaping: yes
 **** Unit of Scheduling: Packets and flows
 **** Programmable: yes, on enqueue and dequeue
+** [X] PIFO: Push-in First-Out
+*** The PIFO is a programmable scheduling data structure that consists of
+multiple queues where the logic schedules the packets only on enqueue.
+Therefore, the programmer designing the scheduler will push the packet
+into the appropriate FIFO queue and then pop the packets out in a
+First-in First-out fashion. This simple design makes it easy to implement
+this queue in hardware.
+*** Attributes:
+**** Optimized for hardware
+**** Efficiency: O(1)
+**** Work Conserving: yes
+**** Supports Shaping: yes
+**** Unit of Scheduling: packets
+**** Programmable: yes, on enqueue
