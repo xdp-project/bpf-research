@@ -1,3 +1,4 @@
+# -*- fill-column: 79; -*-
 #+TITLE: Schedulers
 
 This document lists different type of network schedulers and their attributes.
@@ -9,59 +10,65 @@ future dates like a calendar. It consists of multiple FIFO queues where only
 one of the queues is active. The active queue is either rotated at time
 intervals or when the active queue is empty.
 *** Attributes:
-**** Optimized for hardware
-**** Efficiency: O(1)
-**** Work Conserving: yes, using a logical CQ
-**** Supports Shaping: yes
-**** Unit of Scheduling: Packets
-**** Programmable: yes, on enqueue
+-  Optimized for hardware
+-  Efficiency: O(1)
+-  Work Conserving: yes, using a logical CQ
+-  Supports Shaping: yes
+-  Unit of Scheduling: Packets
+-  Programmable: yes, on enqueue
+
 ** [ ] CJVS: Core Jitter Virtual Clock
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] Core RSCP: Core-stateless RSCP
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] D-EDD: Delay-Earliest Due Date
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] DRR/WDRR: Deficit Round Robin / Weighted DRR
 *** The DRR scheduler is a RR that adds deficit counters in bytes to each queue.
-In each round, the scheduler adds a quantum size in bytes to     the deficit
+In each round, the scheduler adds a quantum size in bytes to the deficit
 counters. It then only dequeues a packet from the queue if the deficit counter
 has enough bytes to dequeue the packet. This arrangement makes sure that the
 fairness of queues/flows also respects packet sizes. The WDRR adds weights to
 the queues that the scheduler uses to multiply the quantum before adding it to
 the deficit counters to add priority to a queue/flow.
 *** Attributes:
-**** Optimized for hardware
-**** Efficiency: O(1)
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling: packets (and flows?)
-**** Programmable: no
+-  Optimized for hardware
+-  Efficiency: O(1)
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling: packets (and flows?)
+-  Programmable: no
+
 ** [ ] EDF: Earliest Deadline First
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [X] Eiffel
 *** Eiffel is a scheduling data structure specifically for software. It relies
 on the Find-First Set machine instruction to keep track of the next queue
@@ -71,84 +78,94 @@ queues. The secondary buffer of queues is for scheduling lower priority packets
 or flows. However, on the next rotation, those become the higher priority
 queues.
 *** Attributes:
-**** Optimized for software
-**** Efficiency: O(1)
-**** Work Conserving: yes
-**** Supports Shaping: yes
-**** Unit of Scheduling: Packets and flows
-**** Programmable: yes, on enqueue and dequeue
+-  Optimized for software
+-  Efficiency: O(1)
+-  Work Conserving: yes
+-  Supports Shaping: yes
+-  Unit of Scheduling: Packets and flows
+-  Programmable: yes, on enqueue and dequeue
+
 ** [ ] FIFO+
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] FQ: Fair Queuing (A WFQ scheduler where all weights are equal is a FQ scheduler)
 *** Attributes:
-**** Optimized for
-**** Efficiency: O(log n)
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency: O(log n)
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] hClock
 *** Attributes:
-**** Optimized for software
-**** Efficiency: O(log n)
-**** Work Conserving: yes
-**** Supports Shaping: yes
-**** Unit of Scheduling: flows
-**** Programmable: no
+-  Optimized for software
+-  Efficiency: O(log n)
+-  Work Conserving: yes
+-  Supports Shaping: yes
+-  Unit of Scheduling: flows
+-  Programmable: no
+
 ** [ ] Jitter-EDD: Jitter-Earliest Due Date
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving: no
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving: no
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] LBF: Leaky Bucket Filter
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving: no
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving: no
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] LSTF: Least Slack Time First
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] pFabric
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] pHeap
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] PIAS: Practical Information-Agnostic flow Scheduling
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [X] PIFO: Push-in First-Out
 *** The PIFO is a programmable scheduling data structure that consists of
 multiple queues where the logic schedules the packets only on enqueue.
@@ -157,20 +174,22 @@ into the appropriate FIFO queue and then pop the packets out in a
 First-in First-out fashion. This simple design makes it easy to implement
 this queue in hardware.
 *** Attributes:
-**** Optimized for hardware
-**** Efficiency: O(1)
-**** Work Conserving: yes
-**** Supports Shaping: yes
-**** Unit of Scheduling: packets
-**** Programmable: yes, on enqueue
+-  Optimized for hardware
+-  Efficiency: O(1)
+-  Work Conserving: yes
+-  Supports Shaping: yes
+-  Unit of Scheduling: packets
+-  Programmable: yes, on enqueue
+
 ** [ ] QFQ: Quick Fair Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] RR/WRR: Round Robin / Weighted RR
 *** The RR scheduler schedules packets into a list of queues depending on their
 priority. The dequeue algorithm then dequeues one packet from each queue in
@@ -179,52 +198,58 @@ queues but does not take the fairness of packet sizes into account. The WRR adds
 weight to each queue, determining how many packets the scheduler should dequeue
 from the queue. This weight gives one queue/flow a priority over another.
 *** Attributes:
-**** Optimized for hardware
-**** Efficiency: O(1)
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling: flows (and packets?)
-**** Programmable: no
+-  Optimized for hardware
+-  Efficiency: O(1)
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling: flows (and packets?)
+-  Programmable: no
+
 ** [ ] RSCP: Rate Controlled Static Priority
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving: no
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving: no
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] SCED: Service Curved based Earliest Deadline
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] SCFQ: Self-Clocked Fair-Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] SFQ: Stochastic Fairness Queueing
 *** Attributes:
-**** Optimized for
-**** Efficiency: O(1)
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency: O(1)
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] SPFQ: Starting Potential-based Fair Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency: O(1)
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency: O(1)
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [X] SP-PIFO: Strict-Priority PIFO
 *** The SP-PIFO is a PIFO that approximates a larger PIFO using fewer queues
 using a per-packet adaption algorithm. The per-packet algorithm consists
@@ -233,57 +258,63 @@ usually scales to around a thousand queues, which often is not enough for
 some schedulers; therefore, a data structure like an SP-PIFO is desirable,
 even when it is not always on par with a PIFO.
 *** Attributes:
-**** Optimized for hardware
-**** Efficiency: O(1) and O(N) on inversions
-**** Work Conserving: yes
-**** Supports Shaping: yes
-**** Unit of Scheduling: packets
-**** Programmable: yes, on enqueue
+-  Optimized for hardware
+-  Efficiency: O(1) and O(N) on inversions
+-  Work Conserving: yes
+-  Supports Shaping: yes
+-  Unit of Scheduling: packets
+-  Programmable: yes, on enqueue
+
 ** [ ] SP: Strict Priority
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] SRPT: Shortest Remaining Processing Time
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] STFQ: Start-Time Fair Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving:
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving:
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] Stop-and-Go Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency:
-**** Work Conserving: no
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency:
+-  Work Conserving: no
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] WF^2Q+: Worst-case Fair Weighted Fair Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency: O(log n)
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency: O(log n)
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
+
 ** [ ] WFQ: Weighted Fair Queuing
 *** Attributes:
-**** Optimized for
-**** Efficiency: O(log n)
-**** Work Conserving: yes
-**** Supports Shaping:
-**** Unit of Scheduling:
-**** Programmable: no
+-  Optimized for
+-  Efficiency: O(log n)
+-  Work Conserving: yes
+-  Supports Shaping:
+-  Unit of Scheduling:
+-  Programmable: no
