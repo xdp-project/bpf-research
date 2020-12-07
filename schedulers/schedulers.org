@@ -30,3 +30,18 @@ the deficit counters to add priority to a queue/flow.
 **** Supports Shaping:
 **** Unit of Scheduling: packets
 **** Programmable: no
+** [X] Eiffel
+*** Eiffel is a scheduling data structure specifically for software. It relies
+on the Find-First Set machine instruction to keep track of the next queue
+with data, which can also be an approximate algorithm when there are many
+queues. It also uses a circular buffer by rotating two equally sized lists of
+queues. The secondary buffer of queues is for scheduling lower priority packets
+or flows. However, on the next rotation, those become the higher priority
+queues.
+*** Attributes:
+**** Optimized for software
+**** Efficiency: O(1)
+**** Work Conserving: yes
+**** Supports Shaping: yes
+**** Unit of Scheduling: Packets and flows
+**** Programmable: yes, on enqueue and dequeue
