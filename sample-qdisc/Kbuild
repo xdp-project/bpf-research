@@ -1,0 +1,5 @@
+ifneq ($(KBUILD_EXTMOD),)
+CONFIG_NET_SCH_SAMPLE := m
+endif
+
+obj-$(CONFIG_NET_SCH_SAMPLE)	+= sch_sample.o

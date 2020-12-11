@@ -1,0 +1,10 @@
+config NET_SCH_SAMPLE
+	tristate "Sample qdisc"
+        depends on NET_SCHED
+	help
+	  Say Y here if you want to use the sample qdisc.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called sch_sample.
+
+	  If unsure, say N.
