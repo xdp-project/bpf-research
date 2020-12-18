@@ -61,6 +61,18 @@ struct Qdisc_ops sample_qdisc_ops __read_mostly = {
 	.dump		=	sample_dump,
 	.owner		=	THIS_MODULE,
 };
-EXPORT_SYMBOL(sample_qdisc_ops);
+
+static int __init sample_qdisc_module_init(void)
+{
+	return register_qdisc(&sample_qdisc_ops);
+}
+
+static void __exit sample_qdisc_module_exit(void)
+{
+	unregister_qdisc(&sample_qdisc_ops);
+}
+
+module_init(sample_qdisc_module_init)
+module_exit(sample_qdisc_module_exit)
 
 MODULE_LICENSE("GPL");
