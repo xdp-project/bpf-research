@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>What have I been up to?</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">What have I been up to?</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2020-12-14 mån 11:26</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org25b1eaa">1. Lab supervision</a></li>
+<li><a href="#/slide-org9fbe2fa">2. Reading</a></li>
+<li><a href="#/slide-org08991b7">3. Implementing pping with libbpf</a>
+<ul>
+<li><a href="#/slide-orge8a88d5">3.1. Design: Kernel-space</a></li>
+<li><a href="#/slide-orgd1a15ce">3.2. Design: User-space</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org546e650">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org25b1eaa">
+<h2 id="org25b1eaa"><span class="section-number-2">1</span> Lab supervision</h2>
+<ul>
+<li>Have finished(ish) correcting labs</li>
+<li>Held my last (planned) "mini-lecture" today</li>
+<li>Only answering questions from now on (4-6h per week)</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org9fbe2fa">
+<h2 id="org9fbe2fa"><span class="section-number-2">2</span> Reading</h2>
+<ul>
+<li>Have read through most of the material Simone sent me
+<ul>
+<li>Have not gone through xBGP and QUIC papers yet</li>
+<li>For kubectl trace have mainly gone through the README and Architecture page (haven't looked at code or tried to use it myself etc.)</li>
+
+</ul></li>
+<li>Have read a little bit of "How To Get a PhD" book
+<ul>
+<li>Plan to continue reading a little bit during the Christmas holiday as it seems fairly easy to read</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org08991b7">
+<h2 id="org08991b7"><span class="section-number-2">3</span> Implementing pping with libbpf</h2>
+<ul>
+<li>Have spent some time with it, but still not gotten that far</li>
+<li>Have set up the overall environment
+<ul>
+<li>Forked the xdp-project/bpf-examples repository (where Jesper has implemented the EDT scheduler)</li>
+<li>Using their testenv script because I don't want to screw up the real interface to my remote machine
+<ul>
+<li>Hard to fix if SSH connection dies</li>
+
+</ul></li>
+
+</ul></li>
+<li>Have written a user-space loader for the XDP part of the program
+<ul>
+<li>Not too familiar with the libbpf API so took some time to get right (the XDP tutorial abstracts a lot of it away)</li>
+
+</ul></li>
+<li>Have gotten the parsing logic on the XDP side complete
+<ul>
+<li>However currently having issues with getting the compiler to unroll my loop</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orge8a88d5">
+<h3 id="orge8a88d5"><span class="section-number-3">3.1</span> Design: Kernel-space</h3>
+<ul>
+<li>TC-BPF program that parses outgoing packets for TCP timestamps
+<ul>
+<li>Adds own timestamp-value to map using flow + TCP timestamp as key</li>
+
+</ul></li>
+<li>XDP program that parses incomming packets for echoed TCP timestamps
+<ul>
+<li>Checks map for flow + TCP timestamp entry</li>
+<li>&#x2026; if exists calculates RTT from own timestamp value and pass to userspace</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgd1a15ce">
+<h3 id="orgd1a15ce"><span class="section-number-3">3.2</span> Design: User-space</h3>
+<ul>
+<li>User space program
+<ul>
+<li>Loads and attaches the XDP and TC-BPF program
+<ul>
+<li>Will have to check up if libbpf has a way to do this (Jesper's example uses a shell script that calls TC commands)</li>
+
+</ul></li>
+<li>Either periodically goes through map or pulls perf-buffer to print out calculated RTTs</li>
+<li>Periodically cleans up the timestamp map from old entries</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org546e650">
+<h2 id="org546e650"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Checked around a bit, and think the Information Retrival course seems nice and relevant
+<ul>
+<li>&#x2026;so should probably mail Åsa Möller to registrate for the course</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1200, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+#+TITLE: Progress update 2020-01-11
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Gotten back from Christmas
+- Got back on 4th, slow start
+- Not a massive amount of progress since last
+- Will leave institutional duties to other meeting
+* PPing
+- Finished it to a working state about 1h ago
+- It is not DONE yet
+- TODOs:
+  - Unload tc-bpf program on exit
+  - Unpin map
+  - Add IPv6 support (only IPv4 now)
+  - Add check for reverse flow
+    - Don't add entries to map if we can't observe the flow in both directions
+  - Consider scalability aspects
+** Current implementation
+- Uses Jespers bpf_egress loader to load TC-bpf part first
+  - Also pins the ts_start map (PIN_GLOBAL_NS)
+- Uses custom libbpf-based loader to load XDP part
+  - Reuses the pinned map
+- Starts parallell thread to perform periodic map cleanup
+  - Simply loops through all map entires looking for old TS entries
+  - Would be much nicer to have a "self clearing" map
+- Creates and polls the perf-buffer for calculated RTTs
+** IPv6 support
+- Use separate IPv6 map or...
+- ...use abstract "flow"-struct that can fit either IPv4 or IPv6 addresses
+** Scalability aspects
+- Current implementation won't scale well to high flows
+  - ... but Pollere's pping should have the same issues
+- Have currently limited the hash-map to 16k entries
+  - Pollere's has 10k
+  - Seem to get about 1k unique TS-vals per second (from single flow) on my machine
+- We talked a little bit about it last meeting
+  - Sampling-based, only add TS-entries for some packets
+  - Add some sort of time-based limit for how often new entries can be added

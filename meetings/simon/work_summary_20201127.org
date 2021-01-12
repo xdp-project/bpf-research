@@ -1,0 +1,77 @@
+#+TITLE: What I've been up to - Summary
+#+AUTHOR: Simon Sundberg
+
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1400, height:900, slideNumber:"c/t"
+
+* How I got here
+- Graduated from the Master in Science of Computer Engineering in 2019
+  - Was working part-time as a project assistant in the HITS project
+- Was a project assistant in HITS for a year (2019-9 - 2020-8)
+- Worked as a project assistant in the Red Hat project for two months
+  - Has some overlap with this project
+- Started my PhD in the AIDA project Nov. 1st
+* What I've done
+- Initially read a few papers about NFV and INT from Sigcomm
+  - Also read most of the papers used as reference in WP2 of the AIDA application
+- Since then I've mainly focused on system monitoring using eBPF
+  - The Red Hat project is focused on XDP which is basically a hook for eBPF programs
+  - I have mainly read the [[http://www.brendangregg.com/bpf-performance-tools-book.html][BPF Performance Tools]] book by Bredan Gregg
+- Started as a lab supervisor in DVGB03
+  - Currently eating a bit too much time
+  - Expect load to be lower going forward
+* eBPF and XDP
+- eBPF is basically a safe runtime environment for running programs in kernel space
+- eBPF often just refered to as BFP
+- Write programs in (restriced) C 
+  - compiled to BPF byte code by Clang + LLVM
+  - BPF byte code is stored in an ELF file
+- When loaded to the kernel, a verifier ensures program is safe
+  - No unbounded loops allowed
+  - No unchecked memory accesses
+  - Limited to 1,000,000 instructions etc.
+#+REVEAL: split
+- eBPF programs are attched to an event of some kind
+  - ex. a function starting, a tracepoint, the arrival of a network packet (XDP)
+- Can communicate with user space through BPF maps
+  - A key-value store (there are some different versions)
+- Advatanges over kernel-bypass
+  - Safe (verifier ensures it)
+  - Can use existing kernel functionality
+* What have I learned?
+- Read through large part of the BPF Performance Tools book
+- Gotten a little bit more familiar with the different Linux subsystems
+  - Some of the tracepoints that might be useful and how to trace them
+  - Still have a lot to learn though
+- bpftrace
+  - A scripting language for creating BPF monitoring tools
+  - Similar to AWK and C
+  - Good for quick prototypes and learning about tracepoints
+  - Not ideal for more complex tools
+  - Implemented two versions of pping (passive ping) using it
+* Some discoveries so far
+** Potential issues with BPF
+- BPF has a couple of potential issues with continer environments
+  - Linux has no container ID (a user space construct)
+    - Can however track PID namespaces and cgroups
+    - Can potentially map namespaces/cgroups to containers by querying ex. docker
+  - Requires root privilegies
+    - There is work ongoing to change this
+- Relatively new technology
+  - Requires recent kernel versions
+  - Rapidly changing (capbabilites, limitations, tracepoints etc)
+** Some interesting technologies
+- Cilium and Hubble
+  - [[https://cilium.io/][Cilium]] is a kubernetes network plugin using BPF and XDP for network policy, load balancing etc
+  - [[https://github.com/cilium/hubble][Hubble]] is a distributed network and security observability platform built on top of Cilium
+- Performance Co-Pilot (PCP)
+  - Distributed, lightweight, real-time monitoring platform
+  - A Red Hat project
+  - Already supports thousands of metrics and can be extened with plugins
+  - Demonstrated capababilites to visualize output from BCC/bpftrace tools at recent eBPF summit
+* What's next
+- I plan to read up a bit more on docker and kubernetes
+  - Not technologies I've used before, only know them on a conceptual level
+- Plan to check out Cilium/Hubble and PCP in more detail
+- Should have a WP2 meeting were we work out some concrete goals
+- Start the introduction course whenever I can get a hold of the book...

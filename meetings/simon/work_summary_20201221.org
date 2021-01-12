@@ -1,0 +1,79 @@
+#+AUTHOR: Simon Sundberg
+#+TITLE: Status Update 2020-12-21
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Lab Supervision
+- Mostly done with being a lab supervisor in DVGB03
+  - Have a single scheduled lab supervision pass after Christmas
+
+* Reading
+- Have read all papers Simone sent
+- Have read a little bit of the "How to get a PhD book"
+  - ...specifically how to NOT get a PhD
+
+* Implementing pping with libbpf
+- Have spent a fair amount of time implementing pping in libbpf
+- Forked the [[https://github.com/xdp-project/bpf-examples][xpd-project/bpf-examples]] repository
+  - Can reuse the same structure as you've used for some of your examples
+  - Using same (forked) [[https://github.com/xdp-project/libbpf/tree/de58d0cccfb9ef73f8b2942a90f37b9f3d7032ee][libbpf]] repository, reuse your Makefile, parsing helpers etc.
+  - Testing my program using your testenv script
+    - Developing program on a remote machine so wouldn't want to accidently screw up the connection on the real interface
+- NOT using BPF CO-RE
+  - Currently few distributions seems to ship with kernels with CONFIG_DEBUG_INFO_BTF=y set
+    - Including Ubuntu 20.04 LTS (which I'm running)
+  - Should I reconsider this?
+** Making every possible misstake
+- Takes some time as I managed to run into every landmine
+  - On the bright side I've (hopefully) learned from my misstakes
+- Verifier rejects some bpf-helpers if program doesn't specify license as GPL
+- Clang doesn't want to unroll some loops?
+  - Rewrote the logic inside the loop a bit and then everything was fine
+- Failing to properly check bounds before accessing packet data
+  - A bit unsure how smart the verifier is/how long memory it has
+  - Might have added more checks than necessary to be on the safe side
+- The bpf_kprintf helper has more limited formating options than printf
+  - bpf_kprintf("%09d\n", 1) will compile and pass verifier, but print nothing
+  - Used it for debugging, missing output caused me to think it never entered a certain branch
+#+REVEAL: split
+- Forgot to update map-definition when changing value type (from int to struct)
+  - Still compiled and passed verifier until trying to fetch value from kernel side
+  - Still got a growing timestamp from map in userspace, but incorrect offset
+    - Thought it was an issue with the clock at first
+- When correctly updating map definition (value as a struct), verifier became angry
+  - Compiler optimization will align struct, causing verifier to reject due to uninitilized padding
+  - Changed my initialization of the struct (setting everything to 0 first)
+    - Better to manually pad instead?
+- The verifier considers bpf_ktime_get_boot_ns unknown
+  - Still don't know what the issue here is
+  - Using bpf_ktime_get_ns for now (so CLOCK_MONOTONIC instead of CLOCK_BOOTTIME)
+** Design
+- See figure at [[https://github.com/simosund/bpf-examples/tree/add_pping/pping][bpf-examples/pping]]
+- TC-BPF program for egress
+  - Stores timestamps of outgoing packets
+- XDP program for ingress
+  - Checks incomming packets for matching outgoing packet in map
+  - Calculates RTT and pushes to userspace program
+- Usperspace program
+  - Loads and attaches XDP/TC-BPF programs
+    - Does libbpf have an API for TC-BPF, or just use tc commands?
+  - Print out RTT messages
+  - Occasionally loop through and clean BPF-map from old entries
+  - Clean up BPF programs/maps on exit (Ctrl-C)
+- Status as of now
+  - Userspace and XDP part largely done
+  - Have not started on TC-BPF part yet
+** Issues with design? 
+- XDP can only load one program per interface?
+  - Is this about to change?
+  - Better to use TC-BPF for ingress as well?
+- Use of perf-buffer vs (per-CPU) BPF map for pushing RTTs to userside?
+- Will TC-BPF catch packets redirected/retransmitted by XDP program?
+* Other
+- Have registered for the Information Retrieval course
+- Have partcipated in a couple of mettings about Uddeholm's use case
+  - Plan to work together to do some network latency measurements
+- Started my vacation today
+- Merry Christmas and Happy New Year!

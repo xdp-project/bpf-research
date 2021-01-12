@@ -1,0 +1,42 @@
+#+AUTHOR: Simon Sundberg
+#+TITLE: What have I been up to?
+
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1200, height:900, slideNumber:"c/t"
+
+* Lab supervision
+- Have finished(ish) correcting labs
+- Held my last (planned) "mini-lecture" today
+- Only answering questions from now on (4-6h per week)
+* Reading
+- Have read through most of the material Simone sent me
+  - Have not gone through xBGP and QUIC papers yet
+  - For kubectl trace have mainly gone through the README and Architecture page (haven't looked at code or tried to use it myself etc.)
+- Have read a little bit of "How To Get a PhD" book
+  - Plan to continue reading a little bit during the Christmas holiday as it seems fairly easy to read
+* Implementing pping with libbpf
+- Have spent some time with it, but still not gotten that far
+- Have set up the overall environment
+  - Forked the xdp-project/bpf-examples repository (where Jesper has implemented the EDT scheduler)
+  - Using their testenv script because I don't want to screw up the real interface to my remote machine
+    - Hard to fix if SSH connection dies
+- Have written a user-space loader for the XDP part of the program
+  - Not too familiar with the libbpf API so took some time to get right (the XDP tutorial abstracts a lot of it away)
+- Have gotten the parsing logic on the XDP side complete
+  - However currently having issues with getting the compiler to unroll my loop
+** Design: Kernel-space
+- TC-BPF program that parses outgoing packets for TCP timestamps
+  - Adds own timestamp-value to map using flow + TCP timestamp as key (using hashmap)
+- XDP program that parses incomming packets for echoed TCP timestamps
+  - Checks map for flow + TCP timestamp entry
+  - ... if exists calculates RTT from own timestamp value and pass to userspace
+** Design: User-space
+- User space program
+  - Loads and attaches the XDP and TC-BPF program
+    - Will have to check up if libbpf has a way to do this (Jesper's example uses a shell script that calls TC commands)
+  - Either periodically goes through map or pulls perf-buffer to print out calculated RTTs
+  - Periodically cleans up the timestamp map from old entries
+    - Assumes libbpf has some method to loop through entries in a hash-map
+* Other
+- Checked around a bit, and think the Information Retrival course seems nice and relevant
+  - ...so should probably mail Åsa Möller to registrate for the course

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2020-01-11</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2020-01-11</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-01-11 mån 14:56</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org4f3a19b">1. Gotten back from Christmas</a></li>
+<li><a href="#/slide-org92abb32">2. PPing</a>
+<ul>
+<li><a href="#/slide-org1b5d6ca">2.1. Current implementation</a></li>
+<li><a href="#/slide-org98bbcd3">2.2. IPv6 support</a></li>
+<li><a href="#/slide-org9fcfd90">2.3. Scalability aspects</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org4f3a19b">
+<h2 id="org4f3a19b"><span class="section-number-2">1</span> Gotten back from Christmas</h2>
+<ul>
+<li>Got back on 4th, slow start</li>
+<li>Not a massive amount of progress since last</li>
+<li>Will leave institutional duties to other meeting</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org92abb32">
+<h2 id="org92abb32"><span class="section-number-2">2</span> PPing</h2>
+<ul>
+<li>Finished it to a working state about 1h ago</li>
+<li>It is not DONE yet</li>
+<li>TODOs:
+<ul>
+<li>Unload tc-bpf program on exit</li>
+<li>Unpin map</li>
+<li>Add IPv6 support (only IPv4 now)</li>
+<li>Add check for reverse flow
+<ul>
+<li>Don't add entries to map if we can't observe the flow in both directions</li>
+
+</ul></li>
+<li>Consider scalability aspects</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org1b5d6ca">
+<h3 id="org1b5d6ca"><span class="section-number-3">2.1</span> Current implementation</h3>
+<ul>
+<li>Uses Jespers bpf_egress loader to load TC-bpf part first
+<ul>
+<li>Also pins the ts_start map (PIN_GLOBAL_NS)</li>
+
+</ul></li>
+<li>Uses custom libbpf-based loader to load XDP part
+<ul>
+<li>Reuses the pinned map</li>
+
+</ul></li>
+<li>Starts parallell thread to perform periodic map cleanup
+<ul>
+<li>Simply loops through all map entires looking for old TS entries</li>
+<li>Would be much nicer to have a "self clearing" map</li>
+
+</ul></li>
+<li>Creates and polls the perf-buffer for calculated RTTs</li>
+
+</ul>
+</section>
+<section id="slide-org98bbcd3">
+<h3 id="org98bbcd3"><span class="section-number-3">2.2</span> IPv6 support</h3>
+<ul>
+<li>Use separate IPv6 map or&#x2026;</li>
+<li>&#x2026;use abstract "flow"-struct that can fit either IPv4 or IPv6 addresses</li>
+
+</ul>
+</section>
+<section id="slide-org9fcfd90">
+<h3 id="org9fcfd90"><span class="section-number-3">2.3</span> Scalability aspects</h3>
+<ul>
+<li>Current implementation won't scale well to high flows
+<ul>
+<li>&#x2026; but Pollere's pping should have the same issues</li>
+
+</ul></li>
+<li>Have currently limited the hash-map to 16k entries
+<ul>
+<li>Pollere's has 10k</li>
+<li>Seem to get about 1k unique TS-vals per second (from single flow) on my machine</li>
+
+</ul></li>
+<li>We talked a little bit about it last meeting
+<ul>
+<li>Sampling-based, only add TS-entries for some packets</li>
+<li>Add some sort of time-based limit for how often new entries can be added</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

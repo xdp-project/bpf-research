@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Status Update 2020-12-21</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Status Update 2020-12-21</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2020-12-21 mån 12:43</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org0a771bb">1. Lab Supervision</a></li>
+<li><a href="#/slide-org29191c0">2. Reading</a></li>
+<li><a href="#/slide-org0b5025b">3. Implementing pping with libbpf</a>
+<ul>
+<li><a href="#/slide-orgb9292e2">3.1. Making every possible misstake</a></li>
+<li><a href="#/slide-org44e3968">3.2. Design</a></li>
+<li><a href="#/slide-org47e44be">3.3. Issues with design?</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orge1ec9bf">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org0a771bb">
+<h2 id="org0a771bb"><span class="section-number-2">1</span> Lab Supervision</h2>
+<ul>
+<li>Mostly done with being a lab supervisor in DVGB03
+<ul>
+<li>Have a single scheduled lab supervision pass after Christmas</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org29191c0">
+<h2 id="org29191c0"><span class="section-number-2">2</span> Reading</h2>
+<ul>
+<li>Have read all papers Simone sent</li>
+<li>Have read a little bit of the "How to get a PhD book"
+<ul>
+<li>&#x2026;specifically how to NOT get a PhD</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org0b5025b">
+<h2 id="org0b5025b"><span class="section-number-2">3</span> Implementing pping with libbpf</h2>
+<ul>
+<li>Have spent a fair amount of time implementing pping in libbpf</li>
+<li>Forked the <a href="https://github.com/xdp-project/bpf-examples">xpd-project/bpf-examples</a> repository
+<ul>
+<li>Can reuse the same structure as you've used for some of your examples</li>
+<li>Using same (forked) <a href="https://github.com/xdp-project/libbpf/tree/de58d0cccfb9ef73f8b2942a90f37b9f3d7032ee">libbpf</a> repository, reuse your Makefile, parsing helpers etc.</li>
+<li>Testing my program using your testenv script
+<ul>
+<li>Developing program on a remote machine so wouldn't want to accidently screw up the connection on the real interface</li>
+
+</ul></li>
+
+</ul></li>
+<li>NOT using BPF CO-RE
+<ul>
+<li>Currently few distributions seems to ship with kernels with CONFIG_DEBUG_INFO_BTF=y set
+<ul>
+<li>Including Ubuntu 20.04 LTS (which I'm running)</li>
+
+</ul></li>
+<li>Should I reconsider this?</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgb9292e2">
+<h3 id="orgb9292e2"><span class="section-number-3">3.1</span> Making every possible misstake</h3>
+<ul>
+<li>Takes some time as I managed to run into every landmine
+<ul>
+<li>On the bright side I've (hopefully) learned from my misstakes</li>
+
+</ul></li>
+<li>Verifier rejects some bpf-helpers if program doesn't specify license as GPL</li>
+<li>Clang doesn't want to unroll some loops?
+<ul>
+<li>Rewrote the logic inside the loop a bit and then everything was fine</li>
+
+</ul></li>
+<li>Failing to properly check bounds before accessing packet data
+<ul>
+<li>A bit unsure how smart the verifier is/how long memory it has</li>
+<li>Might have added more checks than necessary to be on the safe side</li>
+
+</ul></li>
+<li>The bpf_kprintf helper has more limited formating options than printf
+<ul>
+<li>bpf_kprintf("%09d\n", 1) will compile and pass verifier, but print nothing</li>
+<li>Used it for debugging, missing output caused me to think it never entered a certain branch</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgb9292e2-split">
+<ul>
+<li>Forgot to update map-definition when changing value type (from int to struct)
+<ul>
+<li>Still compiled and passed verifier until trying to fetch value from kernel side</li>
+<li>Still got a growing timestamp from map in userspace, but incorrect offset
+<ul>
+<li>Thought it was an issue with the clock at first</li>
+
+</ul></li>
+
+</ul></li>
+<li>When correctly updating map definition (value as a struct), verifier became angry
+<ul>
+<li>Compiler optimization will align struct, causing verifier to reject due to uninitilized padding</li>
+<li>Changed my initialization of the struct (setting everything to 0 first)
+<ul>
+<li>Better to manually pad instead?</li>
+
+</ul></li>
+
+</ul></li>
+<li>The verifier considers bpf_ktime_get_boot_ns unknown
+<ul>
+<li>Still don't know what the issue here is</li>
+<li>Using bpf_ktime_get_ns for now (so CLOCK_MONOTONIC instead of CLOCK_BOOTTIME)</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org44e3968">
+<h3 id="org44e3968"><span class="section-number-3">3.2</span> Design</h3>
+<ul>
+<li>See figure at <a href="https://github.com/simosund/bpf-examples/tree/add_pping/pping">bpf-examples/pping</a></li>
+<li>TC-BPF program for egress
+<ul>
+<li>Stores timestamps of outgoing packets</li>
+
+</ul></li>
+<li>XDP program for ingress
+<ul>
+<li>Checks incomming packets for matching outgoing packet in map</li>
+<li>Calculates RTT and pushes to userspace program</li>
+
+</ul></li>
+<li>Usperspace program
+<ul>
+<li>Loads and attaches XDP/TC-BPF programs
+<ul>
+<li>Does libbpf have an API for TC-BPF, or just use tc commands?</li>
+
+</ul></li>
+<li>Print out RTT messages</li>
+<li>Occasionally loop through and clean BPF-map from old entries</li>
+<li>Clean up BPF programs/maps on exit (Ctrl-C)</li>
+
+</ul></li>
+<li>Status as of now
+<ul>
+<li>Userspace and XDP part largely done</li>
+<li>Have not started on TC-BPF part yet</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org47e44be">
+<h3 id="org47e44be"><span class="section-number-3">3.3</span> Issues with design?</h3>
+<ul>
+<li>XDP can only load one program per interface?
+<ul>
+<li>Is this about to change?</li>
+<li>Better to use TC-BPF for ingress as well?</li>
+
+</ul></li>
+<li>Use of perf-buffer vs (per-CPU) BPF map for pushing RTTs to userside?</li>
+<li>Will TC-BPF catch packets redirected/retransmitted by XDP program?</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orge1ec9bf">
+<h2 id="orge1ec9bf"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Have registered for the Information Retrieval course</li>
+<li>Have partcipated in a couple of mettings about Uddeholm's use case
+<ul>
+<li>Plan to work together to do some network latency measurements</li>
+
+</ul></li>
+<li>Started my vacation today</li>
+<li>Merry Christmas and Happy New Year!</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

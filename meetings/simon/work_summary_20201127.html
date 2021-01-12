@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>What I've been up to - Summary</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">What I've been up to - Summary</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2020-11-30 mån 12:42</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org1ab2b35">1. How I got here</a></li>
+<li><a href="#/slide-orgb0109ba">2. What I've done</a></li>
+<li><a href="#/slide-org84ee98f">3. eBPF and XDP</a></li>
+<li><a href="#/slide-orge2bd91b">4. What have I learned?</a></li>
+<li><a href="#/slide-orged8ccfc">5. Some discoveries so far</a>
+<ul>
+<li><a href="#/slide-orgdbd404b">5.1. Potential issues with BPF</a></li>
+<li><a href="#/slide-orge560571">5.2. Some interesting technologies</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgce22601">6. What's next</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org1ab2b35">
+<h2 id="org1ab2b35"><span class="section-number-2">1</span> How I got here</h2>
+<ul>
+<li>Graduated from the Master in Science of Computer Engineering in 2019
+<ul>
+<li>Was working part-time as a project assistant in the HITS project</li>
+
+</ul></li>
+<li>Was a project assistant in HITS for a year (2019-9 - 2020-8)</li>
+<li>Worked as a project assistant in the Red Hat project for two months
+<ul>
+<li>Has some overlap with this project</li>
+
+</ul></li>
+<li>Started my PhD in the AIDA project Nov. 1st</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgb0109ba">
+<h2 id="orgb0109ba"><span class="section-number-2">2</span> What I've done</h2>
+<ul>
+<li>Initially read a few papers about NFV and INT from Sigcomm
+<ul>
+<li>Also read most of the papers used as reference in WP2 of the AIDA application</li>
+
+</ul></li>
+<li>Since then I've mainly focused on system monitoring using eBPF
+<ul>
+<li>The Red Hat project is focused on XDP which is basically a hook for eBPF programs</li>
+<li>I have mainly read the <a href="http://www.brendangregg.com/bpf-performance-tools-book.html">BPF Performance Tools</a> book by Bredan Gregg</li>
+
+</ul></li>
+<li>Started as a lab supervisor in DVGB03
+<ul>
+<li>Currently eating a bit too much time</li>
+<li>Expect load to be lower going forward</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org84ee98f">
+<h2 id="org84ee98f"><span class="section-number-2">3</span> eBPF and XDP</h2>
+<ul>
+<li>eBPF is basically a safe runtime environment for running programs in kernel space</li>
+<li>eBPF often just refered to as BFP</li>
+<li>Write programs in (restriced) C 
+<ul>
+<li>compiled to BPF byte code by Clang + LLVM</li>
+<li>BPF byte code is stored in an ELF file</li>
+
+</ul></li>
+<li>When loaded to the kernel, a verifier ensures program is safe
+<ul>
+<li>No unbounded loops allowed</li>
+<li>No unchecked memory accesses</li>
+<li>Limited to 1,000,000 instructions etc.</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org84ee98f-split">
+<ul>
+<li>eBPF programs are attched to an event of some kind
+<ul>
+<li>ex. a function starting, a tracepoint, the arrival of a network packet (XDP)</li>
+
+</ul></li>
+<li>Can communicate with user space through BPF maps
+<ul>
+<li>A key-value store (there are some different versions)</li>
+
+</ul></li>
+<li>Advatanges over kernel-bypass
+<ul>
+<li>Safe (verifier ensures it)</li>
+<li>Can use existing kernel functionality</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orge2bd91b">
+<h2 id="orge2bd91b"><span class="section-number-2">4</span> What have I learned?</h2>
+<ul>
+<li>Read through large part of the BPF Performance Tools book</li>
+<li>Gotten a little bit more familiar with the different Linux subsystems
+<ul>
+<li>Some of the tracepoints that might be useful and how to trace them</li>
+<li>Still have a lot to learn though</li>
+
+</ul></li>
+<li>bpftrace
+<ul>
+<li>A scripting language for creating BPF monitoring tools</li>
+<li>Similar to AWK and C</li>
+<li>Good for quick prototypes and learning about tracepoints</li>
+<li>Not ideal for more complex tools</li>
+<li>Implemented two versions of pping (passive ping) using it</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orged8ccfc">
+<h2 id="orged8ccfc"><span class="section-number-2">5</span> Some discoveries so far</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+</section>
+<section id="slide-orgdbd404b">
+<h3 id="orgdbd404b"><span class="section-number-3">5.1</span> Potential issues with BPF</h3>
+<ul>
+<li>BPF has a couple of potential issues with continer environments
+<ul>
+<li>Linux has no container ID (a user space construct)
+<ul>
+<li>Can however track PID namespaces and cgroups</li>
+<li>Can potentially map namespaces/cgroups to containers by querying ex. docker</li>
+
+</ul></li>
+<li>Requires root privilegies
+<ul>
+<li>There is work ongoing to change this</li>
+
+</ul></li>
+
+</ul></li>
+<li>Relatively new technology
+<ul>
+<li>Requires recent kernel versions</li>
+<li>Rapidly changing (capbabilites, limitations, tracepoints etc)</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orge560571">
+<h3 id="orge560571"><span class="section-number-3">5.2</span> Some interesting technologies</h3>
+<ul>
+<li>Cilium and Hubble
+<ul>
+<li><a href="https://cilium.io/">Cilium</a> is a kubernetes network plugin using BPF and XDP for network policy, load balancing etc</li>
+<li><a href="https://github.com/cilium/hubble">Hubble</a> is a distributed network and security observability platform built on top of Cilium</li>
+
+</ul></li>
+<li>Performance Co-Pilot (PCP)
+<ul>
+<li>Distributed, lightweight, real-time monitoring platform</li>
+<li>A Red Hat project</li>
+<li>Already supports thousands of metrics and can be extened with plugins</li>
+<li>Demonstrated capababilites to visualize output from BCC/bpftrace tools at recent eBPF summit</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgce22601">
+<h2 id="orgce22601"><span class="section-number-2">6</span> What's next</h2>
+<ul>
+<li>I plan to read up a bit more on docker and kubernetes
+<ul>
+<li>Not technologies I've used before, only know them on a conceptual level</li>
+
+</ul></li>
+<li>Plan to check out Cilium/Hubble and PCP in more detail</li>
+<li>Should have a WP2 meeting were we work out some concrete goals</li>
+<li>Start the introduction course whenever I can get a hold of the book&#x2026;</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1400, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>
