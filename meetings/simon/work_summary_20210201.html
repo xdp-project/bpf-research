@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-02-01</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-02-01</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-02-01 mån 14:16</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orga71afcd">1. Mobile and Wireless</a></li>
+<li><a href="#/slide-orgbce4e38">2. Computer Networks article</a></li>
+<li><a href="#/slide-orgcb71132">3. PPing</a></li>
+<li><a href="#/slide-orgb2b7068">4. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orga71afcd">
+<h2 id="orga71afcd"><span class="section-number-2">1</span> Mobile and Wireless</h2>
+<ul>
+<li>Have finished the second exercise sheet
+<ul>
+<li>Will run between 10/2 to 24/2</li>
+
+</ul></li>
+<li>Will try to finish 3rd exercise sheet this week</li>
+<li>I'm currently overspending time on this
+<ul>
+<li>Try to get work with exercise sheets done early to handle load later</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgbce4e38">
+<h2 id="orgbce4e38"><span class="section-number-2">2</span> Computer Networks article</h2>
+<ul>
+<li>Gotten a revision on a journal article to Computer Networks</li>
+<li>Several comments to address and minor fixes in paper</li>
+<li>Making changes and proofreading 18-page paper takes considerable time
+<ul>
+<li>Good writing practice</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgcb71132">
+<h2 id="orgcb71132"><span class="section-number-2">3</span> PPing</h2>
+<ul>
+<li>Have gotten great continuous feedback from Toke
+<ul>
+<li>Still have a couple of fixes left
+<ul>
+<li>Slow progress due to work on Mobile &amp; Wireless + Computer Networks</li>
+
+</ul></li>
+<li>Probably close to merge ready(?)</li>
+
+</ul></li>
+<li>Outline of changes done
+<ul>
+<li>Fixes to format/styling of code + commit messages</li>
+<li>Cleanup of tc and map on program exit</li>
+<li>Switched to BTF-defined map for XDP program
+<ul>
+<li>Can use libbpf functionality to automatically pin map using the pinning attribute</li>
+<li>Attempts to use BTF-defined map for tc as well if iproute has libbpf support
+<ul>
+<li>Based on Jesper's <a href="https://github.com/simosund/bpf-examples/blob/76060f0cb865ace20a3d7138796eda6e93986096/traffic-pacing-edt/edt_pacer_vlan.c#L61-L84">traffic-pacing-edt/edt_pacer_vlan.c</a></li>
+<li>Not tested, may not work correctly for pinned maps?</li>
+
+</ul></li>
+
+</ul></li>
+<li>Various other minor fixes</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgb2b7068">
+<h2 id="orgb2b7068"><span class="section-number-2">4</span> Plan</h2>
+<ul>
+<li>Right now working hard on the Computer Networks revision</li>
+<li>Will adress Toke's change request "soon" (later today or tomorrow)</li>
+<li>Will try to squeeze in the third exercise sheet for Mobile &amp; Wireless</li>
+<li>Spend a little bit of time preparing for Information retrieval course</li>
+<li>Write up "contract" for supervisor interaction
+<ul>
+<li>Anna was supposed to provide an example</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

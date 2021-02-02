@@ -1,0 +1,70 @@
+#+TITLE: Progress update 2021-01-25
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Reading
+- Have finished "How to get a PhD"
+  - Not read chapters 12-13 (for supervisors)
+- Have only skimmed through article forwarded by Simone
+  - Seems like a very good overview of eBPF/XDP
+  - Probably know a lot of it already, but rehersal is good
+* PPing
+- Have initiated pull request to the [[https://github.com/xdp-project/bpf-examples/pull/7][xdp-project/bpf-examples]] repo
+  - Got some very helpful feedback from Toke
+  - Have adressed the initial feedback points
+- Had some issues with converting to BTF-defined maps
+  - Assumed it required kernel support
+    - Updated to Ubuntu 20.10 which has kernel configured with BTF
+  - Tried running XDP program in traffic-pacing-edt
+    - Error message complained about missing/corrupt BTF
+    - I assumed the issue was kernel BTF support
+    - ...however was due to BTF-section being stripped from ELF object
+- Plan to add IPv6 support next
+* Revison of Computer Networks journal article
+- Got a revision of an article I and Johan Garcia submitted 2020-10-13
+- Wrote while working as project assistent in HITS
+- Based on my previous work for locating cellular base stations
+  - collaboration with Icomera
+- Reviewers request minor revisions
+  - ...although stated as major revision in system
+  - Largely related to clarification of limitations for proposed method
+- Current status
+  - Had an initial meeting with co-author/supervisor Johan Garica
+  - Have planned how to handle most comments
+  - Have adressed my inital points
+  - Follow-up meeting on Wednesday (27/1)
+  - Deadline 7/2
+* Lab supervisor in Moible and Wireless
+- Have created the [[https://www.overleaf.com/read/bkbbvskvfqdj][1st exercise sheet]] (of 4)
+  - Went live on last Friday (22/1)
+  - Deadline 9/2 (with live seesion on 10/2)
+- Some misscommunication between me and Andreas
+  - Excercise sheet largle based on previous years
+  - Andreas wants them to be more closely tied to lecture material
+  - Will let Andreas review the excercise sheets from now on
+- Plan to get next excercise sheet done in first half of this week
+* Rethink "[[https://www.kau.se/rethink/studier/folj-en-doktorand]["Follow a PhD-student"]] Workshop
+- Project aimed at improving administrative processes for PhD students
+- I have participated in an interview and the workshop
+  - Interesting to see other PhDs and their thoughts
+  - "Kurstorget" will be reworked
+  - Apparently most departments don't have an intro course
+* Courses
+- Got accepted to the information retrieval course
+  - Apparently fully booked this year
+  - Frey will also attend this course
+- Any info on DISCO literature study course?
+* Graduate school
+- Got an invitation to the graduate school for science and technology
+- Not entierly clear to me what it practially means
+  - Mainly seem to offer some activities (ex. courses)
+- See no drawbacks with it?
+  - ...so will probably join
+* Personal stuff
+- Lost my keys this weekend
+  - Includes key to office (Teknisk Service notified)
+  - Should have minimal impact on work
+  - ...but I'm somewhat stressed out by it

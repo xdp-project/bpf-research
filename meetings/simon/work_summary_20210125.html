@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-01-25</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-01-25</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-01-25 mån 15:04</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgb15753c">1. Reading</a></li>
+<li><a href="#/slide-org21ea2f9">2. PPing</a></li>
+<li><a href="#/slide-orgd81af43">3. Revison of Computer Networks journal article</a></li>
+<li><a href="#/slide-org033213c">4. Lab supervisor in Moible and Wireless</a></li>
+<li><a href="#/slide-org161478b">5. Rethink ""Follow a PhD-student" Workshop</a></li>
+<li><a href="#/slide-orgb0eedfb">6. Courses</a></li>
+<li><a href="#/slide-org5b9035b">7. Graduate school</a></li>
+<li><a href="#/slide-org72d30ad">8. Personal stuff</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgb15753c">
+<h2 id="orgb15753c"><span class="section-number-2">1</span> Reading</h2>
+<ul>
+<li>Have finished "How to get a PhD"
+<ul>
+<li>Not read chapters 12-13 (for supervisors)</li>
+
+</ul></li>
+<li>Have only skimmed through article forwarded by Simone
+<ul>
+<li>Seems like a very good overview of eBPF/XDP</li>
+<li>Probably know a lot of it already, but rehersal is good</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org21ea2f9">
+<h2 id="org21ea2f9"><span class="section-number-2">2</span> PPing</h2>
+<ul>
+<li>Have initiated pull request to the <a href="https://github.com/xdp-project/bpf-examples/pull/7">xdp-project/bpf-examples</a> repo
+<ul>
+<li>Got some very helpful feedback from Toke</li>
+<li>Have adressed the initial feedback points</li>
+
+</ul></li>
+<li>Had some issues with converting to BTF-defined maps
+<ul>
+<li>Assumed it required kernel support
+<ul>
+<li>Updated to Ubuntu 20.10 which has kernel configured with BTF</li>
+
+</ul></li>
+<li>Tried running XDP program in traffic-pacing-edt
+<ul>
+<li>Error message complained about missing/corrupt BTF</li>
+<li>I assumed the issue was kernel BTF support</li>
+<li>&#x2026;however was due to BTF-section being stripped from ELF object</li>
+
+</ul></li>
+
+</ul></li>
+<li>Plan to add IPv6 support next</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgd81af43">
+<h2 id="orgd81af43"><span class="section-number-2">3</span> Revison of Computer Networks journal article</h2>
+<ul>
+<li>Got a revision of an article I and Johan Garcia submitted 2020-10-13</li>
+<li>Wrote while working as project assistent in HITS</li>
+<li>Based on my previous work for locating cellular base stations
+<ul>
+<li>collaboration with Icomera</li>
+
+</ul></li>
+<li>Reviewers request minor revisions
+<ul>
+<li>&#x2026;although stated as major revision in system</li>
+<li>Largely related to clarification of limitations for proposed method</li>
+
+</ul></li>
+<li>Current status
+<ul>
+<li>Had an initial meeting with co-author/supervisor Johan Garica</li>
+<li>Have planned how to handle most comments</li>
+<li>Have adressed my inital points</li>
+<li>Follow-up meeting on Wednesday (27/1)</li>
+<li>Deadline 7/2</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org033213c">
+<h2 id="org033213c"><span class="section-number-2">4</span> Lab supervisor in Moible and Wireless</h2>
+<ul>
+<li>Have created the <a href="https://www.overleaf.com/read/bkbbvskvfqdj">1st exercise sheet</a> (of 4)
+<ul>
+<li>Went live on last Friday (22/1)</li>
+<li>Deadline 9/2 (with live seesion on 10/2)</li>
+
+</ul></li>
+<li>Some misscommunication between me and Andreas
+<ul>
+<li>Excercise sheet largle based on previous years</li>
+<li>Andreas wants them to be more closely tied to lecture material</li>
+<li>Will let Andreas review the excercise sheets from now on</li>
+
+</ul></li>
+<li>Plan to get next excercise sheet done in first half of this week</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org161478b">
+<h2 id="org161478b"><span class="section-number-2">5</span> Rethink "<a href="https://www.kau.se/rethink/studier/folj-en-doktorand">"Follow a PhD-student"</a> Workshop</h2>
+<ul>
+<li>Project aimed at improving administrative processes for PhD students</li>
+<li>I have participated in an interview and the workshop
+<ul>
+<li>Interesting to see other PhDs and their thoughts</li>
+<li>"Kurstorget" will be reworked</li>
+<li>Apparently most departments don't have an intro course</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgb0eedfb">
+<h2 id="orgb0eedfb"><span class="section-number-2">6</span> Courses</h2>
+<ul>
+<li>Got accepted to the information retrieval course
+<ul>
+<li>Apparently fully booked this year</li>
+<li>Frey will also attend this course</li>
+
+</ul></li>
+<li>Any info on DISCO literature study course?</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org5b9035b">
+<h2 id="org5b9035b"><span class="section-number-2">7</span> Graduate school</h2>
+<ul>
+<li>Got an invitation to the graduate school for science and technology</li>
+<li>Not entierly clear to me what it practially means
+<ul>
+<li>Mainly seem to offer some activities (ex. courses)</li>
+
+</ul></li>
+<li>See no drawbacks with it?
+<ul>
+<li>&#x2026;so will probably join</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org72d30ad">
+<h2 id="org72d30ad"><span class="section-number-2">8</span> Personal stuff</h2>
+<ul>
+<li>Lost my keys this weekend
+<ul>
+<li>Includes key to office (Teknisk Service notified)</li>
+<li>Should have minimal impact on work</li>
+<li>&#x2026;but I'm somewhat stressed out by it</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+#+TITLE: Progress update 2021-02-01
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Mobile and Wireless
+- Have finished the second exercise sheet
+  - Will run between 10/2 to 24/2
+- Will try to finish 3rd exercise sheet this week
+- I'm currently overspending time on this
+  - Try to get work with exercise sheets done early to handle load later
+* Computer Networks article
+- Gotten a revision on a journal article to Computer Networks
+- Several comments to address and minor fixes in paper
+- Making changes and proofreading 18-page paper takes considerable time
+  - Good writing practice
+* PPing
+- Have gotten great continuous feedback from Toke
+  - Still have a couple of fixes left
+    - Slow progress due to work on Mobile & Wireless + Computer Networks
+  - Probably close to merge ready(?)
+- Outline of changes done
+  - Fixes to format/styling of code + commit messages
+  - Cleanup of tc and map on program exit
+  - Switched to BTF-defined map for XDP program
+    - Can use libbpf functionality to automatically pin map using the pinning attribute
+    - Attempts to use BTF-defined map for tc as well if iproute has libbpf support
+      - Based on Jesper's [[https://github.com/simosund/bpf-examples/blob/76060f0cb865ace20a3d7138796eda6e93986096/traffic-pacing-edt/edt_pacer_vlan.c#L61-L84][traffic-pacing-edt/edt_pacer_vlan.c]]
+      - Not tested, may not work correctly for pinned maps?
+  - Various other minor fixes
+* Plan
+- Right now working hard on the Computer Networks revision
+- Will adress Toke's change request "soon" (later today or tomorrow)
+- Will try to squeeze in the third exercise sheet for Mobile & Wireless
+- Spend a little bit of time preparing for Information retrieval course
+- Write up "contract" for supervisor interaction
+  - Anna was supposed to provide an example
