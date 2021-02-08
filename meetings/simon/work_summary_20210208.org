@@ -1,0 +1,36 @@
+#+TITLE: Progress update 2021-02-08
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Status
+- Didn't get much done last week
+- Fixed up the last few things for PPing
+  - Is now merged into the xdp-project/bpf-examples repo
+- Spent a lot of time working on the journal revision
+  - Now submitted (at about 10 PM on Friday)
+- Feel somewhat behind
+  - Haven't started on any of the additional PPing features yet
+  - Haven't gotten started on Mobile & Wireless worksheet 3
+  - Haven't done the preperations for Information Retrieval course
+* Plan for the week
+- Largely to do all the things I failed to do last week
+- PPing
+  - Add IPv6 support to PPing (or at least start on it)
+- Mobile and Wireless
+  - Create exercise sheet 3 for Mobile & Wireless
+  - Correct exercise sheet 1 (will be handed in tomorrow)
+  - Hold the live session for exercise 1
+- Courses/PhD stuff
+  - Attend the PhD fika today
+  - Attend the PhD introduction day
+  - Attend PhD lunch
+  - Write student-supervisor "contract"
+  - Do preperations for Info retrieval (two lectures next week)
+* Private matters
+- Had a nice conversation with Frey this weekend
+- My keys have been found
+  - Will hopefully get them back today
+  
