@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-02-15</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-02-15</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-02-15 mån 14:29</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org4778e42">1. Mobile and Wireless</a></li>
+<li><a href="#/slide-org4826f66">2. Computer Networks revision</a></li>
+<li><a href="#/slide-org6d2ef70">3. PPing</a>
+<ul>
+<li><a href="#/slide-orgf57e17e">3.1. PPing - issue with reporting incorrect RTT</a></li>
+<li><a href="#/slide-org7393319">3.2. PPing - some discussion</a></li>
+<li><a href="#/slide-org951d4da">3.3. PPing - what's next?</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org43d106d">4. Courses</a></li>
+<li><a href="#/slide-org618ac79">5. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org4778e42">
+<h2 id="org4778e42"><span class="section-number-2">1</span> Mobile and Wireless</h2>
+<ul>
+<li>The first exercise sheet has been handed in
+<ul>
+<li>There were some minor issues with the exercises</li>
+<li>Had accidently written MHz instead of Hz on one question
+<ul>
+<li>Still worked, just got some odd answers</li>
+
+</ul></li>
+<li>Two questions could potentially be missinterpreted</li>
+
+</ul></li>
+<li>Holding live session + correcting was almost possible in a (long) day</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org4826f66">
+<h2 id="org4826f66"><span class="section-number-2">2</span> Computer Networks revision</h2>
+<ul>
+<li>Spent most of week 5 on it (and submitted around 22:00 on Friday)</li>
+<li>Got notified yesterday that it's accepted for publication</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org6d2ef70">
+<h2 id="org6d2ef70"><span class="section-number-2">3</span> PPing</h2>
+<ul>
+<li>Have added IPv6 support
+<ul>
+<li>Maps IPv4 address to IPv6 addresses as previously talked about</li>
+<li>Had in interesting issue with a constant being moved to .rodata
+<ul>
+<li>Supported by libbpf, but not by iproute2 (without libbpf support)</li>
+<li>Thanks Toke for finding the issue and clearing up my confusion</li>
+
+</ul></li>
+
+</ul></li>
+<li>Have refactored code in XDP/TC programs
+<ul>
+<li>Now reuse all the parsing logic for TC/XDP</li>
+<li>Should be relativly straightforward to add support for other protocols now</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgf57e17e">
+<h3 id="orgf57e17e"><span class="section-number-3">3.1</span> PPing - issue with reporting incorrect RTT</h3>
+<ul>
+<li>In my inital demo it reported mostly 100ms RTT when adding 30ms of delay</li>
+<li>Figured out what caused this issue
+<ul>
+<li>I had setup my testing in a retarded way</li>
+<li>Was using iperf to generate TCP flow</li>
+<li>Was running PPing on the iperf server side - only sends ACKs
+<ul>
+<li>Was measuring time between ACK being sent and next packet from client (after client as recieved the ACK)</li>
+<li>Was telling iperf client to only send at 10 Mbps to limit printouts from pping - delay between sending packets</li>
+
+</ul></li>
+
+</ul></li>
+<li>Have worked on a fix to not create map entries for pure ACKs</li>
+
+</ul>
+</section>
+<section id="slide-org7393319">
+<h3 id="org7393319"><span class="section-number-3">3.2</span> PPing - some discussion</h3>
+<ul>
+<li>What do we want to support?
+<ul>
+<li>Currently supports iproute both with and without libbpf
+<ul>
+<li>Have to declare ts_start map three times (?)</li>
+<li>Had to go with less clear option for the IPv4 to IPv6 mapping</li>
+
+</ul></li>
+<li>Kernel version, BTF etc.
+<ul>
+<li>Currently use loops, function calls etc. (instead of unrolling, inlining etc)</li>
+<li>For future, use global variables instead of map lookups etc.</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org951d4da">
+<h3 id="org951d4da"><span class="section-number-3">3.3</span> PPing - what's next?</h3>
+<ul>
+<li><a href="https://github.com/simosund/bpf-examples/blob/pping_IPv6/pping/TODO.md">TODO list</a> is kinda long - what do focus on next?
+<ul>
+<li>Rate limit for adding entries</li>
+<li>Automatic delete of unique identifiers</li>
+<li>Track min RTT
+<ul>
+<li>Use per-CPU hashmap</li>
+<li>Reset after some timeout?</li>
+
+</ul></li>
+<li>Add seq/ack fallback for TCP?</li>
+<li>Add new protocol (ICMP echo/reply should be easy)</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org43d106d">
+<h2 id="org43d106d"><span class="section-number-2">4</span> Courses</h2>
+<ul>
+<li>Information Retrieval
+<ul>
+<li>Have written introduction and read course litterature for this tomorrow's lecture</li>
+
+</ul></li>
+<li>Intro to PhD course
+<ul>
+<li>Have written <a href="https://www.overleaf.com/read/bcjmgsjmppcb">supervisor interaction "contract"</a></li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org618ac79">
+<h2 id="org618ac79"><span class="section-number-2">5</span> Plan</h2>
+<ul>
+<li>Create worksheet 3 for Mobile and Wireless</li>
+<li>Attend lectures and do associated work for Information Retrieval
+<ul>
+<li>Expect this to eat up around 2 days this week</li>
+
+</ul></li>
+<li>Continue hacking away on PPing
+<ul>
+<li>Feature may depend on discussion, but thinking rate limit to start with</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

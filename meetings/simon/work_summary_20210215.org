@@ -1,0 +1,65 @@
+#+TITLE: Progress update 2021-02-15
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Mobile and Wireless
+- The first exercise sheet has been handed in
+  - There were some minor issues with the exercises
+  - Had accidently written MHz instead of Hz on one question
+    - Still worked, just got some odd answers
+  - Two questions could potentially be missinterpreted
+- Holding live session + correcting was almost possible in a (long) day
+* Computer Networks revision
+- Spent most of week 5 on it (and submitted around 22:00 on Friday)
+- Got notified yesterday that it's accepted for publication
+* PPing
+- Have added IPv6 support
+  - Maps IPv4 address to IPv6 addresses as previously talked about
+  - Had in interesting issue with a constant being moved to .rodata
+    - Supported by libbpf, but not by iproute2 (without libbpf support)
+    - Thanks Toke for finding the issue and clearing up my confusion
+- Have refactored code in XDP/TC programs
+  - Now reuse all the parsing logic for TC/XDP
+  - Should be relativly straightforward to add support for other protocols now
+** PPing - issue with reporting incorrect RTT
+- In my inital demo it reported mostly 100ms RTT when adding 30ms of delay
+- Figured out what caused this issue
+  - I had setup my testing in a retarded way
+  - Was using iperf to generate TCP flow
+  - Was running PPing on the iperf server side - only sends ACKs
+    - Was measuring time between ACK being sent and next packet from client (after client as recieved the ACK)
+    - Was telling iperf client to only send at 10 Mbps to limit printouts from pping - delay between sending packets
+- Have worked on a fix to not create map entries for pure ACKs
+** PPing - some discussion
+- What do we want to support?
+  - Currently supports iproute both with and without libbpf
+    - Have to declare ts_start map three times (?)
+    - Had to go with less clear option for the IPv4 to IPv6 mapping
+  - Kernel version, BTF etc.
+    - Currently use loops, function calls etc. (instead of unrolling, inlining etc)
+    - For future, use global variables instead of map lookups etc.
+** PPing - what's next?
+- [[https://github.com/simosund/bpf-examples/blob/pping_IPv6/pping/TODO.md][TODO list]] is kinda long - what do focus on next?
+  - Rate limit for adding entries
+  - Automatic delete of unique identifiers
+  - Track min RTT
+    - Use per-CPU hashmap
+    - Reset after some timeout?
+  - Add seq/ack fallback for TCP?
+  - Add new protocol (ICMP echo/reply should be easy)
+* Courses
+- Information Retrieval
+  - Have written introduction and read course litterature for this tomorrow's lecture
+- Intro to PhD course
+  - Have written [[https://www.overleaf.com/read/bcjmgsjmppcb][supervisor interaction "contract"]]
+* Plan
+- Create worksheet 3 for Mobile and Wireless
+- Attend lectures and do associated work for Information Retrieval
+  - Expect this to eat up around 2 days this week
+- Continue hacking away on PPing
+  - Feature may depend on discussion, but thinking rate limit to start with
+
+  
