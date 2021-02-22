@@ -1,0 +1,98 @@
+#+TITLE: Progress update 2021-02-22
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Mobile and Wireless
+- Have created worksheet 3
+  - Redid final question after feedback from Andreas
+  - Took about 1.5 days to do exercises+solutions
+- This week I will hold live session for sheet 2 and grade it
+  - Should take about 1 (long-ish) day
+* Information retrieval
+- Had two lectures last week (of which one was almost a full day)
+- A fair bit of required background reading/video watching
+- Spent about 2.5-ish days total
+  - Included a little bit of time (1-2 hours) to also practice the material
+  - "Wasted" 1-2 hours on searching and playing around with tools for creating citation maps (not part of course)
+- This week another three lectures (3h+2h+2h)
+  - Also a fair bit of background reading
+  - Expect it to take about 2 days
+- Last lecture, only seminar+examination task left
+  - Expect load to decrease a bit
+* Computer Networks revision
+- Got the proof plus several forms to fill for the publication
+- Forms include publishing format, license and colours for figures
+  - Open access costs about €2000, and another €500 for every figure in colour
+  - I'm at this stage very unsure about these types of questions
+  - Have contacted Johan Garcia about it, but not gotten a response yet
+- Spent about 3-ish hours on it so far
+  - Will hopefully not need to spend a significant amount of additional time on it
+* PPing
+- Not much time left to work on this...
+- The IPv6 and no entry for pure ACKs fixes have been merged
+- Thinking about how to approach the rate limiting we talked about last week
+  - Andreas suggested probabilistic approach
+    - Could be extended to configure across multiple devices
+    - Seems complex to me
+    - Not familiar with the probibalistic data structures and how they map to BPF
+  - Think I will initially go with the time-based sampling we've talked about previously
+    - Only allow for one entery every ex. 100ms per flow
+    - Allow users to configure this
+    - This should treat all flows relativly "fairly" regardless of intensity
+** Rate limiting: Implementation
+- Plan to keep "global" (not per-CPU) map of last entry for each flow (source+dest addresses)
+  - Per-CPU maps faster, but each CPU has its own state
+  - Use flow as key, timestamp of last entry as value
+    - Before adding entry, check time since last entry was added
+- Concurrency issues with "global" maps
+  - Would possibly result in small bursts being allowed
+  - Could overwrite last timestamp (but would be with a very similar timestamp)
+  - These should be relativly OK?
+    - Adding atomic operations/locks affects performance and makes it more complicated
+** Rate limiting: Allowing bursts
+- Would probably be good to allow shorter bursts
+  - Partly to deal with delayed ACKs (may not get a match if only creating entry for "first" packet)
+  - Not entierly sure how to best handle this
+    - Could store multiple timestamps in value
+      - Burst size needs to be known at compile time
+    - Could add a counter in value
+      - Would potentially further amplify concurrency issues
+    - Let the concurrency issues be the solution (doesn't seem reliable)
+** Rate limiting examples
+- Keeping multiple timestamps
+  #+begin_SRC C
+  struct last_entry {
+      __u64 timestamp1;
+      __u64 timestamp2;
+  } le;
+
+  if (now - le.timestamp1 < 100ms && now - le.timestamp2 < 100ms)
+      abort;
+  #+end_SRC
+- Burst counter
+  #+begin_SRC C
+  struct last_entry {
+      __u64 timestamp;
+      __u8 burst_count;
+  } le;
+
+  if (now - le.timestamp < 100ms && le.burst_count >= MAX_BURST)
+      abort;
+  #+end_SRC
+** Graceful degradation
+- Current way already works ok?
+- Maybe automatically increase rate limit as map gets full?
+* Plan
+- Attend info-ret lectures and do background reading
+  - Also get started on examination task
+- Correct Mobile and Wireless exercise 2 (and host live session)
+- Implement discussed rate limiting in PPing
+- Put away a few hours to start working with the ISP
+* Student-Supervisor expectations
+- My points are avilable at [[https://www.overleaf.com/read/bcjmgsjmppcb][Overleaf]]
+- Maybe also discuss if my supervisors should fulfill different roles?
+
+  

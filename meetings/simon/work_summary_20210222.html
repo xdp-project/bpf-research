@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-02-22</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-02-22</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-02-22 mån 15:13</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgc493a62">1. Mobile and Wireless</a></li>
+<li><a href="#/slide-org70387c1">2. Information retrieval</a></li>
+<li><a href="#/slide-org8275b5d">3. Computer Networks revision</a></li>
+<li><a href="#/slide-org31626fd">4. PPing</a>
+<ul>
+<li><a href="#/slide-orgfdc36e1">4.1. Rate limiting: Implementation</a></li>
+<li><a href="#/slide-org3f23469">4.2. Rate limiting: Allowing bursts</a></li>
+<li><a href="#/slide-org6443c10">4.3. Rate limiting examples</a></li>
+<li><a href="#/slide-orgece1a58">4.4. Graceful degradation</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org091b1ec">5. Plan</a></li>
+<li><a href="#/slide-orgf3a459b">6. Student-Supervisor expectations</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgc493a62">
+<h2 id="orgc493a62"><span class="section-number-2">1</span> Mobile and Wireless</h2>
+<ul>
+<li>Have created worksheet 3
+<ul>
+<li>Redid final question after feedback from Andreas</li>
+<li>Took about 1.5 days to do exercises+solutions</li>
+
+</ul></li>
+<li>This week I will hold live session for sheet 2 and grade it
+<ul>
+<li>Should take about 1 (long-ish) day</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org70387c1">
+<h2 id="org70387c1"><span class="section-number-2">2</span> Information retrieval</h2>
+<ul>
+<li>Had two lectures last week (of which one was almost a full day)</li>
+<li>A fair bit of required background reading/video watching</li>
+<li>Spent about 2.5-ish days total
+<ul>
+<li>Included a little bit of time (1-2 hours) to also practice the material</li>
+<li>"Wasted" 1-2 hours on searching and playing around with tools for creating citation maps (not part of course)</li>
+
+</ul></li>
+<li>This week another three lectures (3h+2h+2h)
+<ul>
+<li>Also a fair bit of background reading</li>
+<li>Expect it to take about 2 days</li>
+
+</ul></li>
+<li>Last lecture, only seminar+examination task left
+<ul>
+<li>Expect load to decrease a bit</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org8275b5d">
+<h2 id="org8275b5d"><span class="section-number-2">3</span> Computer Networks revision</h2>
+<ul>
+<li>Got the proof plus several forms to fill for the publication</li>
+<li>Forms include publishing format, license and colours for figures
+<ul>
+<li>Open access costs about €2000, and another €500 for every figure in colour</li>
+<li>I'm at this stage very unsure about these types of questions</li>
+<li>Have contacted Johan Garcia about it, but not gotten a response yet</li>
+
+</ul></li>
+<li>Spent about 3-ish hours on it so far
+<ul>
+<li>Will hopefully not need to spend a significant amount of additional time on it</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org31626fd">
+<h2 id="org31626fd"><span class="section-number-2">4</span> PPing</h2>
+<ul>
+<li>Not much time left to work on this&#x2026;</li>
+<li>The IPv6 and no entry for pure ACKs fixes have been merged</li>
+<li>Thinking about how to approach the rate limiting we talked about last week
+<ul>
+<li>Andreas suggested probabilistic approach
+<ul>
+<li>Could be extended to configure across multiple devices</li>
+<li>Seems complex to me</li>
+<li>Not familiar with the probibalistic data structures and how they map to BPF</li>
+
+</ul></li>
+<li>Think I will initially go with the time-based sampling we've talked about previously
+<ul>
+<li>Only allow for one entery every ex. 100ms per flow</li>
+<li>Allow users to configure this</li>
+<li>This should treat all flows relativly "fairly" regardless of intensity</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgfdc36e1">
+<h3 id="orgfdc36e1"><span class="section-number-3">4.1</span> Rate limiting: Implementation</h3>
+<ul>
+<li>Plan to keep "global" (not per-CPU) map of last entry for each flow (source+dest addresses)
+<ul>
+<li>Per-CPU maps faster, but each CPU has its own state</li>
+<li>Use flow as key, timestamp of last entry as value
+<ul>
+<li>Before adding entry, check time since last entry was added</li>
+
+</ul></li>
+
+</ul></li>
+<li>Concurrency issues with "global" maps
+<ul>
+<li>Would possibly result in small bursts being allowed</li>
+<li>Could overwrite last timestamp (but would be with a very similar timestamp)</li>
+<li>These should be relativly OK?
+<ul>
+<li>Adding atomic operations/locks affects performance and makes it more complicated</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org3f23469">
+<h3 id="org3f23469"><span class="section-number-3">4.2</span> Rate limiting: Allowing bursts</h3>
+<ul>
+<li>Would probably be good to allow shorter bursts
+<ul>
+<li>Partly to deal with delayed ACKs (may not get a match if only creating entry for "first" packet)</li>
+<li>Not entierly sure how to best handle this
+<ul>
+<li>Could store multiple timestamps in value
+<ul>
+<li>Burst size needs to be known at compile time</li>
+
+</ul></li>
+<li>Could add a counter in value
+<ul>
+<li>Would potentially further amplify concurrency issues</li>
+
+</ul></li>
+<li>Let the concurrency issues be the solution (doesn't seem reliable)</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org6443c10">
+<h3 id="org6443c10"><span class="section-number-3">4.3</span> Rate limiting examples</h3>
+<ul>
+<li><p>
+Keeping multiple timestamps
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #a020f0;">struct</span> <span style="color: #228b22;">last_entry</span> {
+    <span style="color: #228b22;">__u64</span> <span style="color: #a0522d;">timestamp1</span>;
+    <span style="color: #228b22;">__u64</span> <span style="color: #a0522d;">timestamp2</span>;
+} <span style="color: #a0522d;">le</span>;
+
+<span style="color: #a020f0;">if</span> (now - le.timestamp1 &lt; 100ms &amp;&amp; now - le.timestamp2 &lt; 100ms)
+    abort;
+</code></pre>
+</div></li>
+<li><p>
+Burst counter
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #a020f0;">struct</span> <span style="color: #228b22;">last_entry</span> {
+    <span style="color: #228b22;">__u64</span> <span style="color: #a0522d;">timestamp</span>;
+    <span style="color: #228b22;">__u8</span> <span style="color: #a0522d;">burst_count</span>;
+} <span style="color: #a0522d;">le</span>;
+
+<span style="color: #a020f0;">if</span> (now - le.timestamp &lt; 100ms &amp;&amp; le.burst_count &gt;= MAX_BURST)
+    abort;
+</code></pre>
+</div></li>
+
+</ul>
+</section>
+<section id="slide-orgece1a58">
+<h3 id="orgece1a58"><span class="section-number-3">4.4</span> Graceful degradation</h3>
+<ul>
+<li>Current way already works ok?</li>
+<li>Maybe automatically increase rate limit as map gets full?</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org091b1ec">
+<h2 id="org091b1ec"><span class="section-number-2">5</span> Plan</h2>
+<ul>
+<li>Attend info-ret lectures and do background reading
+<ul>
+<li>Also get started on examination task</li>
+
+</ul></li>
+<li>Correct Mobile and Wireless exercise 2 (and host live session)</li>
+<li>Implement discussed rate limiting in PPing</li>
+<li>Put away a few hours to start working with the ISP</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgf3a459b">
+<h2 id="orgf3a459b"><span class="section-number-2">6</span> Student-Supervisor expectations</h2>
+<ul>
+<li>My points are avilable at <a href="https://www.overleaf.com/read/bcjmgsjmppcb">Overleaf</a></li>
+<li>Maybe also discuss if my supervisors should fulfill different roles?</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>
