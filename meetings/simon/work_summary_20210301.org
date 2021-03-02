@@ -1,0 +1,92 @@
+#+TITLE: Progress update 2021-03-01
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Interest in other work?
+- Are you interested in status for my institutional duty and other things not related to pping?
+- Otherwise I'll leave those for my PhD supervisor meeting
+* Not pping stuff
+- Finalized my Computer Networks publication
+  - Fill in some forms, go through the proof, answer some questions etc.
+- Mobile and Wireless
+  - Created worksheet 3
+  - Hosted session for workseet 2
+  - Will create final worksheet this week
+- Information retrieval course
+  - Fairly intense start, required more reading than I anticipated
+  - Should be lower intensity now, all lectures done
+- DISCO reading course
+  - Started another course
+  - Some reading for the first seminar next week
+* PPing
+- Have started working on implementing rate limiting a little bit
+- After feeling uncertain on how to implement, wanted some additional feedback/discussion
+- Started [[https://github.com/xdp-project/bpf-examples/pull/13][PR]] with [[https://github.com/simosund/bpf-examples/blob/pping_Add_Sampling/pping/SAMPLING_DESIGN.md][document]] outlining some of my thoughts
+  - Have you looked at it?
+  - General thoughts?
+** Basic sampling mechanic
+- There are several options
+  - 1 in N sampling
+  - Random sampling
+  - Head sampling
+  - Probabilistic approach
+  - Time based sampling
+- I feel like the time based sampling is a reasonably simple and effective solution
+  - Initially start with a fixed time limit
+  - Perhaps move to a RTT-based time limit later
+** Flow state information
+- Will need to keep some additional per-flow information
+  - Time of last timestamp entry per flow
+  - Last seen identifier (more on that later)
+  - Other useful info
+- Result in an additional map to handle
+  - This map will also need to be cleaned up
+  - Puts a fixed limit on maximum number of concurrent flows
+- Could potentially replace the packet timestamp map
+  - May only sample at most one packet per RTT
+** Handling duplicate identifiers
+- Only want to timestamp first unique identifier in flow
+  - Match against first response with same identifier
+- Currently works by keeping timestamp entry around for 10s
+  - Cannot create another entry with same identifier for this duration
+  - Will fail once sampling is introduced
+- Proposed solution
+  - Keep track of last seen identifier in flow state
+  - Only allow sampling if identifier differs from last seen
+  - Allows deleting entries as soon as RTT is calculated
+  - Concurrency and out of order issue
+    - Packet with older identifier detected as new
+** Concurrency issues
+- Plan to use (non-PERCPU) hash-maps
+- May have multiple packets reading and updating values at once
+- In general don't think this should cause a large issue
+  - Timestamps from concurrent actions should be similar
+  - Can only create one entry per idenitifer
+  - May potentially calculate multiple RTTs from single timestamp entry
+- Alternative would be to use spin-locks?
+  - Probably not great for performance
+** Graceful degradation
+- After rate-limit is implemented, doing "nothing" shouldn't be too horrible
+  - Once map is full, will have to wait until some RTT can be calculated
+  - First packet rate-limited packet with new identifer gets next spot
+- Many flows with few RTTs, or fewer flows with more RTTs?
+- Some actions that could be taken
+  - Automatically increase sampling time if map close to full
+  - Only keep most active flows around
+    - Flows which recently created timestamps
+    - Heavy flows (high packet rate)
+    - Flows with short RTTs (more effective use of timestap entries)
+    - ?
+** Global variables in BPF
+- Anyone has any experience with using global variables in BPF?
+  - Could be useful for passing user configration to TC/XDP
+  - Alternative PERCPU_ARRAY with single entry?
+* Plan
+- Final worksheet for Mobile & Wireless
+- Start on exam task for Info Ret
+- Read material for first DISCO seminar
+- Continue working on pping (based on outlines ideas/discussion)
+  - Documentation?

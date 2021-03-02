@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-03-01</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-03-01</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-03-02 tis 09:52</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org965d217">1. Interest in other work?</a></li>
+<li><a href="#/slide-orgf515695">2. Not pping stuff</a></li>
+<li><a href="#/slide-org762fb4a">3. PPing</a>
+<ul>
+<li><a href="#/slide-org6f04f12">3.1. Basic sampling mechanic</a></li>
+<li><a href="#/slide-orga0c4fa3">3.2. Flow state information</a></li>
+<li><a href="#/slide-org36fb488">3.3. Handling duplicate identifiers</a></li>
+<li><a href="#/slide-orge03e104">3.4. Concurrency issues</a></li>
+<li><a href="#/slide-orgd762de1">3.5. Graceful degradation</a></li>
+<li><a href="#/slide-org4b175dc">3.6. Global variables in BPF</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org5f19231">4. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org965d217">
+<h2 id="org965d217"><span class="section-number-2">1</span> Interest in other work?</h2>
+<ul>
+<li>Are you interested in status for my institutional duty and other things not related to pping?</li>
+<li>Otherwise I'll leave those for my PhD supervisor meeting</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgf515695">
+<h2 id="orgf515695"><span class="section-number-2">2</span> Not pping stuff</h2>
+<ul>
+<li>Finalized my Computer Networks publication
+<ul>
+<li>Fill in some forms, go through the proof, answer some questions etc.</li>
+
+</ul></li>
+<li>Mobile and Wireless
+<ul>
+<li>Created worksheet 3</li>
+<li>Hosted session for workseet 2</li>
+<li>Will create final worksheet this week</li>
+
+</ul></li>
+<li>Information retrieval course
+<ul>
+<li>Fairly intense start, required more reading than I anticipated</li>
+<li>Should be lower intensity now, all lectures done</li>
+
+</ul></li>
+<li>DISCO reading course
+<ul>
+<li>Started another course</li>
+<li>Some reading for the first seminar next week</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org762fb4a">
+<h2 id="org762fb4a"><span class="section-number-2">3</span> PPing</h2>
+<ul>
+<li>Have started working on implementing rate limiting a little bit</li>
+<li>After feeling uncertain on how to implement, wanted some additional feedback/discussion</li>
+<li>Started <a href="https://github.com/xdp-project/bpf-examples/pull/13">PR</a> with <a href="https://github.com/simosund/bpf-examples/blob/pping_Add_Sampling/pping/SAMPLING_DESIGN.md">document</a> outlining some of my thoughts
+<ul>
+<li>Have you looked at it?</li>
+<li>General thoughts?</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org6f04f12">
+<h3 id="org6f04f12"><span class="section-number-3">3.1</span> Basic sampling mechanic</h3>
+<ul>
+<li>There are several options
+<ul>
+<li>1 in N sampling</li>
+<li>Random sampling</li>
+<li>Head sampling</li>
+<li>Probabilistic approach</li>
+<li>Time based sampling</li>
+
+</ul></li>
+<li>I feel like the time based sampling is a reasonably simple and effective solution
+<ul>
+<li>Initially start with a fixed time limit</li>
+<li>Perhaps move to a RTT-based time limit later</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orga0c4fa3">
+<h3 id="orga0c4fa3"><span class="section-number-3">3.2</span> Flow state information</h3>
+<ul>
+<li>Will need to keep some additional per-flow information
+<ul>
+<li>Time of last timestamp entry per flow</li>
+<li>Last seen identifier (more on that later)</li>
+<li>Other useful info</li>
+
+</ul></li>
+<li>Result in an additional map to handle
+<ul>
+<li>This map will also need to be cleaned up</li>
+<li>Puts a fixed limit on maximum number of concurrent flows</li>
+
+</ul></li>
+<li>Could potentially replace the packet timestamp map
+<ul>
+<li>May only sample at most one packet per RTT</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org36fb488">
+<h3 id="org36fb488"><span class="section-number-3">3.3</span> Handling duplicate identifiers</h3>
+<ul>
+<li>Only want to timestamp first unique identifier in flow
+<ul>
+<li>Match against first response with same identifier</li>
+
+</ul></li>
+<li>Currently works by keeping timestamp entry around for 10s
+<ul>
+<li>Cannot create another entry with same identifier for this duration</li>
+<li>Will fail once sampling is introduced</li>
+
+</ul></li>
+<li>Proposed solution
+<ul>
+<li>Keep track of last seen identifier in flow state</li>
+<li>Only allow sampling if identifier differs from last seen</li>
+<li>Allows deleting entries as soon as RTT is calculated</li>
+<li>Concurrency and out of order issue
+<ul>
+<li>Packet with older identifier detected as new</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orge03e104">
+<h3 id="orge03e104"><span class="section-number-3">3.4</span> Concurrency issues</h3>
+<ul>
+<li>Plan to use (non-PERCPU) hash-maps</li>
+<li>May have multiple packets reading and updating values at once</li>
+<li>In general don't think this should cause a large issue
+<ul>
+<li>Timestamps from concurrent actions should be similar</li>
+<li>Can only create one entry per idenitifer</li>
+<li>May potentially calculate multiple RTTs from single timestamp entry</li>
+
+</ul></li>
+<li>Alternative would be to use spin-locks?
+<ul>
+<li>Probably not great for performance</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgd762de1">
+<h3 id="orgd762de1"><span class="section-number-3">3.5</span> Graceful degradation</h3>
+<ul>
+<li>After rate-limit is implemented, doing "nothing" shouldn't be too horrible
+<ul>
+<li>Once map is full, will have to wait until some RTT can be calculated</li>
+<li>First packet rate-limited packet with new identifer gets next spot</li>
+
+</ul></li>
+<li>Many flows with few RTTs, or fewer flows with more RTTs?</li>
+<li>Some actions that could be taken
+<ul>
+<li>Automatically increase sampling time if map close to full</li>
+<li>Only keep most active flows around
+<ul>
+<li>Flows which recently created timestamps</li>
+<li>Heavy flows (high packet rate)</li>
+<li>Flows with short RTTs (more effective use of timestap entries)</li>
+<li>?</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org4b175dc">
+<h3 id="org4b175dc"><span class="section-number-3">3.6</span> Global variables in BPF</h3>
+<ul>
+<li>Anyone has any experience with using global variables in BPF?
+<ul>
+<li>Could be useful for passing user configration to TC/XDP</li>
+<li>Alternative PERCPU_ARRAY with single entry?</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org5f19231">
+<h2 id="org5f19231"><span class="section-number-2">4</span> Plan</h2>
+<ul>
+<li>Final worksheet for Mobile &amp; Wireless</li>
+<li>Start on exam task for Info Ret</li>
+<li>Read material for first DISCO seminar</li>
+<li>Continue working on pping (based on outlines ideas/discussion)
+<ul>
+<li>Documentation?</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>
