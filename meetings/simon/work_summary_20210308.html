@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-03-08</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-03-08</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-03-08 mån 15:13</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org3a7910b">1. Mobile and Wireless</a></li>
+<li><a href="#/slide-org208c3c9">2. Information Retrieval</a></li>
+<li><a href="#/slide-org3414ac4">3. DISCO reading</a></li>
+<li><a href="#/slide-org397d2dc">4. PPing: progress</a>
+<ul>
+<li><a href="#/slide-org1c1ffd8">4.1. PPing: Upcomming</a></li>
+<li><a href="#/slide-orgc823a3f">4.2. PPing: Future improvments</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orge1a56f2">5. Other</a></li>
+<li><a href="#/slide-orgbed1e8d">6. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org3a7910b">
+<h2 id="org3a7910b"><span class="section-number-2">1</span> Mobile and Wireless</h2>
+<ul>
+<li>Have finished final (4th) <a href="https://www.overleaf.com/read/jqsyftkqsvwz">worksheet</a>
+<ul>
+<li>Exercises from previous years didn't fit that well with course material</li>
+<li>Had to come up with more exercises on my own</li>
+<li>Got a couple of items to revise from Andreas</li>
+<li>Overall took about 1.3 days (scheduled 1 day for it)</li>
+
+</ul></li>
+<li>Will host exercise 3 session on Wednesday (10/3)</li>
+<li>Estimate I've overworked somewhat in terms of hours, but not in days</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org208c3c9">
+<h2 id="org208c3c9"><span class="section-number-2">2</span> Information Retrieval</h2>
+<ul>
+<li>Examination task
+<ul>
+<li>A 5000 word report on search and publication strategy</li>
+<li>Started a little (3-4h) last week</li>
+<li>First draft should be handed in by 15/3</li>
+<li>Will need to spend a bit more time this week</li>
+
+</ul></li>
+<li>Will have meeting with topic librarian tomorrow (9/3)</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org3414ac4">
+<h2 id="org3414ac4"><span class="section-number-2">3</span> DISCO reading</h2>
+<ul>
+<li>Had first seminar (on network slicing in 5G) today
+<ul>
+<li>Think Alexander had a very nice high-level presentation of the topic</li>
+<li>Overall pretty nice discussion</li>
+<li>Didn't really follow the discussion questions that closely</li>
+
+</ul></li>
+<li>Background reading
+<ul>
+<li>3 fairly high-level papers</li>
+<li>More on concept rather than technical details</li>
+<li>Good selection for someone not that familiar with the topic</li>
+
+</ul></li>
+<li>Overall, spent about 1 day with reading+questions before the seminar</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org397d2dc">
+<h2 id="org397d2dc"><span class="section-number-2">4</span> PPing: progress</h2>
+<ul>
+<li>Updated <a href="https://github.com/simosund/bpf-examples/blob/pping_Add_Sampling/pping/SAMPLING_DESIGN.md">documentation</a> with some of our discussions from Red Hat meeting</li>
+<li>Have pushed initial implementation of rate limiting to <a href="https://github.com/xdp-project/bpf-examples/pull/13">PR</a>
+<ul>
+<li>Missing user configuration</li>
+<li>Missing flow cleanup</li>
+<li>Missing burst capabilities</li>
+<li>Missing output rate limit</li>
+
+</ul></li>
+<li>Have changed procedure for loading tc-program
+<ul>
+<li>Used to both load and attach with tc command</li>
+<li>Capabilities would differ based on if iproute had libbpf support or not</li>
+<li>Now load and pin from userspace program (libbpf), and only attach with tc command</li>
+<li>Zero documentation that this is possible
+<ul>
+<li>I should probably document it&#x2026;</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org1c1ffd8">
+<h3 id="org1c1ffd8"><span class="section-number-3">4.1</span> PPing: Upcomming</h3>
+<ul>
+<li>Flow cleanup
+<ul>
+<li>From userspace - periodically remove connections with no recent activity</li>
+<li>From BPF - remove closed connections
+<ul>
+<li>On RST - remove immediately</li>
+<li>On FIN - close immediatley (easy), or try and track 4-way handshake?</li>
+
+</ul></li>
+
+</ul></li>
+<li>Bursts
+<ul>
+<li>Nr packets? 2 should be enough for delayed ACK? Toke suggested ex. 3</li>
+<li>Duration - should only allow burst in short time window - how short?
+<ul>
+<li>Shorter than rate limit</li>
+<li>Definitly shorter than delayed ACK (500 ms)</li>
+
+</ul></li>
+
+</ul></li>
+<li>Rate limit output
+<ul>
+<li>To avoid multiple printouts from burst</li>
+<li>Timelimit
+<ul>
+<li>Shorter than sampling limit</li>
+<li>Higher than burst limit</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgc823a3f">
+<h3 id="orgc823a3f"><span class="section-number-3">4.2</span> PPing: Future improvments</h3>
+<ul>
+<li><a href="http://doi.org/10.1145/3405669.3405823">Paper</a> linked by Andreas uses hierarchical hash tables with lazy expiery</li>
+<li>The lazy expiery part would be nice to have here
+<ul>
+<li>Currently loop through and delete old entries</li>
+<li>Instead, simply overwrite old entries on hash collision</li>
+<li>Would probably have to implement own hash-table
+<ul>
+<li>Store it in simple BPF ARRAY map instead</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orge1a56f2">
+<h2 id="orge1a56f2"><span class="section-number-2">5</span> Other</h2>
+<ul>
+<li>ISP
+<ul>
+<li>Have briefly looked it through, filled in a few things</li>
+<li>Need to actually get it done soon-ish
+<ul>
+<li>A bit over 4 months since I started</li>
+
+</ul></li>
+
+</ul></li>
+<li>Recently got a mail about the course <a href="http://libra.sae.kau.se/course/philosophy-and-theory-science-doctoral-students-vetenskapsteori-doktorander">Philosophy and Theory of Science for doctoral students</a>
+<ul>
+<li>Part of course plan</li>
+<li>Takes place between 5/4-21/5</li>
+<li>Should probably sign up for it (deadline 26/3)?</li>
+
+</ul></li>
+<li>How many points is the DISCO reading course?
+<ul>
+<li>Future instances?</li>
+
+</ul></li>
+<li>Brief discussion with Johan about Institutional duties
+<ul>
+<li>Will likely do graphical user interfaces next</li>
+<li>Don't have much relevant experience, so will have to schedule hours accordingly</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgbed1e8d">
+<h2 id="orgbed1e8d"><span class="section-number-2">6</span> Plan</h2>
+<ul>
+<li>Have <a href="https://www.overleaf.com/read/bcjmgsjmppcb">student-supervisor expecations</a> discussion</li>
+<li>Finish first draft of InfoRet examination task
+<ul>
+<li>Also have topic librarian meeting</li>
+
+</ul></li>
+<li>Host mobile &amp; wireless <a href="https://www.overleaf.com/read/hrbygxygjchw">session 3</a></li>
+<li>PPing map cleanup and user configuration
+<ul>
+<li>Try and squeeze in some documentation as well</li>
+<li>Don't think I'll have time for burst handling this week</li>
+
+</ul></li>
+<li>Maybe also work some on the ISP?</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

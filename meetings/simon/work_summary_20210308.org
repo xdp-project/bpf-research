@@ -1,0 +1,91 @@
+#+TITLE: Progress update 2021-03-08
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Mobile and Wireless
+- Have finished final (4th) [[https://www.overleaf.com/read/jqsyftkqsvwz][worksheet]]
+  - Exercises from previous years didn't fit that well with course material
+  - Had to come up with more exercises on my own
+  - Got a couple of items to revise from Andreas
+  - Overall took about 1.3 days (scheduled 1 day for it)
+- Will host exercise 3 session on Wednesday (10/3)
+- Estimate I've overworked somewhat in terms of hours, but not in days
+* Information Retrieval
+- Examination task
+  - A 5000 word report on search and publication strategy
+  - Started a little (3-4h) last week
+  - First draft should be handed in by 15/3
+  - Will need to spend a bit more time this week
+- Will have meeting with topic librarian tomorrow (9/3)
+* DISCO reading
+- Had first seminar (on network slicing in 5G) today
+  - Think Alexander had a very nice high-level presentation of the topic
+  - Overall pretty nice discussion
+  - Didn't really follow the discussion questions that closely
+- Background reading
+  - 3 fairly high-level papers
+  - More on concept rather than technical details
+  - Good selection for someone not that familiar with the topic
+- Overall, spent about 1 day with reading+questions before the seminar
+* PPing: progress
+- Updated [[https://github.com/simosund/bpf-examples/blob/pping_Add_Sampling/pping/SAMPLING_DESIGN.md][documentation]] with some of our discussions from Red Hat meeting
+- Have pushed initial implementation of rate limiting to [[https://github.com/xdp-project/bpf-examples/pull/13][PR]]
+  - Missing user configuration
+  - Missing flow cleanup
+  - Missing burst capabilities
+  - Missing output rate limit
+- Have changed procedure for loading tc-program
+  - Used to both load and attach with tc command
+  - Capabilities would differ based on if iproute had libbpf support or not
+  - Now load and pin from userspace program (libbpf), and only attach with tc command
+  - Zero documentation that this is possible
+    - I should probably document it...
+** PPing: Upcomming
+- Flow cleanup
+  - From userspace - periodically remove connections with no recent activity
+  - From BPF - remove closed connections
+    - On RST - remove immediately
+    - On FIN - close immediatley (easy), or try and track 4-way handshake?
+- Bursts
+  - Nr packets? 2 should be enough for delayed ACK? Toke suggested ex. 3
+  - Duration - should only allow burst in short time window - how short?
+    - Shorter than rate limit
+    - Definitly shorter than delayed ACK (500 ms)
+- Rate limit output
+  - To avoid multiple printouts from burst
+  - Timelimit
+    - Shorter than sampling limit
+    - Higher than burst limit
+** PPing: Future improvments
+- [[http://doi.org/10.1145/3405669.3405823][Paper]] linked by Andreas uses hierarchical hash tables with lazy expiery
+- The lazy expiery part would be nice to have here
+  - Currently loop through and delete old entries
+  - Instead, simply overwrite old entries on hash collision
+  - Would probably have to implement own hash-table
+    - Store it in simple BPF ARRAY map instead
+* Other
+- ISP
+  - Have briefly looked it through, filled in a few things
+  - Need to actually get it done soon-ish
+    - A bit over 4 months since I started
+- Recently got a mail about the course [[http://libra.sae.kau.se/course/philosophy-and-theory-science-doctoral-students-vetenskapsteori-doktorander][Philosophy and Theory of Science for doctoral students]]
+  - Part of course plan
+  - Takes place between 5/4-21/5
+  - Should probably sign up for it (deadline 26/3)?
+- How many points is the DISCO reading course?
+  - Future instances?
+- Brief discussion with Johan about Institutional duties
+  - Will likely do graphical user interfaces next
+  - Don't have much relevant experience, so will have to schedule hours accordingly
+* Plan
+- Have [[https://www.overleaf.com/read/bcjmgsjmppcb][student-supervisor expecations]] discussion
+- Finish first draft of InfoRet examination task
+  - Also have topic librarian meeting
+- Host mobile & wireless [[https://www.overleaf.com/read/hrbygxygjchw][session 3]]
+- PPing map cleanup and user configuration
+  - Try and squeeze in some documentation as well
+  - Don't think I'll have time for burst handling this week
+- Maybe also work some on the ISP?
