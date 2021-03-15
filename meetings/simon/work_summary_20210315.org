@@ -1,0 +1,119 @@
+#+TITLE: Progress update 2021-03-15
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Have changed the way tc program is loaded ([[PPing: New loading mechanism][next slide]])
+- Have added initinal (bare-bones) implementation of rate-limiting
+  - Added static (100ms) rate limit
+  - Added basic per-flow information
+  - Missing user configuration  
+  - Missing burst capabilities
+- Currently having some issues with the verifier ([[PPing: The verifier hates me...][next-next slide]])
+
+** PPing: New loading mechanism
+- Used to load XDP program with libbpf, and tc program with iproute
+- Needed to support both iproute with and without libbpf support
+  - Different code-paths, 3 definitions of same map, confusing bugs etc.
+- Now load and pin tc program with libbpf
+  - Only use iproute to attach pinned program
+  - Does not matter if iproute supports libbpf or not
+  - Simplifies development going forward
+
+** PPing: The verifier hates me...
+- Currently trying to implement cleanup of flow-info from BPF program
+- Verifier rejects program
+  - Simply adding a printk-statement enough to cause compiler to allocate registers diffrently, verifier rejects.
+  - With Toke's help I've narrowed down the bug to:
+    - Compiler
+    - Verifier
+    - Both
+    - Neither...
+- Don't need the printk statement, but have another similar-ish issue
+- Think I might have an idea what's going on after reading [[https://blog.path.net/ebpf-xdp-and-network-security/][this blog post]]
+  - But have no idea how to really fix it
+  - Need to start inserting byte-code instructions?
+
+* Compilation of some fun issues when writing BPF code
+- Just a collection of some errors that have confused me
+
+** iproute vs libbpf differences
+#+BEGIN_SRC C
+static void map_ipv4_to_ipv6(__be32 ipv4, struct in6_addr *ipv6)
+{
+        // Works with libbpf, not with iproute (without libbpf support)
+	__u16 ipv4_prefix[] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0xffff }; // This constant is stored in .rodata 
+	__builtin_memcpy(ipv6, ipv4_prefix, sizeof(ipv4_prefix));
+	ipv6->in6_u.u6_addr32[3] = ipv4;
+}
+#+END_SRC
+- Iproute (without libbpf support) doesn't know what to do with .rodata
+- This is no longer an issue as tc program is now also loaded using libbpf
+
+** Breaking code with a printk-statement
+#+BEGIN_SRC C
+if (parse_tcphdr(&ctx->nh, ctx->data_end, &tcph) < 0)
+		return -1;
+
+// Check if connection is closing
+if (tcph->fin || tcph->rst) {
+	*flow_closing = true;
+	// Verifier will reject program if I uncomment this line...
+	//bpf_printk("Some good old print-statment debugging\n");
+	}
+#+END_SRC
+- This seems to be caused by compiler allocating registers differently and confusing the verifier
+- If this is a bug with the compiler, verifier or code is a bit unclear
+
+** My current issue
+#+BEGIN_SRC C
+// Error in this function unless one the the later statements is commented out
+if (parse_packet_identifier(&pctx, &p_id, &flow_closing) < 0)
+        goto out;
+
+// Either comment this out...
+if (flow_closing)
+        bpf_map_delete_elem(&flow_state, &p_id.flow);
+
+// ...or this out, and code is fine!
+...other code
+#+END_SRC
+- This seems to be due to compiler using registers differently, and reading some variables from the stack
+- Apprently verifier forgets constraints when reading variable from stack
+  - Think a u8 might contain negative values
+  - Objects against trying to add potentially negative value to packet pointer
+
+** Creating infinite loops
+#+BEGIN_SRC C
+//#pragma unroll /unrolling the loop avoids it being infinite
+for (i=0; i < 10; i++) {
+        // Some code
+
+	// Adding this check causes an infinite loop?
+        if (x < 1)
+	       return -1;
+}
+#+END_SRC
+- I haven't got a clue what causes this behavior
+
+* Other stuff
+- Mostly done with mobile and wireless
+  - Just have live session with exercise 4 left
+- Information Retrieval
+  - Examination task is a 5k word essay on search+publication strategy
+  - Took up a fair amount of last week (and weekend)
+- AIDA meeting tomorrow
+  - Do I need to prepare anything?
+- Need to complete ISP soon-ish
+* Plan
+- PPing:
+  - Befriend the verifier
+  - User configuration
+  - Burst capabilities
+  - Update documentation
+- Inforet: Read other people's handins
+- Mobile & wireless: Host and correct final exercise
+- Go skiing

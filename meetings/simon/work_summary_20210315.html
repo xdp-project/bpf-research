@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-03-15</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-03-15</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-03-15 mån 16:19</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orge81c1e0">1. PPing</a>
+<ul>
+<li><a href="#/slide-org2c101b5">1.1. PPing: New loading mechanism</a></li>
+<li><a href="#/slide-orgfde0c28">1.2. PPing: The verifier hates me&#x2026;</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orga269965">2. Compilation of some fun issues when writing BPF code</a>
+<ul>
+<li><a href="#/slide-orga121bf5">2.1. iproute vs libbpf differences</a></li>
+<li><a href="#/slide-org4e4cc63">2.2. Breaking code with a printk-statement</a></li>
+<li><a href="#/slide-org4320c1d">2.3. My current issue</a></li>
+<li><a href="#/slide-org9d4bdbc">2.4. Creating infinite loops</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org8d91610">3. Other stuff</a></li>
+<li><a href="#/slide-orgdac1ec0">4. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orge81c1e0">
+<h2 id="orge81c1e0"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Have changed the way tc program is loaded (<a href="#/slide-org2c101b5">next slide</a>)</li>
+<li>Have added initinal (bare-bones) implementation of rate-limiting
+<ul>
+<li>Added static (100ms) rate limit</li>
+<li>Added basic per-flow information</li>
+<li>Missing user configuration</li>
+<li>Missing burst capabilities</li>
+
+</ul></li>
+<li>Currently having some issues with the verifier (<a href="#/slide-orgfde0c28">next-next slide</a>)</li>
+
+</ul>
+
+</section>
+<section id="slide-org2c101b5">
+<h3 id="org2c101b5"><span class="section-number-3">1.1</span> PPing: New loading mechanism</h3>
+<ul>
+<li>Used to load XDP program with libbpf, and tc program with iproute</li>
+<li>Needed to support both iproute with and without libbpf support
+<ul>
+<li>Different code-paths, 3 definitions of same map, confusing bugs etc.</li>
+
+</ul></li>
+<li>Now load and pin tc program with libbpf
+<ul>
+<li>Only use iproute to attach pinned program</li>
+<li>Does not matter if iproute supports libbpf or not</li>
+<li>Simplifies development going forward</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgfde0c28">
+<h3 id="orgfde0c28"><span class="section-number-3">1.2</span> PPing: The verifier hates me&#x2026;</h3>
+<ul>
+<li>Currently trying to implement cleanup of flow-info from BPF program</li>
+<li>Verifier rejects program
+<ul>
+<li>Simply adding a printk-statement enough to cause compiler to allocate registers diffrently, verifier rejects.</li>
+<li>With Toke's help I've narrowed down the bug to:
+<ul>
+<li>Compiler</li>
+<li>Verifier</li>
+<li>Both</li>
+<li>Neither&#x2026;</li>
+
+</ul></li>
+
+</ul></li>
+<li>Don't need the printk statement, but have another similar-ish issue</li>
+<li>Think I might have an idea what's going on after reading <a href="https://blog.path.net/ebpf-xdp-and-network-security/">this blog post</a>
+<ul>
+<li>But have no idea how to really fix it</li>
+<li>Need to start inserting byte-code instructions?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orga269965">
+<h2 id="orga269965"><span class="section-number-2">2</span> Compilation of some fun issues when writing BPF code</h2>
+<ul>
+<li>Just a collection of some errors that have confused me</li>
+
+</ul>
+
+</section>
+<section id="slide-orga121bf5">
+<h3 id="orga121bf5"><span class="section-number-3">2.1</span> iproute vs libbpf differences</h3>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #a020f0;">static</span> <span style="color: #228b22;">void</span> <span style="color: #0000ff;">map_ipv4_to_ipv6</span>(<span style="color: #228b22;">__be32</span> <span style="color: #a0522d;">ipv4</span>, <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">in6_addr</span> *<span style="color: #a0522d;">ipv6</span>)
+{
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">Works with libbpf, not with iproute (without libbpf support)</span>
+        <span style="color: #228b22;">__u16</span> <span style="color: #a0522d;">ipv4_prefix</span>[] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0xffff }; <span style="color: #b22222;">// </span><span style="color: #b22222;">This constant is stored in .rodata </span>
+        __builtin_memcpy(ipv6, ipv4_prefix, <span style="color: #a020f0;">sizeof</span>(ipv4_prefix));
+        ipv6-&gt;in6_u.u6_addr32[3] = ipv4;
+}
+</code></pre>
+</div>
+<ul>
+<li>Iproute (without libbpf support) doesn't know what to do with .rodata</li>
+<li>This is no longer an issue as tc program is now also loaded using libbpf</li>
+
+</ul>
+
+</section>
+<section id="slide-org4e4cc63">
+<h3 id="org4e4cc63"><span class="section-number-3">2.2</span> Breaking code with a printk-statement</h3>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #a020f0;">if</span> (parse_tcphdr(&amp;ctx-&gt;nh, ctx-&gt;data_end, &amp;tcph) &lt; 0)
+                <span style="color: #a020f0;">return</span> -1;
+
+<span style="color: #b22222;">// </span><span style="color: #b22222;">Check if connection is closing</span>
+<span style="color: #a020f0;">if</span> (tcph-&gt;fin || tcph-&gt;rst) {
+        *flow_closing = <span style="color: #008b8b;">true</span>;
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">Verifier will reject program if I uncomment this line...</span>
+        <span style="color: #b22222;">//</span><span style="color: #b22222;">bpf_printk("Some good old print-statment debugging\n");</span>
+        }
+</code></pre>
+</div>
+<ul>
+<li>This seems to be caused by compiler allocating registers differently and confusing the verifier</li>
+<li>If this is a bug with the compiler, verifier or code is a bit unclear</li>
+
+</ul>
+
+</section>
+<section id="slide-org4320c1d">
+<h3 id="org4320c1d"><span class="section-number-3">2.3</span> My current issue</h3>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #b22222;">// </span><span style="color: #b22222;">Error in this function unless one the the later statements is commented out</span>
+<span style="color: #a020f0;">if</span> (parse_packet_identifier(&amp;pctx, &amp;p_id, &amp;flow_closing) &lt; 0)
+        <span style="color: #a020f0;">goto</span> <span style="color: #008b8b;">out</span>;
+
+<span style="color: #b22222;">// </span><span style="color: #b22222;">Either comment this out...</span>
+<span style="color: #a020f0;">if</span> (flow_closing)
+        bpf_map_delete_elem(&amp;flow_state, &amp;p_id.flow);
+
+<span style="color: #b22222;">// </span><span style="color: #b22222;">...or this out, and code is fine!</span>
+...other code
+</code></pre>
+</div>
+<ul>
+<li>This seems to be due to compiler using registers differently, and reading some variables from the stack</li>
+<li>Apprently verifier forgets constraints when reading variable from stack
+<ul>
+<li>Think a u8 might contain negative values</li>
+<li>Objects against trying to add potentially negative value to packet pointer</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org9d4bdbc">
+<h3 id="org9d4bdbc"><span class="section-number-3">2.4</span> Creating infinite loops</h3>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #b22222;">//</span><span style="color: #b22222;">#pragma unroll /unrolling the loop avoids it being infinite</span>
+<span style="color: #a020f0;">for</span> (i=0; i &lt; 10; i++) {
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">Some code</span>
+
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">Adding this check causes an infinite loop?</span>
+        <span style="color: #a020f0;">if</span> (x &lt; 1)
+               <span style="color: #a020f0;">return</span> -1;
+}
+</code></pre>
+</div>
+<ul>
+<li>I haven't got a clue what causes this behavior</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org8d91610">
+<h2 id="org8d91610"><span class="section-number-2">3</span> Other stuff</h2>
+<ul>
+<li>Mostly done with mobile and wireless
+<ul>
+<li>Just have live session with exercise 4 left</li>
+
+</ul></li>
+<li>Information Retrieval
+<ul>
+<li>Examination task is a 5k word essay on search+publication strategy</li>
+<li>Took up a fair amount of last week (and weekend)</li>
+
+</ul></li>
+<li>AIDA meeting tomorrow
+<ul>
+<li>Do I need to prepare anything?</li>
+
+</ul></li>
+<li>Need to complete ISP soon-ish</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgdac1ec0">
+<h2 id="orgdac1ec0"><span class="section-number-2">4</span> Plan</h2>
+<ul>
+<li>PPing:
+<ul>
+<li>Befriend the verifier</li>
+<li>User configuration</li>
+<li>Burst capabilities</li>
+<li>Update documentation</li>
+
+</ul></li>
+<li>Inforet: Read other people's handins</li>
+<li>Mobile &amp; wireless: Host and correct final exercise</li>
+<li>Go skiing</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>
