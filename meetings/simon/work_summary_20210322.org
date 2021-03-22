@@ -1,0 +1,133 @@
+#+TITLE: Progress update 2021-03-22
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Institutional duty
+- Had live session for final Mobile & Wireless exercise sheet last friday (19/3)
+  - Friday ended up as a half-day due to my farther's birthday
+  - Still have a few more exercises to correct
+- Introduction meeting for graphical userinterface course tomorrow
+
+* Courses
+- Will have seminar 25/3
+  - Will oppose two other people's essays
+  - Need to read all 5 group memebers essays
+  - After seminar, have until 12/4 to finish essay
+- Need to read multiaccess papers for DISCO seminar 31/3
+- Deadline for applying to Philosophy and Theory of Science 26/3
+  - Leaning towards delaying until next occasion due to uncertain course quality?
+
+* ISP
+- Have still only briefly filled it in
+  - Plan to try and get a first draft done later this week
+  - Can maybe get feedback from you on first draft
+
+* Other
+- Last week only worked about 3.5 days
+  - Skiing on Thursday, celebrated dad on Friday
+- How does the year-based worktime work?
+  - In this case I "flexed" as I worked about 6.5 days previous week
+  - Should I have taken out vacation instead?
+
+* PPing
+- Have solved issue with verifier forgetting u8 limits after reading from stack
+- Have not solved infinite loop problem
+- Have pushed initial implementation of user-configurable rate-limit
+
+** PPing: verifier forgetting limits
+- Verifier keeps track of possible limits (min, max) for each register
+- If variable pushed and later read from stack, verifier forgets limits
+- Had an issue where verifier forgot limits for u8 variable
+  - complained at potentially adding a negative value to a packet pointer
+- Solved by adding *&= 3f* first (verifier knows value has to be between 0-63)
+  - If doing *&= ff* instead, compiler skips it because compiler knows it's always true
+
+** PPing: Infinite loop
+- Unfortunately, adding *&= 3f* seemed to cause an infinite loop - verifier rejects
+- Seems to be due to compiler previously unrolled loop
+  - extra instruction causes compiler to no longer unroll loop
+- Still don't know why verifier thinks non-unrolled loop is infinite
+  - Will at some point go back to try and identify issue
+  - Will probably have to go through 4.7 million line output from verifier...
+- Have simply told compiler to unroll loop for now
+  - Will likely to have to set *MAX_TCP_OPTIONS* higher in the future
+  - Would be good if larger loop didn't have to be unrolled
+
+*** PPing: Infinite loop - code
+#+BEGIN_SRC C
+#pragma unroll //temporary solution
+for (i = 0; i < MAX_TCP_OPTIONS; i++) {
+    if (pos + 1 > opt_end || pos + 1 > data_end)
+        return -1;
+
+    opt = *pos;
+    if (opt == 0) // Reached end of TCP options
+        return -1;
+
+    if (opt == 1) { // TCP NOP option - advance one byte
+        pos++;
+        continue;
+    }
+
+    // Option > 1, should have option size
+    if (pos + 2 > opt_end || pos + 2 > data_end)
+        return -1;
+    opt_size = *(pos + 1);
+
+    // Option-kind is TCP timestap (yey!)
+    if (opt == 8 && opt_size == 10) {
+        if (pos + opt_size > opt_end || pos + opt_size > data_end)
+	    return -1;
+	*tsval = *(__u32 *)(pos + 2);
+	*tsecr = *(__u32 *)(pos + 6);
+	return 0;
+    }
+    // Other option - advance option-size bytes
+    opt_size &= 0x3f; // Adding this instruction results in infinite loop
+    pos += opt_size;
+}
+#+END_SRC
+
+** PPing: Configurable rate-limit
+- Use BPF global variable to communicate user-configured options to BPF program
+  - Maybe more efficent than maps?
+    - Some [[https://facebookmicrosites.github.io/bpf/blog/2020/02/19/bpf-portability-and-co-re.html][sources]] claims so, and being stored in .rodata makes me think so
+    - Jesper claimed it's just a behinde the scenes map-lookup
+  - Easier to use than map-lookup on BPF side
+  - Allows (JIT?) compiler to optimize based on values set by userspace
+- Constant global variables seem to be stored in the .rodata section
+- Can be set by userspace before loading program
+  - Writing to a specific map
+  - Map name appears to be first 8 chars of object name + ".rodata"
+- Need to set the value for ALL .rodata
+
+*** PPing: writing .rodata
+- Had an issue where .rodata appeared to be 20 bytes, but my user configuration was only 8 bytes
+- Found that it was due to other constant also being stored in .rodata
+
+#+BEGIN_SRC C
+static void map_ipv4_to_ipv6(__be32 ipv4, struct in6_addr *ipv6)
+{
+        // Works with libbpf, not with iproute (without libbpf support)
+	__u16 ipv4_prefix[] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0xffff }; // This constant is stored in .rodata 
+	__builtin_memcpy(ipv6, ipv4_prefix, sizeof(ipv4_prefix));
+	ipv6->in6_u.u6_addr32[3] = ipv4;
+}
+#+END_SRC
+
+- Changed back to older memset-solution to not have to push the ipv4-prefix from the loader
+
+* Plan
+- PPing:
+  - Implement burst capabilities
+  - Update documentation
+  - Probably some fixes based on feedback from Toke
+  - ... at some point figure out what causes the infinite loop
+- Mobile & wireless: Correct last exercises
+- GUI course: Intro meeting + possible other preparations
+- Inforet: Prepare for seminar
+- DISCO reading: Prepare for seminar
+- ISP: Finish first draft

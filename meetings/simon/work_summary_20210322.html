@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-03-22</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-03-22</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-03-22 mån 15:13</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgd4d3d96">1. Institutional duty</a></li>
+<li><a href="#/slide-orgdf4866e">2. Courses</a></li>
+<li><a href="#/slide-org76fb9c2">3. ISP</a></li>
+<li><a href="#/slide-orgd62f8b6">4. Other</a></li>
+<li><a href="#/slide-org15ffd00">5. PPing</a>
+<ul>
+<li><a href="#/slide-orgf8b94c4">5.1. PPing: verifier forgetting limits</a></li>
+<li><a href="#/slide-org4e0ed79">5.2. PPing: Infinite loop</a>
+<ul>
+<li><a href="#/slide-orgc23037a">5.2.1. PPing: Infinite loop - code</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org87e3eb2">5.3. PPing: Configurable rate-limit</a>
+<ul>
+<li><a href="#/slide-org65dbf3c">5.3.1. PPing: writing .rodata</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#/slide-orgf2b1b8d">6. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgd4d3d96">
+<h2 id="orgd4d3d96"><span class="section-number-2">1</span> Institutional duty</h2>
+<ul>
+<li>Had live session for final Mobile &amp; Wireless exercise sheet last friday (19/3)
+<ul>
+<li>Friday ended up as a half-day due to my farther's birthday</li>
+<li>Still have a few more exercises to correct</li>
+
+</ul></li>
+<li>Introduction meeting for graphical userinterface course tomorrow</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgdf4866e">
+<h2 id="orgdf4866e"><span class="section-number-2">2</span> Courses</h2>
+<ul>
+<li>Will have seminar 25/3
+<ul>
+<li>Will oppose two other people's essays</li>
+<li>Need to read all 5 group memebers essays</li>
+<li>After seminar, have until 12/4 to finish essay</li>
+
+</ul></li>
+<li>Need to read multiaccess papers for DISCO seminar 31/3</li>
+<li>Deadline for applying to Philosophy and Theory of Science 26/3
+<ul>
+<li>Leaning towards delaying until next occasion due to uncertain course quality?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org76fb9c2">
+<h2 id="org76fb9c2"><span class="section-number-2">3</span> ISP</h2>
+<ul>
+<li>Have still only briefly filled it in
+<ul>
+<li>Plan to try and get a first draft done later this week</li>
+<li>Can maybe get feedback from you on first draft</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd62f8b6">
+<h2 id="orgd62f8b6"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Last week only worked about 3.5 days
+<ul>
+<li>Skiing on Thursday, celebrated dad on Friday</li>
+
+</ul></li>
+<li>How does the year-based worktime work?
+<ul>
+<li>In this case I "flexed" as I worked about 6.5 days previous week</li>
+<li>Should I have taken out vacation instead?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org15ffd00">
+<h2 id="org15ffd00"><span class="section-number-2">5</span> PPing</h2>
+<ul>
+<li>Have solved issue with verifier forgetting u8 limits after reading from stack</li>
+<li>Have not solved infinite loop problem</li>
+<li>Have pushed initial implementation of user-configurable rate-limit</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf8b94c4">
+<h3 id="orgf8b94c4"><span class="section-number-3">5.1</span> PPing: verifier forgetting limits</h3>
+<ul>
+<li>Verifier keeps track of possible limits (min, max) for each register</li>
+<li>If variable pushed and later read from stack, verifier forgets limits</li>
+<li>Had an issue where verifier forgot limits for u8 variable
+<ul>
+<li>complained at potentially adding a negative value to a packet pointer</li>
+
+</ul></li>
+<li>Solved by adding <b>&amp;= 3f</b> first (verifier knows value has to be between 0-63)
+<ul>
+<li>If doing <b>&amp;= ff</b> instead, compiler skips it because compiler knows it's always true</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org4e0ed79">
+<h3 id="org4e0ed79"><span class="section-number-3">5.2</span> PPing: Infinite loop</h3>
+<ul>
+<li>Unfortunately, adding <b>&amp;= 3f</b> seemed to cause an infinite loop - verifier rejects</li>
+<li>Seems to be due to compiler previously unrolled loop
+<ul>
+<li>extra instruction causes compiler to no longer unroll loop</li>
+
+</ul></li>
+<li>Still don't know why verifier thinks non-unrolled loop is infinite
+<ul>
+<li>Will at some point go back to try and identify issue</li>
+<li>Will probably have to go through 4.7 million line output from verifier&#x2026;</li>
+
+</ul></li>
+<li>Have simply told compiler to unroll loop for now
+<ul>
+<li>Will likely to have to set <b>MAX_TCP_OPTIONS</b> higher in the future</li>
+<li>Would be good if larger loop didn't have to be unrolled</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgc23037a">
+<h4 id="orgc23037a"><span class="section-number-4">5.2.1</span> PPing: Infinite loop - code</h4>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #483d8b;">#pragma</span> unroll <span style="color: #b22222;">//</span><span style="color: #b22222;">temporary solution</span>
+<span style="color: #a020f0;">for</span> (i = 0; i &lt; MAX_TCP_OPTIONS; i++) {
+    <span style="color: #a020f0;">if</span> (pos + 1 &gt; opt_end || pos + 1 &gt; data_end)
+        <span style="color: #a020f0;">return</span> -1;
+
+    opt = *pos;
+    <span style="color: #a020f0;">if</span> (opt == 0) <span style="color: #b22222;">// </span><span style="color: #b22222;">Reached end of TCP options</span>
+        <span style="color: #a020f0;">return</span> -1;
+
+    <span style="color: #a020f0;">if</span> (opt == 1) { <span style="color: #b22222;">// </span><span style="color: #b22222;">TCP NOP option - advance one byte</span>
+        pos++;
+        <span style="color: #a020f0;">continue</span>;
+    }
+
+    <span style="color: #b22222;">// </span><span style="color: #b22222;">Option &gt; 1, should have option size</span>
+    <span style="color: #a020f0;">if</span> (pos + 2 &gt; opt_end || pos + 2 &gt; data_end)
+        <span style="color: #a020f0;">return</span> -1;
+    opt_size = *(pos + 1);
+
+    <span style="color: #b22222;">// </span><span style="color: #b22222;">Option-kind is TCP timestap (yey!)</span>
+    <span style="color: #a020f0;">if</span> (opt == 8 &amp;&amp; opt_size == 10) {
+        <span style="color: #a020f0;">if</span> (pos + opt_size &gt; opt_end || pos + opt_size &gt; data_end)
+            <span style="color: #a020f0;">return</span> -1;
+        *tsval = *(__u32 *)(pos + 2);
+        *tsecr = *(__u32 *)(pos + 6);
+        <span style="color: #a020f0;">return</span> 0;
+    }
+    <span style="color: #b22222;">// </span><span style="color: #b22222;">Other option - advance option-size bytes</span>
+    opt_size &amp;= 0x3f; <span style="color: #b22222;">// </span><span style="color: #b22222;">Adding this instruction results in infinite loop</span>
+    pos += opt_size;
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org87e3eb2">
+<h3 id="org87e3eb2"><span class="section-number-3">5.3</span> PPing: Configurable rate-limit</h3>
+<ul>
+<li>Use BPF global variable to communicate user-configured options to BPF program
+<ul>
+<li>Maybe more efficent than maps?
+<ul>
+<li>Some <a href="https://facebookmicrosites.github.io/bpf/blog/2020/02/19/bpf-portability-and-co-re.html">sources</a> claims so, and being stored in .rodata makes me think so</li>
+<li>Jesper claimed it's just a behinde the scenes map-lookup</li>
+
+</ul></li>
+<li>Easier to use than map-lookup on BPF side</li>
+<li>Allows (JIT?) compiler to optimize based on values set by userspace</li>
+
+</ul></li>
+<li>Constant global variables seem to be stored in the .rodata section</li>
+<li>Can be set by userspace before loading program
+<ul>
+<li>Writing to a specific map</li>
+<li>Map name appears to be first 8 chars of object name + ".rodata"</li>
+
+</ul></li>
+<li>Need to set the value for ALL .rodata</li>
+
+</ul>
+
+</section>
+<section id="slide-org65dbf3c">
+<h4 id="org65dbf3c"><span class="section-number-4">5.3.1</span> PPing: writing .rodata</h4>
+<ul>
+<li>Had an issue where .rodata appeared to be 20 bytes, but my user configuration was only 8 bytes</li>
+<li>Found that it was due to other constant also being stored in .rodata</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #a020f0;">static</span> <span style="color: #228b22;">void</span> <span style="color: #0000ff;">map_ipv4_to_ipv6</span>(<span style="color: #228b22;">__be32</span> <span style="color: #a0522d;">ipv4</span>, <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">in6_addr</span> *<span style="color: #a0522d;">ipv6</span>)
+{
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">Works with libbpf, not with iproute (without libbpf support)</span>
+        <span style="color: #228b22;">__u16</span> <span style="color: #a0522d;">ipv4_prefix</span>[] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0xffff }; <span style="color: #b22222;">// </span><span style="color: #b22222;">This constant is stored in .rodata </span>
+        __builtin_memcpy(ipv6, ipv4_prefix, <span style="color: #a020f0;">sizeof</span>(ipv4_prefix));
+        ipv6-&gt;in6_u.u6_addr32[3] = ipv4;
+}
+</code></pre>
+</div>
+
+<ul>
+<li>Changed back to older memset-solution to not have to push the ipv4-prefix from the loader</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf2b1b8d">
+<h2 id="orgf2b1b8d"><span class="section-number-2">6</span> Plan</h2>
+<ul>
+<li>PPing:
+<ul>
+<li>Implement burst capabilities</li>
+<li>Update documentation</li>
+<li>Probably some fixes based on feedback from Toke</li>
+<li>&#x2026; at some point figure out what causes the infinite loop</li>
+
+</ul></li>
+<li>Mobile &amp; wireless: Correct last exercises</li>
+<li>GUI course: Intro meeting + possible other preparations</li>
+<li>Inforet: Prepare for seminar</li>
+<li>DISCO reading: Prepare for seminar</li>
+<li>ISP: Finish first draft</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>
