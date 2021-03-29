@@ -1,0 +1,117 @@
+#+TITLE: Progress update 2021-03-29
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Have solved issue with verifier forgetting u8 limits after reading from stack
+- Have workaround for infinite loop problem, *NOT* solved root cause
+- Have pushed initial implementation of user-configurable rate-limit
+- Have updated documentation
+
+** PPing: verifier forgetting limits
+- Verifier keeps track of possible limits (min, max) for each register
+- If variable pushed and later read from stack, verifier forgets limits
+- Had an issue where verifier forgot limits for u8 variable
+  - complained at potentially adding a negative value to a packet pointer
+- Solved by adding *&= 3f* first (verifier knows value has to be between 0-63)
+  - If doing *&= ff* instead, compiler skips it because compiler knows it's always true
+
+** PPing: Infinite loop
+- Unfortunately, adding *&= 3f* seemed to cause an infinite loop - verifier rejects
+- Seems to be due to compiler previously unrolled loop
+  - extra instruction causes compiler to no longer unroll loop
+- Still don't know why verifier thinks non-unrolled loop is infinite
+  - Will at some point go back to try and identify issue
+  - Will probably have to go through 4.7 million line output from verifier...
+- Have simply told compiler to unroll loop for now
+  - *MAX_TCP_OPTIONS* currently set to 10, may need to change in the future
+  - Would be good if larger loop didn't have to be unrolled
+  - ...but shouldn't be a major issue?
+
+
+*** PPing: Infinite loop - code
+#+BEGIN_SRC C
+#pragma unroll //temporary solution
+for (i = 0; i < MAX_TCP_OPTIONS; i++) {
+    if (pos + 1 > opt_end || pos + 1 > data_end)
+        return -1;
+
+    opt = *pos;
+    if (opt == 0) // Reached end of TCP options
+        return -1;
+
+    if (opt == 1) { // TCP NOP option - advance one byte
+        pos++;
+        continue;
+    }
+
+    // Option > 1, should have option size
+    if (pos + 2 > opt_end || pos + 2 > data_end)
+        return -1;
+    opt_size = *(pos + 1);
+
+    // Option-kind is TCP timestap (yey!)
+    if (opt == 8 && opt_size == 10) {
+        if (pos + opt_size > opt_end || pos + opt_size > data_end)
+	    return -1;
+	*tsval = *(__u32 *)(pos + 2);
+	*tsecr = *(__u32 *)(pos + 6);
+	return 0;
+    }
+    // Other option - advance option-size bytes
+    opt_size &= 0x3f; // Adding this instruction results in infinite loop
+    pos += opt_size;
+}
+#+END_SRC
+
+** PPing: Configurable rate-limit
+- Use BPF global variable to communicate user-configured options to BPF program
+- Constant global variables seem to be stored in the .rodata section
+- Can be set by userspace before loading program
+  - Writing to a specific map
+  - Map name appears to be first 8 chars of object name + ".rodata"
+    - Toke has pointed out this may change
+- Need to set the value for *ALL* .rodata
+
+*** PPing: writing .rodata
+- Had an issue where .rodata appeared to be 20 bytes, but my user configuration was only 8 bytes
+- Found that it was due to other constant also being stored in .rodata
+
+#+BEGIN_SRC C
+static void map_ipv4_to_ipv6(__be32 ipv4, struct in6_addr *ipv6)
+{
+        // Works with libbpf, not with iproute (without libbpf support)
+	__u16 ipv4_prefix[] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0xffff }; // This constant is stored in .rodata 
+	__builtin_memcpy(ipv6, ipv4_prefix, sizeof(ipv4_prefix));
+	ipv6->in6_u.u6_addr32[3] = ipv4;
+}
+#+END_SRC
+- Changed back to older memset-solution to not have to push the ipv4-prefix from the loader
+
+** PPing: Documentation updated
+- Have updated the [[https://github.com/simosund/bpf-examples/blob/pping_Add_Sampling/pping/README.md][README]]
+  - Updated figure to include the flow_state map
+  - Added brief descriptions of files and maps
+  - Added some references to similar-ish projects
+- Feel free to have a look
+
+** PPing: Start with measurements
+- Start to think about taking some real measurements
+  - Jesper had some contacts at an ISP where it could maybe be deployed
+  - Some artificial benchmark to compare performance to Kathie's pping?
+- What features must be completed before we can start to use it?
+  - Burst capabilitiy to handle delayed ACKs
+  - Some updates to output format
+    - Add timestamp to output
+    - Add "machine friendly" format
+
+* Other
+- *Institutional duty*: Done with Mobile & Wireless, starting with GUI course
+- *Info Ret*: Seminar went well, need to prepare for final handin
+- *DISCO reading*: Seminar this Wednesday (31/3)
+- *ISP*: Have sent first draft to Anna, need to translate to English...
+- *AIDA meeting*: Have an AIDA meeting tomorrow (30/3)
+- *Easter*: What happens to supervision meeting on monday 5th?
