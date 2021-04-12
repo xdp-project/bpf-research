@@ -1,0 +1,37 @@
+#+TITLE: Progress update 2021-04-12
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Not much has happend
+- Have changed "u8-check" for *opt_size* after Toke pointed out that the &= 0x3f could lead to incorrect processing of malformed packets
+  - Declared as volatile in attempt to allow &= 0xff check
+  - No check needed as using volatile seemed to cause variable always being read as u8 from stack
+  - Maybe better to declare as u16 and have &= 0xff check?
+  - Lead to discovery of [[PPing: Failed packet access check][other issue]]
+- Have added *opt_size* > 1 check for better processing of malformed packets
+** PPing: Failed packet access check
+#+BEGIN_SRC C
+if (opt == 8 && opt_size == 10) {
+	if (pos + opt_size > opt_end || pos + opt_size > data_end)
+		return -1;
+	*tsval = *(__u32 *)(pos + 2);
+	*tsecr = *(__u32 *)(pos + 6);
+	return 0;
+}
+#+END_SRC
+- Verifier disliked packet access, not convinced pos + opt_size > pos + 2 or 6
+- When *opt_size* was not volatile, compiler replaced pos + opt_size with pos + 10
+  - ...so I simply did the same replacement in the source code
+
+* Other
+- Been quite busy with "other" stuff last couple of weeks
+- *Info ret:* Spent a lot of time writing up final version of report
+  - Still not entirely happy, but think it's "good enough"
+- *ISP:* Spent some time writing 2nd/3rd draft, close to done?
+- *GUI course:* TA in area I have little experience with, spent some time reading up on material
+- *AIDA meetings:* Had AIDA meeting before easter, two more this week
+

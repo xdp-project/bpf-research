@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-04-12</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-04-12</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-04-12 mån 16:43</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgd5aeadc">1. PPing</a>
+<ul>
+<li><a href="#/slide-org90f643a">1.1. PPing: Failed packet access check</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orga2d52a4">2. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgd5aeadc">
+<h2 id="orgd5aeadc"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Not much has happend</li>
+<li>Have changed "u8-check" for <b>opt_size</b> after Toke pointed out that the &amp;= 0x3f could lead to incorrect processing of malformed packets
+<ul>
+<li>Declared as volatile in attempt to allow &amp;= 0xff check</li>
+<li>No check needed as using volatile seemed to cause variable always being read as u8 from stack</li>
+<li>Maybe better to declare as u16 and have &amp;= 0xff check?</li>
+<li>Lead to discovery of <a href="#/slide-org90f643a">other issue</a></li>
+
+</ul></li>
+<li>Have added <b>opt_size</b> &gt; 1 check for better processing of malformed packets</li>
+
+</ul>
+</section>
+<section id="slide-org90f643a">
+<h3 id="org90f643a"><span class="section-number-3">1.1</span> PPing: Failed packet access check</h3>
+<div class="org-src-container">
+
+<pre  class="src src-C"><code trim><span style="color: #a020f0;">if</span> (opt == 8 &amp;&amp; opt_size == 10) {
+        <span style="color: #a020f0;">if</span> (pos + opt_size &gt; opt_end || pos + opt_size &gt; data_end)
+                <span style="color: #a020f0;">return</span> -1;
+        *tsval = *(__u32 *)(pos + 2);
+        *tsecr = *(__u32 *)(pos + 6);
+        <span style="color: #a020f0;">return</span> 0;
+}
+</code></pre>
+</div>
+<ul>
+<li>Verifier disliked packet access, not convinced pos + opt_size &gt; pos + 2 or 6</li>
+<li>When <b>opt_size</b> was not volatile, compiler replaced pos + opt_size with pos + 10
+<ul>
+<li>&#x2026;so I simply did the same replacement in the source code</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orga2d52a4">
+<h2 id="orga2d52a4"><span class="section-number-2">2</span> Other</h2>
+<ul>
+<li>Been quite busy with "other" stuff last couple of weeks</li>
+<li><b>Info ret:</b> Spent a lot of time writing up final version of report
+<ul>
+<li>Still not entirely happy, but think it's "good enough"</li>
+
+</ul></li>
+<li><b>ISP:</b> Spent some time writing 2nd/3rd draft, close to done?</li>
+<li><b>GUI course:</b> TA in area I have little experience with, spent some time reading up on material</li>
+<li><b>AIDA meetings:</b> Had AIDA meeting before easter, two more this week</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
