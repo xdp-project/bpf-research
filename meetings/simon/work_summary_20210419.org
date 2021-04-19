@@ -1,0 +1,106 @@
+#+TITLE: Progress update 2021-04-12
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Institutional duty
+- TA in GUI course
+  - ...not my field of expertise
+- Deadline for lab 1 was yesterday
+  - Mainly some warmup with using Java Swing
+  - Have 12 labs I need to correct this week
+- Lab 2 started today
+  - More focus on design principles
+  - I need to check up a bit on these
+
+* Courses
+- Have finished Information retrieval course
+- Not enrolled in any other courses this term
+- Anna suggested course in teaching: "Teaching at University: Knowledge, learning and practical teaching (KLL)"
+  - Does it give any credits (only states 80h workload)?
+  - Should probably take it ASAP?
+    - Enroll HT21?
+    - HT21 already quite busy
+  - Remove points from courses in microservices/virtualization?
+
+* PPing
+- Have had a fair amount of time to work on last week
+  - Still haven't made much progress...
+- Idea was to work on improving the output
+- But first, merge in current branch to master
+- Toke had a couple of minor requests
+- One was to move both BPF programs into a single file
+  - ...back to fighting the verifier
+
+** PPing: Moving BPF programs to single file
+- Have two BPF programs, one for egress (tc) and one for ingress (XDP)
+- Both use largely the same code (parse packet for TCP timestamp)
+- Previously each program in a separate file, include common code from header
+  - Was needed when tc-program was loaded with iproute
+  - Needed different map definitions for same map
+  - Not needed now that everything is loaded with libbpf
+- Having single file simplifies loading process somewhat
+  - Not sure if I even need to pin the maps anymore?
+** PPing: Verifier rejection
+- Simply moving the code from two files into a single file causes verifier rejection
+  - BPF program too large (processed over 1 million instructions)
+  - Am I stuck in an infinite loop again?
+    - Probably not
+- One major change in BPF bytecode - now actually calls a function instead of inlining everything
+- Toke unsure what the problem is, suggest reporting it upstream
+  - Create minimal working example
+
+* Verifier - processed instructions
+- When verifier verifies program, it walks through and processes the instructions from all possible branches in the program
+- If verifier is not done by the time it hits 1 million instructions, it rejects the program as too large
+  - Even if no single path exceeds 1 million instructions, if program has many potential paths it can still fail
+- While creating a MWE, wanted to know how many instructions the verifier processed for various versions of the code
+- Libbpf has no convenient way to show verifier output unless program fails
+  - Used bpftrace to trace the verifier =)
+- Turns out, even before merging to a single file verifier processed many instructions
+
+** Program parts that affect nr processed instructions
+- *Separate files:* XDP program and TC program kept in separate files
+  - pping_kern_xdp and pping_kern_tc
+- *Single file:* XDP program and TC program kept in same file
+  - pping_kern
+- *TCP options parsing:* Program normally has a loop (max 10) to parse TCP options to find TCP timestamp
+- *IPv6 path:* Program normally has a path to parse IPv6 packets, which includes a loop (max 6) for skipping past IPv6 extensions
+- *Swap saddr/daddr:* Program normally has some logic to swap saddr/daddr on ingress to match egress.
+  - For some reason tripples nr processed instruction for TC program
+
+** Nr processed instructions for various combinations
+
+| Prog version           | XDP prog | TC prog |
+|------------------------+----------+---------|
+| Separate files         | 462k     | 461k    |
+| Single file            | 599k     | > 1m    |
+| No TCP options parsing | 15k      | 47k     |
+| Only 5 TCP loops       | 165k     | 520k    |
+| Only 1 TCP loop        | 25k      | 80k     |
+| No IPv6 path           | 9k       | 27k     |
+| Only 3 IPv6 loops      | 116k     | 317k    |
+| Only 1 IPv6 loop       | 17k      | 51k     |
+| No swap saddr/daddr    | 603k     | 603k    |
+
+- Loop searching for IPv6 extensions and loop parsing TCP options seems to cause some combinatorial explosion
+
+* PPing: How to move forward?
+- Think I've identified issue (combination of two loops causes many potential paths/jumps)
+- Not sure what, if anything, to report upstream?
+  - As an alternative, maybe just post on EBPF slack to see if people have any ideas
+- Not sure how to best solve/avoid issue
+  - Easiest solution is to separate into two files or lower loop count
+    - As more features are added to the program and it gets more complex, might hit verifier limit again
+  - Toke also suggested to try and force compiler to not inline some functions
+    - Seems to help a bit, but not enough from initial investigation
+  - Could investigate BPF bytecode for swap logic to try and figure out what causes trippeling in number of processed instructions
+
+* Plan
+- Finish up ISP and send it in (today)
+- Correct lab 1 in GUI course and check up on lab 2 (tomorrow-ish)
+- Start preparing a bit for DISCO seminar
+- PPing: Solve verifier issue so I can move on to working on output
+- AIDA meeting next week - anything I need to prepare?

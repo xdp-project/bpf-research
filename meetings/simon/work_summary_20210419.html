@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-04-12</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-04-12</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-04-19 mån 12:42</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org48bc9ec">1. Institutional duty</a></li>
+<li><a href="#/slide-orgd4a56ad">2. Courses</a></li>
+<li><a href="#/slide-orgae99168">3. PPing</a>
+<ul>
+<li><a href="#/slide-org5cd0daa">3.1. PPing: Moving BPF programs to single file</a></li>
+<li><a href="#/slide-org151d808">3.2. PPing: Verifier rejection</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org6192e0d">4. Verifier - processed instructions</a>
+<ul>
+<li><a href="#/slide-orgaa2f5ee">4.1. Program parts that affect nr processed instructions</a></li>
+<li><a href="#/slide-org179bd4a">4.2. Nr processed instructions for various combinations</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orga2e1f06">5. PPing: How to move forward?</a></li>
+<li><a href="#/slide-org807f883">6. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org48bc9ec">
+<h2 id="org48bc9ec"><span class="section-number-2">1</span> Institutional duty</h2>
+<ul>
+<li>TA in GUI course
+<ul>
+<li>&#x2026;not my field of expertise</li>
+
+</ul></li>
+<li>Deadline for lab 1 was yesterday
+<ul>
+<li>Mainly some warmup with using Java Swing</li>
+<li>Have 12 labs I need to correct this week</li>
+
+</ul></li>
+<li>Lab 2 started today
+<ul>
+<li>More focus on design principles</li>
+<li>I need to check up a bit on these</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd4a56ad">
+<h2 id="orgd4a56ad"><span class="section-number-2">2</span> Courses</h2>
+<ul>
+<li>Have finished Information retrieval course</li>
+<li>Not enrolled in any other courses this term</li>
+<li>Anna suggested course in teaching: "Teaching at University: Knowledge, learning and practical teaching (KLL)"
+<ul>
+<li>Does it give any credits (only states 80h workload)?</li>
+<li>Should probably take it ASAP?
+<ul>
+<li>Enroll HT21?</li>
+<li>HT21 already quite busy</li>
+
+</ul></li>
+<li>Remove points from courses in microservices/virtualization?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgae99168">
+<h2 id="orgae99168"><span class="section-number-2">3</span> PPing</h2>
+<ul>
+<li>Have had a fair amount of time to work on last week
+<ul>
+<li>Still haven't made much progress&#x2026;</li>
+
+</ul></li>
+<li>Idea was to work on improving the output</li>
+<li>But first, merge in current branch to master</li>
+<li>Toke had a couple of minor requests</li>
+<li>One was to move both BPF programs into a single file
+<ul>
+<li>&#x2026;back to fighting the verifier</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org5cd0daa">
+<h3 id="org5cd0daa"><span class="section-number-3">3.1</span> PPing: Moving BPF programs to single file</h3>
+<ul>
+<li>Have two BPF programs, one for egress (tc) and one for ingress (XDP)</li>
+<li>Both use largely the same code (parse packet for TCP timestamp)</li>
+<li>Previously each program in a separate file, include common code from header
+<ul>
+<li>Was needed when tc-program was loaded with iproute</li>
+<li>Needed different map definitions for same map</li>
+<li>Not needed now that everything is loaded with libbpf</li>
+
+</ul></li>
+<li>Having single file simplifies loading process somewhat
+<ul>
+<li>Not sure if I even need to pin the maps anymore?</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org151d808">
+<h3 id="org151d808"><span class="section-number-3">3.2</span> PPing: Verifier rejection</h3>
+<ul>
+<li>Simply moving the code from two files into a single file causes verifier rejection
+<ul>
+<li>BPF program too large (processed over 1 million instructions)</li>
+<li>Am I stuck in an infinite loop again?
+<ul>
+<li>Probably not</li>
+
+</ul></li>
+
+</ul></li>
+<li>One major change in BPF bytecode - now actually calls a function instead of inlining everything</li>
+<li>Toke unsure what the problem is, suggest reporting it upstream
+<ul>
+<li>Create minimal working example</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org6192e0d">
+<h2 id="org6192e0d"><span class="section-number-2">4</span> Verifier - processed instructions</h2>
+<ul>
+<li>When verifier verifies program, it walks through and processes the instructions from all possible branches in the program</li>
+<li>If verifier is not done by the time it hits 1 million instructions, it rejects the program as too large
+<ul>
+<li>Even if no single path exceeds 1 million instructions, if program has many potential paths it can still fail</li>
+
+</ul></li>
+<li>While creating a MWE, wanted to know how many instructions the verifier processed for various versions of the code</li>
+<li>Libbpf has no convenient way to show verifier output unless program fails
+<ul>
+<li>Used bpftrace to trace the verifier =)</li>
+
+</ul></li>
+<li>Turns out, even before merging to a single file verifier processed many instructions</li>
+
+</ul>
+
+</section>
+<section id="slide-orgaa2f5ee">
+<h3 id="orgaa2f5ee"><span class="section-number-3">4.1</span> Program parts that affect nr processed instructions</h3>
+<ul>
+<li><b>Separate files:</b> XDP program and TC program kept in separate files
+<ul>
+<li>pping_kern_xdp and pping_kern_tc</li>
+
+</ul></li>
+<li><b>Single file:</b> XDP program and TC program kept in same file
+<ul>
+<li>pping_kern</li>
+
+</ul></li>
+<li><b>TCP options parsing:</b> Program normally has a loop (max 10) to parse TCP options to find TCP timestamp</li>
+<li><b>IPv6 path:</b> Program normally has a path to parse IPv6 packets, which includes a loop (max 6) for skipping past IPv6 extensions</li>
+<li><b>Swap saddr/daddr:</b> Program normally has some logic to swap saddr/daddr on ingress to match egress.
+<ul>
+<li>For some reason tripples nr processed instruction for TC program</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org179bd4a">
+<h3 id="org179bd4a"><span class="section-number-3">4.2</span> Nr processed instructions for various combinations</h3>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Prog version</th>
+<th scope="col" class="org-left">XDP prog</th>
+<th scope="col" class="org-left">TC prog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Separate files</td>
+<td class="org-left">462k</td>
+<td class="org-left">461k</td>
+</tr>
+
+<tr>
+<td class="org-left">Single file</td>
+<td class="org-left">599k</td>
+<td class="org-left">&gt; 1m</td>
+</tr>
+
+<tr>
+<td class="org-left">No TCP options parsing</td>
+<td class="org-left">15k</td>
+<td class="org-left">47k</td>
+</tr>
+
+<tr>
+<td class="org-left">Only 5 TCP loops</td>
+<td class="org-left">165k</td>
+<td class="org-left">520k</td>
+</tr>
+
+<tr>
+<td class="org-left">Only 1 TCP loop</td>
+<td class="org-left">25k</td>
+<td class="org-left">80k</td>
+</tr>
+
+<tr>
+<td class="org-left">No IPv6 path</td>
+<td class="org-left">9k</td>
+<td class="org-left">27k</td>
+</tr>
+
+<tr>
+<td class="org-left">Only 3 IPv6 loops</td>
+<td class="org-left">116k</td>
+<td class="org-left">317k</td>
+</tr>
+
+<tr>
+<td class="org-left">Only 1 IPv6 loop</td>
+<td class="org-left">17k</td>
+<td class="org-left">51k</td>
+</tr>
+
+<tr>
+<td class="org-left">No swap saddr/daddr</td>
+<td class="org-left">603k</td>
+<td class="org-left">603k</td>
+</tr>
+</tbody>
+</table>
+
+<ul>
+<li>Loop searching for IPv6 extensions and loop parsing TCP options seems to cause some combinatorial explosion</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orga2e1f06">
+<h2 id="orga2e1f06"><span class="section-number-2">5</span> PPing: How to move forward?</h2>
+<ul>
+<li>Think I've identified issue (combination of two loops causes many potential paths/jumps)</li>
+<li>Not sure what, if anything, to report upstream?
+<ul>
+<li>As an alternative, maybe just post on EBPF slack to see if people have any ideas</li>
+
+</ul></li>
+<li>Not sure how to best solve/avoid issue
+<ul>
+<li>Easiest solution is to separate into two files or lower loop count
+<ul>
+<li>As more features are added to the program and it gets more complex, might hit verifier limit again</li>
+
+</ul></li>
+<li>Toke also suggested to try and force compiler to not inline some functions
+<ul>
+<li>Seems to help a bit, but not enough from initial investigation</li>
+
+</ul></li>
+<li>Could investigate BPF bytecode for swap logic to try and figure out what causes trippeling in number of processed instructions</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org807f883">
+<h2 id="org807f883"><span class="section-number-2">6</span> Plan</h2>
+<ul>
+<li>Finish up ISP and send it in (today)</li>
+<li>Correct lab 1 in GUI course and check up on lab 2 (tomorrow-ish)</li>
+<li>Start preparing a bit for DISCO seminar</li>
+<li>PPing: Solve verifier issue so I can move on to working on output</li>
+<li>AIDA meeting next week - anything I need to prepare?</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
