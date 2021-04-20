@@ -1,0 +1,411 @@
+%%
+%% This is file `sample-xelatex.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `sigconf')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-xelatex.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+
+\documentclass[sigconf, nonacm]{acmart}
+
+\usepackage{mwe}
+
+
+
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{Express Data Queueing}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+\author{Freysteinn Alfreðsson}
+\email{freysteinn.alfredsson@kau.se}
+\orcid{0000-0003-1516-9370}
+\affiliation{%
+  \institution{Department of Computer Science}
+  \city{Karlstad}
+  \country{Sweden}
+}
+\author{Per Hurtig}
+\email{per.hurtig@kau.se}
+\affiliation{%
+  \institution{Department of Computer Science}
+  \city{Karlstad}
+  \country{Sweden}
+}
+%%\orcid{0000-0003-1516-9370}
+\author{Anna Brunstrom}
+\email{anna.brunstrom@kau.se}
+\affiliation{%
+  \institution{Department of Computer Science}
+  \city{Karlstad}
+  \country{Sweden}
+}
+
+\author{Toke Høiland-Jørgensen}
+\email{toke@redhat.com}
+\affiliation{%
+  \institution{Red hat}
+  \country{Denmark}
+}
+
+\author{Jesper Dangaard Brouer}
+\email{brouer@redhat.com}
+\affiliation{%
+  \institution{Red hat}
+  \country{Denmark}
+}
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{Alfreðsson, et al.}
+
+\begin{abstract}
+\end{abstract}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{XDP, eBPF, BPF, Queueing, Linux, Scheduling}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\section{Introduction}
+
+The Linux kernel is a widely used platform in devices that range from IoT
+devices, cellphones, home and enterprise routers to servers and cloud offerings.
+A common task done by all network equipment and devices is network scheduling,
+which the equipment uses to prioritize different traffic between hosts. On
+smartphones, the network scheduler might want to prioritize video streaming over
+application updates. A cloud provider might wish to schedule fairness between
+customers or even prioritize some customers over others. With the growing number
+of devices and their diverse network requirements, there is a need for increased
+flexibility in the rapid deployment and interaction with schedulers. However,
+network equipment and devices tend to have a limited set of network schedulers
+available with a few parameters that the customers could control. Therefore,
+researchers and network vendors have turned to programmable network schedulers
+to allow the customers to write schedulers optimized for their domain-specific
+use cases.
+
+Currently, the Linux kernel provides the Queuing Disciplines (Qdiscs) for
+handling network scheduling. Adding new Qdiscs requires writing new Linux kernel
+modules in the C programming language. However, kernel modules have full access
+to the Linux kernel internals and do not provide a safe execution environment. A
+minor bug in a Qdisc could crash the whole kernel. Consequently, vendors tend
+not to provide third-party Qdiscs because of security reasons. Third-party
+providers also need to recompile their modules for every kernel update, which
+further limits the deployment of specialized network schedulers. Therefore, to
+support programmable schedulers that can be rapidly and safely deployed, we
+propose two programmable networking scheduling frameworks for the Linux kernel
+using the eBPF execution environment. The eBPF framework is an in-kernel runtime
+environment that allows specialized programs to execute within the kernel safely
+and without being recompiled. Our first framework is a Qdisc called eBPF-Qdisc,
+which allows the programmer to write new schedulers in eBPF that can use all
+existing Qdisc infrastructures. The second framework we call Express Data
+Queueing (XDQ) and expands upon Express Data Path
+(XDP)\cite{hoiland2018express}. XDP is a framework that allows programmers to
+attach an eBPF program to the network interface's transmit path. These programs
+can alter and redirect the packets, giving the programmer the option of
+bypassing the Linux kernel's network stack for added performance, including the
+Qdisc layer. XDQ extends on XDP by providing programmers with the ability to
+write schedulers for XDP programs.
+
+\begin{itemize}
+\item Explain the structure of this technical report.
+\end{itemize}
+
+\section{Network Scheduling and Queue Management}
+
+The main function of the network schedulers is to arrange or rearrange packets
+in order to meet some specific criteria. However, they can also be used to shape
+traffic.
+
+\begin{itemize}
+\item Explain the basic concepts of network schedulers.
+\item Explain the difference between schedulers and queues.
+  \item Give examples of these specific network schedulers:
+        \begin{itemize}
+          \item DRR
+          \item WFQ
+        \end{itemize}
+\end{itemize}
+
+
+\section{Network Schedulers in Practice}
+
+\begin{itemize}
+  \item Explain what is not possible using today's network schedulers.
+  \item Explain why you would like to be able to schedule traffic
+\end{itemize}
+
+\subsection{New Requirements}
+
+\begin{itemize}
+  \item What are the different systems that demand rapid deployment?
+  \item Why can't the default schedulers handle the new requirements?
+\end{itemize}
+
+
+\subsection{eBPF a Game Changer}
+
+\begin{itemize}
+  \item Explain why schedulers in eBPF change the field.
+  \item Why can't the default schedulers handle the new requirements?
+\end{itemize}
+
+
+\section{Programmable Schedulers}
+
+\begin{itemize}
+  \item Explain how programmable schedulers differ from traditional schedulers.
+  \item Explain which programmable schedulers exist in practice, such as P4 and others.
+  \item Question: What are the names of the current software based programmable schedulers?
+        \begin{itemize}
+          \item P4
+          \item What are the others called? What are the DPDK versions called?
+        \end{itemize}
+\end{itemize}
+
+% Why:
+% - Domain specific requirements
+
+
+\subsection{Implementation of Programmable Schedulers}
+
+\begin{itemize}
+  \item Explain how programmable schedulers are implemented.
+  \item Explain that programmable scheduling frameworks provide isolated frameworks to implement schedulers, unlike Qdiscs that are normal kernel modules.
+  \item Explain that some frameworks provide special programming languages to describe the schedulers.
+  \item Explain that different data structures limit what type of scheduling algorithms we can write using a programmable scheduling framework.
+\end{itemize}
+
+
+\subsubsection{Algorithms}
+
+\begin{itemize}
+  \item Explain what types of scheduling algorithms are programmable and which aren't.
+  \item Give examples of how they differ.
+\end{itemize}
+
+
+\subsubsection{Data Structures}
+
+\begin{itemize}
+  \item Explain how different data-structures affect which scheduling algorithms can be written using programmable schedulers.
+  \item Explain the following data-structures and what features they provide:
+        \begin{itemize}
+          \item PIFO\cite{Sivaraman2016}
+          \item SP-PIFO\cite{Alcoz2020}
+          \item Eiffel\cite{Saeed2019}
+          \item Calendar-queues\cite{KrSharma2020}
+        \end{itemize}
+\end{itemize}
+
+\section{The extended Berkeley Packet Filter (eBPF)}
+
+The eBPF framework is an in-kernel runtime environment that allows specialized
+programs to execute in the kernel safely. These programs attach themselves to
+hooks provided by the different subsystems of the kernel. These hooks limit what
+the programs can do and define what type of eBPF programs can exist. These types
+of programs vary but predominantly, they are related to networking, tracing, and
+security. At its core, eBPF is an instruction set. However, as a framework, it
+provides a key-value store that enables inter-process communication called eBPF
+maps, in-kernel helper functions, and toolchains to create and manage eBPF
+programs from user-space.
+
+
+\subsection{Instruction-set}
+
+The eBPF instruction set is 64-bit and consists of eleven registers listed in
+table ~\ref{table:eBPF_registers}. It contains a little over a hundred
+instructions. However, the current format defines the opcode as the first octet
+of the instruction. Therefore, in the current design, it could only support 256
+instructions. The currently available instructions are limited to Arithmetic
+Logic Unit (ALU) instructions, byte-swap instructions for Endian handling,
+memory, and branch instructions.
+
+\begin{table}
+  \caption{Frequency of Special Characters}
+  \label{tab:freq}
+  \begin{tabular}{ll}
+    \toprule
+    Register & Type                    \\
+    \midrule
+    R0       & Return value            \\
+    R1-R5    & Parameters to functions \\
+    R6-R9    & Callee saved registers  \\
+    R10      & Read-only stack pointer \\
+    \bottomrule
+\end{tabular}
+\label{table:eBPF_registers}
+\end{table}
+
+The main strength of the eBPF framework comes from the Linux kernel's eBPF
+verifier, which ensures that the programs can not crash nor harm the system. It
+does this by ensuring that the program does not exceed one million instructions
+and that all loops within the program are bounded.
+
+As a second check the verifier checks all conditional logic by pushing the paths
+into a stack that it uses to simulate the code until it reaches end of the
+program.
+
+\begin{itemize}
+  \item Explain how the verifier works.
+  \item Explain what type of problems the verifier can protect against.
+  \item Explain the difference between the eBPF bytecode and JIT on the architectures that support it.
+  \item Explain what eBPF maps are and what different types they provide. Per-cpu core maps, etc.
+  \item Question: You mentioned new eBPF maps that were not documented. Which maps are available now that I might not be aware of?
+  \item Explain what type of hooks and helper functions the eBPF runtime has.
+  \item Explain how eBPF programs are loaded using the bpf system call.
+  \item Explain how bpf programs are typically loaded using bcc, libbpf, ip, or tc.
+  \item Explain how eBPF is a new technology and tends to have many issues related to the compilers, loaders, and verifier.
+\end{itemize}
+
+
+\section{Express Data Path (XDP)}
+
+XDP is a type of eBPF program that are attached directly to the RX path of a
+network interface.
+
+\begin{itemize}
+  \item Explain that XDP hooks directly to the RX path of a network driver and allows direct manipulation of the packet.
+  \item Explain how XDP allows you to bypass the Linux network stack and redirect or drop the packets.
+\end{itemize}
+
+
+%%\section{Linux Kernel Networking Subsystem}
+
+
+\section{The Linux Kernel Packet Queueing Discipline (Qdisc)}
+
+\begin{itemize}
+  \item Explain where in the network pipe the Qdiscs are located.
+  \item Explain the features that Qdiscs provides for traffic control:
+        \begin{itemize}
+          \item Shaping: Shaping delay packets to meet a desired rate.
+          \item Scheduling: Schedulers arrange and/or rearrange packets for output.
+          \item Classifying: Classifiers sort or separate traffic into queues.
+          \item Policing: Policiers measure and limit traffic in a particular queue.
+          \item Dropping: Dropping discards an entire packet, flow or classification.
+          \item Marking: Marking is a mechanism by which the packet is altered.
+        \end{itemize}
+  \item Explain what type of primitives the Qdiscs system supplies:
+        \begin{itemize}
+          \item Classfull Qdiscs.
+          \item Classless Qdiscs.
+          \item Actions.
+          \item Filters.
+        \end{itemize}
+  \item The tc command line tool.
+\end{itemize}
+
+
+
+\subsection{Classless and Classfull Qdiscs}
+
+\begin{itemize}
+  \item Explain how the Classfull Qdiscs can create a tree of Qdiscs where the leaves are Classless Qdiscs.
+  \item Explain tc command and how it refers to instances of Qdiscs using a 16 bit identifier in hex.
+        \item Explain that the tc command parameters may behave differently between Qdics due to each Qdisc handling them differently.
+  \item Explain that the ingress Qdiscs are refereed to as the hex number, ffff, and that they can only be classless.
+  \item Give an example of using a Qdisc.
+\end{itemize}
+
+
+\subsection{Classifiers and Filters}
+
+\begin{itemize}
+  \item Explain that Qdiscs can attach classifiers and filters.
+  \item Explain how classifiers are an outer loop that run filters. Also explain that each Qdisc is expected to implement this loop, and that it might not do so.
+\end{itemize}
+
+
+\subsection{eBPF Classifier and Filter}
+
+\begin{itemize}
+  \item Explain that the Qdisc layer currently supports two types of eBPF programs. These programs are a eBPF based classifier and filters.
+  \item Explain why these eBPF programs
+\end{itemize}
+
+
+\section{Programmable Scheduling Frameworks in eBPF}
+
+\begin{itemize}
+  \item Explain what facilities a programmable scheduling framework needs.
+        \begin{itemize}
+          \item Programmable data structures, where a general data-structure is desired, but more flexible to provide multiple.
+          \item A way to dynamically change its functionality on the fly through maps.
+        \end{itemize}
+  \item Explain which components need to be part of the kernel and can't be in eBPF code due to eBPF limits, such as instruction count.
+\end{itemize}
+
+
+\section{eBPF-Qdisc}
+
+\begin{itemize}
+  \item Explain the building blocks of Cong Wang's eBPF-Qdisc.
+  \item Explain that is a classfull Qdisc.
+  \item Explain what changes are needed to make it better.
+  \item Explain the limitations of the eBPF-Qdisc.
+\end{itemize}
+
+
+\section{eXpress Data Queueing (XDQ)}
+
+\begin{itemize}
+  \item Explain where XDQ attaches into XDP.
+  \item Explain what changes are needed to make it a reality.
+\end{itemize}
+
+
+\section{Conclusion}
+
+\begin{itemize}
+  \item Explain the two different solutions, their differences and state.
+\end{itemize}
+
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+
+\end{document}
+\endinput

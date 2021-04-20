@@ -1,0 +1,10 @@
+*.out
+*.pdf
+*.log
+*.fls
+*.fdb_latexmk
+*.blg
+*.bbl
+*.aux
+*.cut
+.auctex-auto/

@@ -1,0 +1,61 @@
+
+@inproceedings{hoiland2018express,
+  title={The express data path: Fast programmable packet processing in the operating system kernel},
+  author={H{\o}iland-J{\o}rgensen, Toke and Brouer, Jesper Dangaard and Borkmann, Daniel and Fastabend, John and Herbert, Tom and Ahern, David and Miller, David},
+  booktitle={Proceedings of the 14th international conference on emerging networking experiments and technologies},
+  pages={54--66},
+  year={2018}
+}
+
+@article{Sivaraman2016,
+  abstract = {Switches today provide a small menu of scheduling algorithms. While we can tweak scheduling parameters, we cannot modify algorithmic logic, or add a completely new algorithm, after the switch has been designed. This paper presents a design for a programmable packet scheduler, which allows scheduling algorithms - potentially algorithms that are unknown today - to be programmed into a switch without requiring hardware redesign. Our design uses the property that scheduling algorithms make two decisions: in what order to schedule packets and when to schedule them. Further, we observe that in many scheduling algorithms, definitive decisions on these two questions can be made when packets are enqueued. We use these observations to build a programmable scheduler using a single abstraction: the push-in first-out queue (PIFO), a priority queue that maintains the scheduling order or time. We show that a PIFO-based scheduler lets us program a wide variety of scheduling algorithms. We present a hardware design for this scheduler for a 64-port 10 Gbit/s shared-memory (output-queued) switch. Our design costs an additional 4% in chip area. In return, it lets us program many sophisticated algorithms, such as a 5-level hierarchical scheduler with programmable decisions at each level.},
+  author = {Sivaraman, Anirudh and Subramanian, Suvinay and Alizadeh, Mohammad and Chole, Sharad and Chuang, Shang Tse and Agrawal, Anurag and Balakrishnan, Hari and Edsall, Tom and Katti, Sachin and McKeown, Nick},
+  doi = {10.1145/2934872.2934899},
+  file = {:home/frey/.local/share/data/Mendeley Ltd./Mendeley Desktop/Downloaded/Sivaraman et al. - 2016 - Programmable packet scheduling at line rate(2).pdf:pdf},
+  isbn = {9781450341936},
+  journal = {SIGCOMM 2016 - Proceedings of the 2016 ACM Conference on Special Interest Group on Data Communication},
+  keywords = {Programmable scheduling,Switch hardware},
+  mendeley-groups = {PhD/Scheduling and Queues},
+  pages = {44--57},
+  title = {{Programmable packet scheduling at line rate}},
+  year = {2016}
+}
+
+@article{Saeed2019,
+abstract = {Packet scheduling determines the ordering of packets in a queuing data structure with respect to some ranking function that is mandated by a scheduling policy. It is the core component in many recent innovations to optimize network performance and utilization. Our focus in this paper is on the design and deployment of packet scheduling in software. Software schedulers have several advantages over hardware including shorter development cycle and flexibility in functionality and deployment location. We substantially improve current software packet scheduling performance, while maintaining flexibility, by exploiting underlying features of packet ranking; namely, packet ranks are integers and, at any point in time, fall within a limited range of values. We introduce Eiffel, a novel programmable packet scheduling system. At the core of Eiffel is an integer priority queue based on the Find First Set (FFS) instruction and designed to support a wide range of policies and ranking functions efficiently. As an even more efficient alternative, we also propose a new approximate priority queue that can outperform FFS-based queues for some scenarios. To support flexibility, Eiffel introduces novel programming abstractions to express scheduling policies that cannot be captured by current, state-of-the-art scheduler programming models. We evaluate Eiffel in a variety of settings and in both kernel and userspace deployments. We show that it outperforms state of the art systems by 3-40x in terms of either number of cores utilized for network processing or number of flows given fixed processing capacity.},
+archivePrefix = {arXiv},
+arxivId = {1810.03060},
+author = {Saeed, Ahmed and Zhao, Yimeng and Dukkipati, Nandita and Ammar, Mostafa and Zegura, Ellen and Harras, Khaled and Vahdat, Amin},
+eprint = {1810.03060},
+file = {:home/frey/Documents/nsdi19-saeed.pdf:pdf},
+isbn = {9781931971492},
+journal = {Proceedings of the 16th USENIX Symposium on Networked Systems Design and Implementation, NSDI 2019},
+mendeley-groups = {PhD/Scheduling and Queues},
+pages = {17--31},
+title = {{Eiffel: Efficient and flexible software packet scheduling}},
+year = {2019}
+}
+
+@article{Alcoz2020,
+abstract = {Push-In First-Out (PIFO) queues are hardware primitives which enable programmable packet scheduling by providing the abstraction of a priority queue at line rate. However, implementing them at scale is not easy: just hardware designs (not implementations) exist, which support only about 1k flows. In this paper, we introduce SP-PIFO, a programmable packet scheduler which closely approximates the behavior of PIFO queues using strict-priority queues-at line rate, at scale, and on existing devices. The key insight behind SP-PIFO is to dynamically adapt the mapping between packet ranks and available strict-priority queues to minimize the scheduling errors with respect to an ideal PIFO. We present a mathematical formulation of the problem and derive an adaptation technique which closely approximates the optimal queue mapping without any traffic knowledge. We fully implement SP-PIFO in P4 and evaluate it on real workloads. We show that SP-PIFO: (i) closely matches PIFO, with as little as 8 priority queues; (ii) scales to large amount of flows and ranks; and (iii) quickly adapts to traffic variations. We also show that SP-PIFO runs at line rate on existing hardware (Barefoot Tofino), with a negligible memory footprint.},
+author = {Alcoz, Albert Gran and Dietm{\"{u}}ller, Alexander and Vanbever, Laurent},
+file = {:home/frey/.local/share/data/Mendeley Ltd./Mendeley Desktop/Downloaded/Alcoz, Dietm{\"{u}}ller, Vanbever - 2020 - SP-PIFO Approximating push-in first-out behaviors using strict-priority queues.pdf:pdf},
+isbn = {9781939133137},
+journal = {Proceedings of the 17th USENIX Symposium on Networked Systems Design and Implementation, NSDI 2020},
+mendeley-groups = {PhD/Scheduling and Queues},
+pages = {59--76},
+title = {{SP-PIFO: Approximating push-in first-out behaviors using strict-priority queues}},
+year = {2020}
+}
+
+@article{KrSharma2020,
+abstract = {Packet schedulers traditionally focus on the prioritized transmission of packets. Scheduling is often realized through coarse-grained queue-level priorities, as in today's switches, or through fine-grained packet-level priorities, as in recent proposals such as PIFO. Unfortunately, fixed packet priorities determined when a packet is received by the traffic manager are not sufficient to support a broad class of scheduling algorithms that require the priorities of packets to change as a function of the time it has spent inside the network. In this paper, we revisit the Calendar Queue abstraction and show that it is an appropriate fit for scheduling algorithms that not only require prioritization but also perform dynamic escalation of packet priorities. We show that the calendar queue abstraction can be realized using either dataplane prim-itives or control-plane commands that dynamically modify the scheduling status of queues. Further, when paired with programmable switch pipelines, we can realize programmable calendar queues that can emulate a diverse set of scheduling policies. We demonstrate the power of this abstraction using three case studies that implement variants of LSTF, Fair Queueing, and pFabric in order to provide stronger delay guarantees, burst-friendly fairness, and starvation-free priori-tization of short flows, respectively. We evaluate the benefits associated with these scheduling policies using both a custom simulator and a small-scale testbed.},
+author = {{Kr Sharma}, Naveen and Zhao, Chenxingyu and Liu, Ming and Kannan, Pravein G and Kim, Changhoon and Krishnamurthy, Arvind and Sivaraman, Anirudh},
+file = {:home/frey/Documents/nsdi20-paper-sharma.pdf:pdf},
+isbn = {9781939133137},
+mendeley-groups = {PhD/Scheduling and Queues},
+pages = {685--699},
+title = {{Programmable Calendar Queues for High-speed Packet Scheduling}},
+url = {https://www.usenix.org/conference/nsdi20/presentation/sharma},
+year = {2020}
+}
