@@ -1,0 +1,120 @@
+#+TITLE: Progress update 2021-04-26
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing - Progress
+- Haven't made much progress
+- Before working on output, merge current PR into master
+  - Done as of last Friday
+- Toke requested I move both BPF programs to single file
+  - No big deal I though...
+  - ...the verifier thought differently
+
+** PPing: Moving BPF programs to single file
+- Have two BPF programs, one for egress (tc) and one for ingress (XDP)
+- Both use largely the same code (parse packet for TCP timestamp)
+- Previously each program in a separate file, include common code from header
+  - Was needed when tc-program was loaded with iproute
+  - Needed different map definitions for same map
+  - Not needed now that everything is loaded with libbpf
+- Having single file simplifies loading process somewhat
+  - Only have to load single object
+  - Don't need to pin maps
+
+** PPing: Verifier rejection
+- Simply moving the code from two files into a single file caused verifier rejection
+  - BPF program too large (processed over 1 million instructions)
+  - Am I stuck in an infinite loop again?
+    - Probably not
+- One major change in BPF bytecode - now actually calls a function instead of inlining everything
+- Toke unsure what the problem was, suggest reporting it upstream
+  - Create minimal working example
+  - Needed to figure out which part of the codes created the issue
+  - The minimal-ish example, and writeup on problem can be found [[https://github.com/simosund/bpf-examples/tree/Create_minimal_example/pping_mwe][here]]
+
+* Verifier - processed instructions
+- Verifier walks through and processes the instructions from all possible branches in the program
+- If verifier is not done by the time it hits 1 million instructions, it rejects the program as too large
+  - Even if no single path exceeds 1 million instructions, program with many paths can still fail
+- While creating a MWE, wanted to know how many instructions the verifier processed for various versions of the code
+- Libbpf has no convenient way to show verifier output unless program fails
+  - Used bpftrace to trace the verifier =)
+- Turns out, even before merging to a single file verifier processed many instructions
+
+** Program parts that affect nr processed instructions
+- *Separate files:* XDP program and TC program kept in separate files
+  - Considerably fewer processed instructions than when both kept in single file
+- *Swap saddr/daddr:* Program normally has some logic to swap saddr/daddr on ingress to match egress.
+  - For some reason tripples nr processed instruction for TC program
+- *TCP options parsing:* Program normally has a loop (max 10) to parse TCP options to find TCP timestamp
+- *IPv6 path:* Program normally has a path to parse IPv6 packets, which includes a loop (max 6) for skipping past IPv6 extensions
+
+** Nr processed instructions for various combinations
+
+| Prog version           | XDP prog | TC prog |
+|------------------------+----------+---------|
+| Default                | 599k     | > 1m    |
+| Separate files         | 462k     | 461k    |
+| No swap saddr/daddr    | 603k     | 603k    |
+| No TCP options parsing | 15k      | 47k     |
+| Only 5 TCP loops       | 165k     | 520k    |
+| No IPv6 path           | 9k       | 27k     |
+| Only 3 IPv6 loops      | 116k     | 317k    |
+
+- Loop searching for IPv6 extensions and loop parsing TCP options seems to cause some combinatorial explosion
+
+** How to befriend the verifier again
+- For now, the solution has been to decrease the IPv6 extension loop count
+  - Based on discussion with my supervisors, these seem pretty rare
+- Have also posted this issue in the [[https://cilium.slack.com/archives/C4XCTGYEM/p1619101486386100][eBPF slack]]
+  - Got a couple of helpful answers from Nathan Sweet and Paul Chaignon
+- Some alternative solutions can be:
+  - Split the program up into multiple files again
+  - Use different eBPF instruction set
+    - Ex. pass ~-mcpu=probe~ to llc
+  - Try compiling with different LLVM version
+  - Use function-by-function verification
+    - Doesn't seem to support pointer arguments yet?
+  - Split program into multiple parts and use tail calls
+
+* PPing: Output
+- Kathie's pping has two output modes
+- Normal
+  #+BEGIN_SRC shell
+  sudo ./pping -i test123
+    
+  11:16:22 12.4ms 12.4ms 10.11.1.2:33988+10.11.1.1:5201
+  11:16:22 12.8ms 12.4ms 10.11.1.2:33988+10.11.1.1:5201
+  11:16:29 12.3ms 12.3ms 10.11.1.2:33988+10.11.1.1:5201
+  11:16:29 12.7ms 12.3ms 10.11.1.2:33988+10.11.1.1:5201
+  #+END_SRC
+
+- "Machine friendly"
+  #+BEGIN_SRC shell
+  sudo ./pping -i test123 -m
+    
+  1619428777.716820 0.013015 0.013015 74 0 66 10.11.1.2:33992+10.11.1.1:5201
+  1619428777.731275 0.012347 0.012347 284 74 169 10.11.1.2:33992+10.11.1.1:5201
+  1619428783.986904 0.012526 0.012347 3020 2156 330 10.11.1.2:33992+10.11.1.1:5201
+  1619428783.999782 0.012864 0.012347 3308 3020 132 10.11.1.2:33992+10.11.1.1:5201
+  #+END_SRC
+# - Both modes also throw out occassional flow info, ex:
+#   - =First packet at Mon Apr 26 11:19:37 2021=
+#   - =4 flows, 104 packets, 2 uni-directional,=
+** PPing: Replicate "machine friendly" output
+- If I replicate Kathie's machine friendly format, can use [[http://pollere.net/ppviz.html][ppviz]]
+- Need to track some additional information
+  - Time of RTT calculation
+  - Nr bytes sent/received - doesn't seem to be used by ppviz
+- Is this a good format?
+
+* Other
+- TA in GUI course
+  - Lab1 corrected, students currently working with lab2
+- DISCO reading course
+  - Seminar on Thursday (29/4)
+- AIDA WP2 meeting tomorrow
+- ISP has been sent in
