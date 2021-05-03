@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-05-03</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-05-03</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-05-03 mån 11:56</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org0ef0189">1. Institutional duty</a></li>
+<li><a href="#/slide-org6fcb823">2. Courses</a></li>
+<li><a href="#/slide-org77eea6b">3. ISP</a></li>
+<li><a href="#/slide-orga16d096">4. PPing</a>
+<ul>
+<li><a href="#/slide-org11e7f9b">4.1. PPing - Current JSON format</a></li>
+<li><a href="#/slide-org9be6522">4.2. PPing - Additional fields?</a></li>
+<li><a href="#/slide-org7d0467f">4.3. PPing - Implementation of min RTT</a></li>
+<li><a href="#/slide-org1200050">4.4. PPing - min RTT code</a></li>
+<li><a href="#/slide-org8ada35b">4.5. PPing - Issue with min RTT reporting</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org9e1bccc">5. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org0ef0189">
+<h2 id="org0ef0189"><span class="section-number-2">1</span> Institutional duty</h2>
+<ul>
+<li>The deadline for Lab 2 in the GUI course was yesterday
+<ul>
+<li>Should be corrected this week</li>
+<li>A bit more complicated to correct than lab 1</li>
+<li>Only gotten 8 handins so far</li>
+
+</ul></li>
+<li>Technically should also handle returns for lab 1 this week
+<ul>
+<li>But did that last Friday</li>
+
+</ul></li>
+<li>Lab 3 started
+<ul>
+<li>Web programming (HTML/CSS/Javascript)</li>
+<li>I barley know any of it</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org6fcb823">
+<h2 id="org6fcb823"><span class="section-number-2">2</span> Courses</h2>
+<ul>
+<li>Just got notified that I've passed the Information Retrieval course
+<ul>
+<li>Should apparently contact examinator and adminstrator</li>
+
+</ul></li>
+<li>Should apply for the KLL (pedagogics) course</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org77eea6b">
+<h2 id="org77eea6b"><span class="section-number-2">3</span> ISP</h2>
+<ul>
+<li>Guess it's technically past the deadline now</li>
+<li>Anna short-circuited the handin so we could adress some points based on comments on Frey's ISP
+<ul>
+<li>Add in papers in the overall plan
+<ul>
+<li>???</li>
+
+</ul></li>
+<li>Add supervisor roles</li>
+<li>Add section on Covid-19</li>
+
+</ul></li>
+<li>Gotten some feedback from Simone
+<ul>
+<li>Unsure if just comments or something you wanted me to address?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orga16d096">
+<h2 id="orga16d096"><span class="section-number-2">4</span> PPing</h2>
+<ul>
+<li>Have added timestamps and minimum-RTT to printouts
+<ul>
+<li>min RTT is currently tracked on kernel side (in BPF programs)</li>
+
+</ul></li>
+<li>Have added a JSON format as well as Kathie's "machine friendly" format
+<ul>
+<li>Kathie's format was very easy to implement, so why not?</li>
+
+</ul></li>
+<li>Have opend pull request <a href="https://github.com/xdp-project/bpf-examples/pull/16">here</a></li>
+
+</ul>
+
+</section>
+<section id="slide-org11e7f9b">
+<h3 id="org11e7f9b"><span class="section-number-3">4.1</span> PPing - Current JSON format</h3>
+<div class="org-src-container">
+
+<pre  class="src src-json" ><code trim>{
+  <span style="color: #a020f0;">"timestamp"</span>: <span style="color: #008b8b;">1619777990.063192</span>,
+  <span style="color: #a020f0;">"rtt"</span>: <span style="color: #008b8b;">0.013005536</span>,
+  <span style="color: #a020f0;">"min_rtt"</span>: <span style="color: #008b8b;">0.01235976</span>,
+  <span style="color: #a020f0;">"src_ip"</span>: <span style="color: #8b2252;">"fc00:dead:cafe:1::1"</span>,
+  <span style="color: #a020f0;">"src_port"</span>: <span style="color: #008b8b;">5201</span>,
+  <span style="color: #a020f0;">"dest_ip"</span>: <span style="color: #8b2252;">"fc00:dead:cafe:1::2"</span>,
+  <span style="color: #a020f0;">"dest_port"</span>: <span style="color: #008b8b;">33056</span>
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org9be6522">
+<h3 id="org9be6522"><span class="section-number-3">4.2</span> PPing - Additional fields?</h3>
+<ul>
+<li>Protocol?
+<ul>
+<li>Currently only TCP</li>
+
+</ul></li>
+<li>IP version?
+<ul>
+<li>Can be derived from IP-address format</li>
+
+</ul></li>
+<li>Additional statistics?
+<ul>
+<li>Sent/received byets?</li>
+<li>Sent/received packets?</li>
+<li>Would require some additional kernel-side tracking</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org7d0467f">
+<h3 id="org7d0467f"><span class="section-number-3">4.3</span> PPing - Implementation of min RTT</h3>
+<ul>
+<li>Technically not needed
+<ul>
+<li>Could be post-processed</li>
+<li>Added it to get output parity with Kathie's pping</li>
+
+</ul></li>
+<li>Implemented it as part of per-flow state in BPF map
+<ul>
+<li>Largely because it was easier than adding it on userside</li>
+<li>Don't need to add and clean user-space hashmap with per-flow min-RTT</li>
+<li>Automatically reset when flow closes</li>
+<li>May also be useful in future
+<ul>
+<li>RTT-based sampling intervals</li>
+<li>Only periodically pulling stats from maps</li>
+
+</ul></li>
+
+</ul></li>
+<li>Whenever XDP program calculates RTT it also checks if it's lowest for the flow
+<ul>
+<li>Pushes both RTT and min-RTT to userspace</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org1200050">
+<h3 id="org1200050"><span class="section-number-3">4.4</span> PPing - min RTT code</h3>
+<div class="org-src-container">
+
+<pre  class="src src-C" ><code trim><span style="color: #b22222;">// </span><span style="color: #b22222;">Update flow's min-RTT, may have concurrency issues</span>
+f_state = bpf_map_lookup_elem(&amp;flow_state, &amp;p_id.flow);
+<span style="color: #a020f0;">if</span> (f_state &amp;&amp; (f_state-&gt;min_rtt == 0 || event.rtt &lt; f_state-&gt;min_rtt))
+    f_state-&gt;min_rtt = event.rtt;
+
+event.min_rtt = f_state ? f_state-&gt;min_rtt : event.rtt;
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org8ada35b">
+<h3 id="org8ada35b"><span class="section-number-3">4.5</span> PPing - Issue with min RTT reporting</h3>
+<ul>
+<li>Current implementation has a considerable flaw</li>
+<li>tc program may delete flow info
+<ul>
+<li>If XDP program finds no flow info, will simply report current RTT as min-RTT</li>
+
+</ul></li>
+<li>Possible solutions
+<ul>
+<li>Only delete flow-state from XDP program
+<ul>
+<li>May miss sent RST packet</li>
+
+</ul></li>
+<li>Have tc program add current min-RTT to packet timestamp
+<ul>
+<li>May be outdated if RTT &gt; sampling rate</li>
+
+</ul></li>
+<li>Don't track min-RTT in kernel</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org9e1bccc">
+<h2 id="org9e1bccc"><span class="section-number-2">5</span> Plan</h2>
+<ul>
+<li>GUI course
+<ul>
+<li>Read up some more on lab3/HTML/CSS/Javascript</li>
+<li>Correct lab2</li>
+
+</ul></li>
+<li>Hand in ISP?</li>
+<li>Work on pping
+<ul>
+<li>Eventual fixes</li>
+<li>More output?</li>
+<li>Burst capabilities?</li>
+<li>Add support for ICMP Echo (ping)?</li>
+<li>Start thinking more about measurement study?
+<ul>
+<li>How to collect/store measurements?</li>
+<li>Performance benchmark?</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

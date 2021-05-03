@@ -1,0 +1,111 @@
+#+TITLE: Progress update 2021-05-03
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Institutional duty
+- The deadline for Lab 2 in the GUI course was yesterday
+  - Should be corrected this week
+  - A bit more complicated to correct than lab 1
+  - Only gotten 8 handins so far
+- Technically should also handle returns for lab 1 this week
+  - But did that last Friday
+- Lab 3 started
+  - Web programming (HTML/CSS/Javascript)
+  - I barley know any of it
+
+* Courses
+- Just got notified that I've passed the Information Retrieval course
+  - Should apparently contact examinator and adminstrator
+- Should apply for the KLL (pedagogics) course
+
+* ISP
+- Guess it's technically past the deadline now
+- Anna short-circuited the handin so we could adress some points based on comments on Frey's ISP
+  - Add in papers in the overall plan
+    - ???
+  - Add supervisor roles
+  - Add section on Covid-19
+- Gotten some feedback from Simone
+  - Unsure if just comments or something you wanted me to address?
+
+* PPing
+- Have added timestamps and minimum-RTT to printouts
+  - min RTT is currently tracked on kernel side (in BPF programs)
+- Have added a JSON format as well as Kathie's "machine friendly" format
+  - Kathie's format was very easy to implement, so why not?
+- Have opend pull request [[https://github.com/xdp-project/bpf-examples/pull/16][here]]
+
+** PPing - Current JSON format
+#+BEGIN_SRC json
+{
+  "timestamp": 1619777990.063192,
+  "rtt": 0.013005536,
+  "min_rtt": 0.01235976,
+  "src_ip": "fc00:dead:cafe:1::1",
+  "src_port": 5201,
+  "dest_ip": "fc00:dead:cafe:1::2",
+  "dest_port": 33056
+}
+#+END_SRC
+
+** PPing - Additional fields?
+- Protocol?
+  - Currently only TCP
+- IP version?
+  - Can be derived from IP-address format
+- Additional statistics?
+  - Sent/received byets?
+  - Sent/received packets?
+  - Would require some additional kernel-side tracking
+
+** PPing - Implementation of min RTT
+- Technically not needed
+  - Could be post-processed
+  - Added it to get output parity with Kathie's pping
+- Implemented it as part of per-flow state in BPF map
+  - Largely because it was easier than adding it on userside
+  - Don't need to add and clean user-space hashmap with per-flow min-RTT
+  - Automatically reset when flow closes
+  - May also be useful in future
+    - RTT-based sampling intervals
+    - Only periodically pulling stats from maps
+- Whenever XDP program calculates RTT it also checks if it's lowest for the flow
+  - Pushes both RTT and min-RTT to userspace
+
+** PPing - min RTT code
+#+BEGIN_SRC C
+// Update flow's min-RTT, may have concurrency issues
+f_state = bpf_map_lookup_elem(&flow_state, &p_id.flow);
+if (f_state && (f_state->min_rtt == 0 || event.rtt < f_state->min_rtt))
+    f_state->min_rtt = event.rtt;
+
+event.min_rtt = f_state ? f_state->min_rtt : event.rtt;
+#+END_SRC
+
+** PPing - Issue with min RTT reporting
+- Current implementation has a considerable flaw
+- tc program may delete flow info
+  - If XDP program finds no flow info, will simply report current RTT as min-RTT
+- Possible solutions
+  - Only delete flow-state from XDP program
+    - May miss sent RST packet
+  - Have tc program add current min-RTT to packet timestamp
+    - May be outdated if RTT > sampling rate
+  - Don't track min-RTT in kernel
+
+* Plan
+- GUI course
+  - Read up some more on lab3/HTML/CSS/Javascript
+  - Correct lab2
+- Hand in ISP?
+- Work on pping
+  - Eventual fixes
+  - More output?
+  - Burst capabilities?
+  - Add support for ICMP Echo (ping)?
+  - Start thinking more about measurement study?
+    - How to collect/store measurements?
+    - Performance benchmark?
