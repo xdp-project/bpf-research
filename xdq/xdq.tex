@@ -25,7 +25,7 @@
 \documentclass[sigconf, nonacm]{acmart}
 
 \usepackage{mwe}
-
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
 
 
 
@@ -111,132 +111,163 @@
 
 The Linux kernel is a widely used platform in devices that range from IoT
 devices, cellphones, home and enterprise routers to servers and cloud offerings.
-A common task done by all network equipment and devices is network scheduling,
+A common task done by all network equipment and devices is packet scheduling,
 which the equipment uses to prioritize different traffic between hosts. On
-smartphones, the network scheduler might want to prioritize video streaming over
+smartphones, the packet scheduler might want to prioritize video streaming over
 application updates. A cloud provider might wish to schedule fairness between
 customers or even prioritize some customers over others. With the growing number
 of devices and their diverse network requirements, there is a need for increased
 flexibility in the rapid deployment and interaction with schedulers. However,
-network equipment and devices tend to have a limited set of network schedulers
+network equipment and devices tend to have a limited set of packet schedulers
 available with a few parameters that the customers could control. Therefore,
-researchers and network vendors have turned to programmable network schedulers
+researchers and network vendors have turned to programmable packet schedulers
 to allow the customers to write schedulers optimized for their domain-specific
 use cases.
 
 Currently, the Linux kernel provides the Queuing Disciplines (Qdiscs) for
-handling network scheduling. Adding new Qdiscs requires writing new Linux kernel
+handling packet scheduling. Adding new Qdiscs requires writing new Linux kernel
 modules in the C programming language. However, kernel modules have full access
 to the Linux kernel internals and do not provide a safe execution environment. A
 minor bug in a Qdisc could crash the whole kernel. Consequently, vendors tend
 not to provide third-party Qdiscs because of security reasons. Third-party
 providers also need to recompile their modules for every kernel update, which
-further limits the deployment of specialized network schedulers. Therefore, to
+further limits the deployment of specialized packet schedulers. Therefore, to
 support programmable schedulers that can be rapidly and safely deployed, we
-propose two programmable networking scheduling frameworks for the Linux kernel
-using the eBPF execution environment. The eBPF framework is an in-kernel runtime
-environment that allows specialized programs to execute within the kernel safely
-and without being recompiled. Our first framework is a Qdisc called eBPF-Qdisc,
-which allows the programmer to write new schedulers in eBPF that can use all
-existing Qdisc infrastructures. The second framework we call Express Data
+propose two programmable packet scheduling frameworks for the Linux kernel using
+the eBPF execution environment. The eBPF framework is an in-kernel runtime
+environment that allows specialized code to execute within the kernel safely and
+without being recompiled. Our first framework is a Qdisc called eBPF-Qdisc,
+which allows the programmer to write new packet schedulers in eBPF that can use
+all existing Qdisc infrastructures. The second framework we call Express Data
 Queueing (XDQ) and expands upon Express Data Path
 (XDP)\cite{hoiland2018express}. XDP is a framework that allows programmers to
-attach an eBPF program to the network interface's transmit path. These programs
-can alter and redirect the packets, giving the programmer the option of
-bypassing the Linux kernel's network stack for added performance, including the
-Qdisc layer. XDQ extends on XDP by providing programmers with the ability to
-write schedulers for XDP programs.
+attach eBPF code to the network interface's transmit path. These programs can
+alter and redirect the packets, giving the programmer the option of bypassing
+the Linux kernel's network stack for added performance, including the Qdisc
+layer. XDQ extends on XDP by providing programmers with the ability to write
+packet schedulers for the XDP datapath.
 
 \begin{itemize}
 \item Explain the structure of this technical report.
 \end{itemize}
 
-\section{Network Scheduling and Queue Management}
+\section{Packet Scheduling, Traffic Shaping, and Queue Management}
 
-The main function of the network schedulers is to arrange or rearrange packets
+The main function of the packet scheduler is to arrange or rearrange packets
 in order to meet some specific criteria. However, they can also be used to shape
 traffic.
 
+\todo[inline]{Frey: This text should not sound like it is explaining packet scheduling from scratch. We assume that the audience have the main overview of what a packet scheduler is.}
+
 \begin{itemize}
-\item Explain the basic concepts of network schedulers.
-\item Explain the difference between schedulers and queues.
-  \item Give examples of these specific network schedulers:
+  \item Explain the basic concepts of packet schedulers.
+  \item Explain the difference between schedulers and queues.
+  \item Explain the difference between a work-conserving and non-work conserving scheduling.
+  \item Use a short round-robin scheduling example.
+\end{itemize}
+
+\section{Linux Kernel Networking Subsystem}
+
+\begin{itemize}
+  \item Explain on a high level the Linux Kernel Networking stack using a diagram.
+\end{itemize}
+
+\subsection{The Linux Kernel Packet Queueing Discipline (Qdisc)}
+
+\begin{itemize}
+  \item Explain where in the network pipe the Qdiscs are located.
+  \item Explain, without going into too much detail, what the Qdisc system is capable of.
         \begin{itemize}
-          \item DRR
-          \item WFQ
+          \item Shaping: Shaping delay packets to meet a desired rate.
+          \item Scheduling: Schedulers arrange and/or rearrange packets for output.
+          \item Classifying: Classifiers sort or separate traffic into queues.
+          \item Policing: Policiers measure and limit traffic in a particular queue.
+          \item Dropping: Dropping discards an entire packet, flow or classification.
+          \item Marking: Marking is a mechanism by which the packet is altered.
+        \end{itemize}
+  \item Explain what type of primitives the Qdiscs system supplies:
+        \begin{itemize}
+          \item Classfull Qdiscs.
+          \item Classless Qdiscs.
+          \item Filters.
         \end{itemize}
 \end{itemize}
 
 
-\section{Network Schedulers in Practice}
+\section{Packet Schedulers in Practice}
+
+\todo[inline]{Frey: This section needs a new name. The idea with this section is to explain why we care about this work and what the requirements are.}
 
 \begin{itemize}
-  \item Explain what is not possible using today's network schedulers.
+  \item Explain what is not possible using today's packet schedulers.
   \item Explain why you would like to be able to schedule traffic
 \end{itemize}
 
-\subsection{New Requirements}
+
+\section{Programmable Packet Schedulers}
+
+\todo[inline]{Frey: Maybe this section could be combined with the above section if we find a better name for them.}
 
 \begin{itemize}
-  \item What are the different systems that demand rapid deployment?
-  \item Why can't the default schedulers handle the new requirements?
-\end{itemize}
-
-
-\subsection{eBPF a Game Changer}
-
-\begin{itemize}
-  \item Explain why schedulers in eBPF change the field.
-  \item Why can't the default schedulers handle the new requirements?
-\end{itemize}
-
-
-\section{Programmable Schedulers}
-
-\begin{itemize}
-  \item Explain how programmable schedulers differ from traditional schedulers.
-  \item Explain which programmable schedulers exist in practice, such as P4 and others.
-  \item Question: What are the names of the current software based programmable schedulers?
+  \item Explain how programmable packet schedulers differ from traditional schedulers.
+  \item Explain what we want from a programmable packet scheduler.
         \begin{itemize}
-          \item P4
-          \item What are the others called? What are the DPDK versions called?
+          \item Can handle work and non-work conserving scheduling.
+          \item Can combine data structures to form a hierarchy for more advanced algorithms.
         \end{itemize}
 \end{itemize}
 
-% Why:
-% - Domain specific requirements
+\todo[inline]{Frey: In the original draft I had a special section called algorithm for each of the data structures below. I decided to remove it for now because I think it is intertwined with the data structure.}
 
 
-\subsection{Implementation of Programmable Schedulers}
+\subsection{PIFO and SP-PIFO}
 
 \begin{itemize}
-  \item Explain how programmable schedulers are implemented.
-  \item Explain that programmable scheduling frameworks provide isolated frameworks to implement schedulers, unlike Qdiscs that are normal kernel modules.
-  \item Explain that some frameworks provide special programming languages to describe the schedulers.
-  \item Explain that different data structures limit what type of scheduling algorithms we can write using a programmable scheduling framework.
+  \item Explain what PIFO\cite{Sivaraman2016} is.
+  \item Explain how PIFO does not allow scheduling at dequeue, but can form hierarchies to create more complex logic.
+  \item Explain that SP-PIFO\cite{Alcoz2020} approximates the behavior of a PIFO using Strict-Priority queues.
+  \item Explain that does not support non-work conserving scheduling.
 \end{itemize}
 
 
-\subsubsection{Algorithms}
+\subsubsection{Data Structure}
 
 \begin{itemize}
-  \item Explain what types of scheduling algorithms are programmable and which aren't.
-  \item Give examples of how they differ.
+  \item Explain how the PIFO is an array of queues.
+  \item Explain how the PIFO tends to not scale with large sizes. Mainly in hardware based scheduling.
+  \item Explain how the SP-PIFO is a small PIFO that approximates larger PIFO.
 \end{itemize}
 
 
-\subsubsection{Data Structures}
+\subsection{Eiffel}
 
 \begin{itemize}
-  \item Explain how different data-structures affect which scheduling algorithms can be written using programmable schedulers.
-  \item Explain the following data-structures and what features they provide:
-        \begin{itemize}
-          \item PIFO\cite{Sivaraman2016}
-          \item SP-PIFO\cite{Alcoz2020}
-          \item Eiffel\cite{Saeed2019}
-          \item Calendar-queues\cite{KrSharma2020}
-        \end{itemize}
+  \item Explain how Eiffel\cite{Saeed2019} data structure is designed for software based scheduling and that it is optimized using find-first-set instructions.
+  \item Explain that it can change the order of the packets on dequeue, unlike PIFO.
 \end{itemize}
+
+
+\subsubsection{Data Structure}
+
+\begin{itemize}
+  \item Explain that it uses a bitmap to keep track of available slots for optimization with FFS commands.
+  \item Explain that it uses two alternating data structures to allow incremental inserts while not needing to scale the bitmaps dynamically.
+\end{itemize}
+
+
+\subsection{Calendar-queues}
+
+\begin{itemize}
+  \item Explain that it supports both work and non-work conserving scheduling.
+\end{itemize}
+
+
+\subsubsection{Data Structure}
+
+\begin{itemize}
+  \item Explain that it uses a circular buffer with a hand like an analog clock. The slots represent when the scheduler will dequeue in the future. While the hand points to the packets that are dequeing.
+\end{itemize}
+
 
 \section{The extended Berkeley Packet Filter (eBPF)}
 
@@ -250,8 +281,19 @@ provides a key-value store that enables inter-process communication called eBPF
 maps, in-kernel helper functions, and toolchains to create and manage eBPF
 programs from user-space.
 
+\todo[inline]{Frey: Because we all know what eBPF is, I am going to collapse these eBPF sections and make it shorter and simpler.}
+
+\begin{itemize}
+  \item Explain h
+  \item Explain eBPF maps and their scope.
+  \item Explain what hooks are and that eBPF allows helper functions.
+  \item Explain how eBPF programs are loaded using the bpf system call.
+\end{itemize}
+
 
 \subsection{Instruction-set}
+
+\todo[inline]{Frey: I think I will remove this section either completely, or at least remove the extra details.}
 
 The eBPF instruction set is 64-bit and consists of eleven registers listed in
 table ~\ref{table:eBPF_registers}. It contains a little over a hundred
@@ -277,29 +319,8 @@ memory, and branch instructions.
 \label{table:eBPF_registers}
 \end{table}
 
-The main strength of the eBPF framework comes from the Linux kernel's eBPF
-verifier, which ensures that the programs can not crash nor harm the system. It
-does this by ensuring that the program does not exceed one million instructions
-and that all loops within the program are bounded.
 
-As a second check the verifier checks all conditional logic by pushing the paths
-into a stack that it uses to simulate the code until it reaches end of the
-program.
-
-\begin{itemize}
-  \item Explain how the verifier works.
-  \item Explain what type of problems the verifier can protect against.
-  \item Explain the difference between the eBPF bytecode and JIT on the architectures that support it.
-  \item Explain what eBPF maps are and what different types they provide. Per-cpu core maps, etc.
-  \item Question: You mentioned new eBPF maps that were not documented. Which maps are available now that I might not be aware of?
-  \item Explain what type of hooks and helper functions the eBPF runtime has.
-  \item Explain how eBPF programs are loaded using the bpf system call.
-  \item Explain how bpf programs are typically loaded using bcc, libbpf, ip, or tc.
-  \item Explain how eBPF is a new technology and tends to have many issues related to the compilers, loaders, and verifier.
-\end{itemize}
-
-
-\section{Express Data Path (XDP)}
+\subsection{Express Data Path (XDP)}
 
 XDP is a type of eBPF program that are attached directly to the RX path of a
 network interface.
@@ -310,54 +331,7 @@ network interface.
 \end{itemize}
 
 
-%%\section{Linux Kernel Networking Subsystem}
-
-
-\section{The Linux Kernel Packet Queueing Discipline (Qdisc)}
-
-\begin{itemize}
-  \item Explain where in the network pipe the Qdiscs are located.
-  \item Explain the features that Qdiscs provides for traffic control:
-        \begin{itemize}
-          \item Shaping: Shaping delay packets to meet a desired rate.
-          \item Scheduling: Schedulers arrange and/or rearrange packets for output.
-          \item Classifying: Classifiers sort or separate traffic into queues.
-          \item Policing: Policiers measure and limit traffic in a particular queue.
-          \item Dropping: Dropping discards an entire packet, flow or classification.
-          \item Marking: Marking is a mechanism by which the packet is altered.
-        \end{itemize}
-  \item Explain what type of primitives the Qdiscs system supplies:
-        \begin{itemize}
-          \item Classfull Qdiscs.
-          \item Classless Qdiscs.
-          \item Actions.
-          \item Filters.
-        \end{itemize}
-  \item The tc command line tool.
-\end{itemize}
-
-
-
-\subsection{Classless and Classfull Qdiscs}
-
-\begin{itemize}
-  \item Explain how the Classfull Qdiscs can create a tree of Qdiscs where the leaves are Classless Qdiscs.
-  \item Explain tc command and how it refers to instances of Qdiscs using a 16 bit identifier in hex.
-        \item Explain that the tc command parameters may behave differently between Qdics due to each Qdisc handling them differently.
-  \item Explain that the ingress Qdiscs are refereed to as the hex number, ffff, and that they can only be classless.
-  \item Give an example of using a Qdisc.
-\end{itemize}
-
-
-\subsection{Classifiers and Filters}
-
-\begin{itemize}
-  \item Explain that Qdiscs can attach classifiers and filters.
-  \item Explain how classifiers are an outer loop that run filters. Also explain that each Qdisc is expected to implement this loop, and that it might not do so.
-\end{itemize}
-
-
-\subsection{eBPF Classifier and Filter}
+\subsection{eBPF Qdisc Classifiers}
 
 \begin{itemize}
   \item Explain that the Qdisc layer currently supports two types of eBPF programs. These programs are a eBPF based classifier and filters.
@@ -365,15 +339,13 @@ network interface.
 \end{itemize}
 
 
-\section{Programmable Scheduling Frameworks in eBPF}
+\section{Programmable Packet Scheduling Frameworks in eBPF}
 
 \begin{itemize}
-  \item Explain what facilities a programmable scheduling framework needs.
+  \item Explain how we fulfill our requirements for a programmable schedulers using eBPF.
         \begin{itemize}
-          \item Programmable data structures, where a general data-structure is desired, but more flexible to provide multiple.
-          \item A way to dynamically change its functionality on the fly through maps.
+          \item How we want to either use eBPF helpers or eBPF maps to manipulate packet scheduling data structures.
         \end{itemize}
-  \item Explain which components need to be part of the kernel and can't be in eBPF code due to eBPF limits, such as instruction count.
 \end{itemize}
 
 
@@ -394,11 +366,17 @@ network interface.
   \item Explain what changes are needed to make it a reality.
 \end{itemize}
 
+\section{Evaluation of eBPF-Qdisc and XDQ}
+
+\begin{itemize}
+  \item Compare a type of scheduling algorithm using eBPF-Qdisc and XDQ performance to Qdiscs that does the same functionality.
+  \item Compare eBPF-Qdisc and XDQ performance to eachother.
+\end{itemize}
 
 \section{Conclusion}
 
 \begin{itemize}
-  \item Explain the two different solutions, their differences and state.
+  \item Reiterate main points of design, and summarise results.
 \end{itemize}
 
 
