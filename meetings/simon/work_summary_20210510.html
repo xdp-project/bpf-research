@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-05-10</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-05-10</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-05-10 mån 12:46</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org7d32391">1. PPing</a>
+<ul>
+<li><a href="#/slide-org3a46e28">1.1. PPing: Current JSON format</a></li>
+<li><a href="#/slide-org68a99c3">1.2. PPing: Discussion on measurement study</a></li>
+<li><a href="#/slide-org0362b14">1.3. PPing: Some measurement considerations</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgc4a51e6">2. Other</a></li>
+<li><a href="#/slide-orgfef9207">3. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org7d32391">
+<h2 id="org7d32391"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Have added a JSON format and Kathie's "machine friendly"/ppviz format
+<ul>
+<li>Kathie's format was very easy to implement, so why not?</li>
+
+</ul></li>
+<li>Have added timestamps and minimum-RTTs to all formats
+<ul>
+<li>Have also added protocol and packets/bytes sent/received to JSON output</li>
+
+</ul></li>
+<li>Have opened <a href="https://github.com/xdp-project/bpf-examples/pull/16">PR</a></li>
+<li>Have also started discussion on measurement study: <a href="https://github.com/xdp-project/bpf-examples/pull/17">PR</a></li>
+
+</ul>
+
+</section>
+<section id="slide-org3a46e28">
+<h3 id="org3a46e28"><span class="section-number-3">1.1</span> PPing: Current JSON format</h3>
+<p>
+Actual format
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-json" ><code trim>{<span style="color: #a020f0;">"timestamp"</span>:<span style="color: #008b8b;">1620639563.930289461</span>, <span style="color: #a020f0;">"rtt"</span>:<span style="color: #008b8b;">0.000006753</span>, <span style="color: #a020f0;">"min_rtt"</span>:<span style="color: #008b8b;">0.000006753</span>, <span style="color: #a020f0;">"src_ip"</span>:<span style="color: #8b2252;">"10.11.1.1"</span>, <span style="color: #a020f0;">"src_port"</span>:<span style="color: #008b8b;">5201</span>, <span style="color: #a020f0;">"dest_ip"</span>:<span style="color: #8b2252;">"10.11.1.2"</span>, <span style="color: #a020f0;">"dest_port"</span>:<span style="color: #008b8b;">48856</span>, <span style="color: #a020f0;">"protocol"</span>:<span style="color: #8b2252;">"TCP"</span>, <span style="color: #a020f0;">"sent_pkts"</span>:<span style="color: #008b8b;">7798</span>, <span style="color: #a020f0;">"sent_bytes"</span>:<span style="color: #008b8b;">342275968</span>, <span style="color: #a020f0;">"rec_pkts"</span>:<span style="color: #008b8b;">5195</span>, <span style="color: #a020f0;">"rec_bytes"</span>:<span style="color: #008b8b;">37</span> }
+</code></pre>
+</div>
+
+<p>
+jq . + comments
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-json" ><code trim>{
+  <span style="color: #a020f0;">"timestamp"</span>: <span style="color: #008b8b;">1620639563.9302895</span>, // May lose precision when interpreted as double
+  <span style="color: #a020f0;">"rtt"</span>: <span style="color: #008b8b;">6.753</span>e-<span style="color: #008b8b;">06</span>,
+  <span style="color: #a020f0;">"min_rtt"</span>: <span style="color: #008b8b;">6.753</span>e-<span style="color: #008b8b;">06</span>,
+  <span style="color: #a020f0;">"src_ip"</span>: <span style="color: #8b2252;">"10.11.1.1"</span>, //ip address stored as string
+  <span style="color: #a020f0;">"src_port"</span>: <span style="color: #008b8b;">5201</span>,
+  <span style="color: #a020f0;">"dest_ip"</span>: <span style="color: #8b2252;">"10.11.1.2"</span>,
+  <span style="color: #a020f0;">"dest_port"</span>: <span style="color: #008b8b;">48856</span>,
+  <span style="color: #a020f0;">"protocol"</span>: <span style="color: #8b2252;">"TCP"</span>, //protocol as string vs number?
+  <span style="color: #a020f0;">"sent_pkts"</span>: <span style="color: #008b8b;">7798</span>,
+  <span style="color: #a020f0;">"sent_bytes"</span>: <span style="color: #008b8b;">342275968</span>,
+  <span style="color: #a020f0;">"rec_pkts"</span>: <span style="color: #008b8b;">5195</span>,
+  <span style="color: #a020f0;">"rec_bytes"</span>: <span style="color: #008b8b;">37</span>
+}
+</code></pre>
+</div>
+<ul>
+<li>Thoughts on format?</li>
+<li>Any additional fields to add?</li>
+
+</ul>
+
+</section>
+<section id="slide-org68a99c3">
+<h3 id="org68a99c3"><span class="section-number-3">1.2</span> PPing: Discussion on measurement study</h3>
+<ul>
+<li>Plan is to use pping for some measurement study</li>
+<li>Publish paper on pping + measurement results</li>
+<li>Have opened <a href="https://github.com/xdp-project/bpf-examples/pull/17">PR</a> to discuss some aspects of collecting measurements
+<ul>
+<li>Contains a <a href="https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md">document</a> that currently mainly outlines some open questions</li>
+<li>Plan to update the document with decisions</li>
+<li>Would appreciate input from others</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org0362b14">
+<h3 id="org0362b14"><span class="section-number-3">1.3</span> PPing: Some measurement considerations</h3>
+<ul>
+<li>What info do we need?
+<ul>
+<li>Anything beyond what is captured in the current JSON format?</li>
+
+</ul></li>
+<li>Can we use local storage?</li>
+<li>How much traffic can we send to remote storage?</li>
+<li>Do we need to filter out some traffic?</li>
+<li>We should probably anonymize IP-addresses
+<ul>
+<li>When should this be done?</li>
+<li>Do we still want some geographical information?</li>
+<li>Public vs private addresses?</li>
+<li>Also anonymize ports?</li>
+
+</ul></li>
+<li>What to analyze?
+<ul>
+<li>RTT fluctuations</li>
+<li>RTT correlation to ex. traffic or distance</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgc4a51e6">
+<h2 id="orgc4a51e6"><span class="section-number-2">2</span> Other</h2>
+<ul>
+<li>GUI course
+<ul>
+<li>Lab 2 corrected, lab 3 to be handed in 23/5</li>
+<li>Couple of delayed or returned assignments drop in</li>
+
+</ul></li>
+
+<li>DISCO reading course
+<ul>
+<li>My seminar on URLLC moved up to next slot</li>
+<li>&#x2026;need to read up on URLLC</li>
+
+</ul></li>
+
+</ul>
+
+
+</section>
+</section>
+<section>
+<section id="slide-orgfef9207">
+<h2 id="orgfef9207"><span class="section-number-2">3</span> Plan</h2>
+<ul>
+<li>Short week
+<ul>
+<li>Wednesday is CS retreat</li>
+<li>Thursday is off (Kristi himmelsfärdsdag)</li>
+<li>Planned to take Friday off as well</li>
+
+</ul></li>
+
+<li>GUI course
+<ul>
+<li>Correct a couple of delayed assignments + returns</li>
+
+</ul></li>
+<li>DISCO reading course
+<ul>
+<li>Read up on URLLC</li>
+
+</ul></li>
+<li>Attend grad school NT seminar</li>
+<li>Maybe/partly attend CS retreat</li>
+<li>PPing
+<ul>
+<li>Fixes(?)</li>
+<li>Add support for ICMP Echo</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+#+TITLE: Progress update 2021-05-10
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Have added a JSON format and Kathie's "machine friendly"/ppviz format
+  - Kathie's format was very easy to implement, so why not?
+- Have added timestamps and minimum-RTTs to all formats
+  - Have also added protocol and packets/bytes sent/received to JSON output
+- Have opened [[https://github.com/xdp-project/bpf-examples/pull/16][PR]]
+- Have also started discussion on measurement study: [[https://github.com/xdp-project/bpf-examples/pull/17][PR]]
+
+** PPing: Current JSON format
+Actual format
+#+BEGIN_SRC json
+{"timestamp":1620639563.930289461, "rtt":0.000006753, "min_rtt":0.000006753, "src_ip":"10.11.1.1", "src_port":5201, "dest_ip":"10.11.1.2", "dest_port":48856, "protocol":"TCP", "sent_pkts":7798, "sent_bytes":342275968, "rec_pkts":5195, "rec_bytes":37 }
+#+END_SRC
+
+jq . + comments
+#+BEGIN_SRC json
+{
+  "timestamp": 1620639563.9302895, // May lose precision when interpreted as double
+  "rtt": 6.753e-06,
+  "min_rtt": 6.753e-06,
+  "src_ip": "10.11.1.1", //ip address stored as string
+  "src_port": 5201,
+  "dest_ip": "10.11.1.2",
+  "dest_port": 48856,
+  "protocol": "TCP", //protocol as string vs number?
+  "sent_pkts": 7798,
+  "sent_bytes": 342275968,
+  "rec_pkts": 5195,
+  "rec_bytes": 37
+}
+#+END_SRC
+- Thoughts on format?
+- Any additional fields to add?
+
+** PPing: Discussion on measurement study
+- Plan is to use pping for some measurement study
+- Publish paper on pping + measurement results
+- Have opened [[https://github.com/xdp-project/bpf-examples/pull/17][PR]] to discuss some aspects of collecting measurements
+  - Contains a [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md][document]] that currently mainly outlines some open questions
+  - Plan to update the document with decisions
+  - Would appreciate input from others
+
+** PPing: Some measurement considerations
+ - What info do we need?
+   - Anything beyond what is captured in the current JSON format?
+ - Can we use local storage?
+ - How much traffic can we send to remote storage?
+ - Do we need to filter out some traffic?
+ - We should probably anonymize IP-addresses
+   - When should this be done?
+   - Do we still want some geographical information?
+   - Public vs private addresses?
+   - Also anonymize ports?
+ - What to analyze?
+   - RTT fluctuations
+   - RTT correlation to ex. traffic or distance
+
+* Other
+- GUI course
+  - Lab 2 corrected, lab 3 to be handed in 23/5
+  - Couple of delayed or returned assignments drop in
+
+- DISCO reading course
+  - My seminar on URLLC moved up to next slot
+  - ...need to read up on URLLC
+
+
+* Plan
+- Short week
+  - Wednesday is CS retreat
+  - Thursday is off (Kristi himmelsfärdsdag)
+  - Planned to take Friday off as well
+
+- GUI course
+  - Correct a couple of delayed assignments + returns
+- DISCO reading course
+  - Read up on URLLC
+- Attend grad school NT seminar
+- Maybe/partly attend CS retreat
+- PPing
+  - Fixes(?)
+  - Add support for ICMP Echo
