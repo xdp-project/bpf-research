@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-05-17</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-05-17</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-05-17 mån 15:10</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org9252e12">1. Institutional duty</a></li>
+<li><a href="#/slide-org9b77022">2. Courses</a></li>
+<li><a href="#/slide-orgb70d225">3. PPing</a>
+<ul>
+<li><a href="#/slide-org0fdc863">3.1. PPing: Single instance fix</a></li>
+<li><a href="#/slide-orgf658369">3.2. PPing: Protocol in JSON format</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org54e88f0">4. Meetings going forward</a></li>
+<li><a href="#/slide-org4f003de">5. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org9252e12">
+<h2 id="org9252e12"><span class="section-number-2">1</span> Institutional duty</h2>
+<ul>
+<li>Lab supervisor in GUI course</li>
+<li>This is final week of lab 3 (final lab)
+<ul>
+<li>Expect fairly high pressue during the supervission sessions</li>
+
+</ul></li>
+<li>Some delayed and returned labs keep dropping in</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org9b77022">
+<h2 id="org9b77022"><span class="section-number-2">2</span> Courses</h2>
+<ul>
+<li>Currently mainly the DISCO reading course
+<ul>
+<li>Have a couple of other courses, but only requires me to attend defenses/colliqiums</li>
+
+</ul></li>
+<li>In DISCO course I've been moved up to host next session
+<ul>
+<li>Currently in the process of reading up on and finding papers on URLLC</li>
+<li>Probably need to have selected papers by end of week</li>
+<li>Will also need to start preparing a presentation</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgb70d225">
+<h2 id="orgb70d225"><span class="section-number-2">3</span> PPing</h2>
+<ul>
+<li>Not much has happend since last week (very short week)</li>
+<li>Fixed issue where only single instance of pping could run at a time</li>
+<li>There are a number of smaller fixes I need to work on
+<ul>
+<li>Both some code cleanup and JSON format improvments</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org0fdc863">
+<h3 id="org0fdc863"><span class="section-number-3">3.1</span> PPing: Single instance fix</h3>
+<ul>
+<li>To ensure pping is always loaded with libbpf, tc program is loaded and pinned from userspace program
+<ul>
+<li>tc command only attaches pinned program, instead of loading it itself</li>
+
+</ul></li>
+<li>Was pinning program to <code>/sys/fs/bpf/pping/classifier</code></li>
+<li>Only removed pinned program on shutdown</li>
+<li>If you try to start pping again (on ex. another interface), it will fail to pin tc program as location is already occupied</li>
+<li>Fix was to simply unpin tc program as soon as it has been attached</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf658369">
+<h3 id="orgf658369"><span class="section-number-3">3.2</span> PPing: Protocol in JSON format</h3>
+<ul>
+<li>Have added a <code>protocol</code> field (will currently only be <code>"TCP"</code>)</li>
+<li>Should <code>protocol</code> always be layer 4/transport protocol?
+<ul>
+<li>Say we add support for QUIC (over UDP), should protocol then be "QUIC" or "UDP"?</li>
+<li>Say we add support for TCP based on seq/ACK numbers, should protocol still only be "TCP"?</li>
+
+</ul></li>
+<li>Could either try to extend <code>protocol</code> field, ex:
+<ul>
+<li><code>"protocol": "TCP Timestamp"</code></li>
+<li><code>"protocol": "ICMP Echo"</code></li>
+
+</ul></li>
+<li>Or add "identifier_type", ex:
+<ul>
+<li><code>"protocol": "TCP", "identifier_type": "timestamp"</code></li>
+<li><code>"protocol": "ICMP", "identifier_type": "echo"</code></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org54e88f0">
+<h2 id="org54e88f0"><span class="section-number-2">4</span> Meetings going forward</h2>
+<ul>
+<li>Should we have separate meetings to coordinate for AIDA, or combine it with these supervision meetings?</li>
+<li>Should maybe delay this discussion until Anna can join?</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org4f003de">
+<h2 id="org4f003de"><span class="section-number-2">5</span> Plan</h2>
+<ul>
+<li>Correct some late/returned labs in GUI course</li>
+<li>Read and select papers for DISCO course</li>
+<li>Various minor fixes for pping</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+#+TITLE: Progress update 2021-05-17
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Institutional duty
+- Lab supervisor in GUI course
+- This is final week of lab 3 (final lab)
+  - Expect fairly high pressue during the supervission sessions
+- Some delayed and returned labs keep dropping in
+
+* Courses
+- Currently mainly the DISCO reading course
+  - Have a couple of other courses, but only requires me to attend defenses/colliqiums
+- In DISCO course I've been moved up to host next session
+  - Currently in the process of reading up on and finding papers on URLLC
+  - Probably need to have selected papers by end of week
+  - Will also need to start preparing a presentation
+
+* PPing
+- Not much has happend since last week (very short week)
+- Fixed issue where only single instance of pping could run at a time
+- There are a number of smaller fixes I need to work on
+  - Both some code cleanup and JSON format improvments
+
+** PPing: Single instance fix
+- To ensure pping is always loaded with libbpf, tc program is loaded and pinned from userspace program
+  - tc command only attaches pinned program, instead of loading it itself
+- Was pinning program to ~/sys/fs/bpf/pping/classifier~
+- Only removed pinned program on shutdown
+- If you try to start pping again (on ex. another interface), it will fail to pin tc program as location is already occupied
+- Fix was to simply unpin tc program as soon as it has been attached
+
+** PPing: Protocol in JSON format
+- Have added a ~protocol~ field (will currently only be ~"TCP"~)
+- Should ~protocol~ always be layer 4/transport protocol?
+  - Say we add support for QUIC (over UDP), should protocol then be "QUIC" or "UDP"?
+  - Say we add support for TCP based on seq/ACK numbers, should protocol still only be "TCP"?
+- Could either try to extend ~protocol~ field, ex:
+  - ~"protocol": "TCP Timestamp"~
+  - ~"protocol": "ICMP Echo"~
+- Or add "identifier_type", ex:
+  - ~"protocol": "TCP", "identifier_type": "timestamp"~
+  - ~"protocol": "ICMP", "identifier_type": "echo"~
+
+* Meetings going forward
+- Should we have separate meetings to coordinate for AIDA, or combine it with these supervision meetings?
+- Should maybe delay this discussion until Anna can join?
+* Plan
+- Correct some late/returned labs in GUI course
+- Read and select papers for DISCO course
+- Various minor fixes for pping
