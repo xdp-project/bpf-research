@@ -96,6 +96,14 @@ class Stfq(EiffelPifo):
         return r
 
 
+class Fifo(EiffelPifo):
+    def get_flow_idx(self, _pkt):
+        return 0
+
+    def get_rank(self, _flow):
+        return 0
+
+
 if __name__ == "__main__":
     pkts = [
         Packet(1, 1, 1),
@@ -105,4 +113,5 @@ if __name__ == "__main__":
         Packet(2, 2, 1),
         Packet(2, 3, 1),
     ]
+    Runner(pkts, Fifo()).run()
     Runner(pkts, Stfq()).run()
