@@ -65,3 +65,42 @@ class EiffelPifo(Pifo):
     def get_rank_dequeue(self, flow):
         raise NotImplementedError
 
+
+class Stfq(EiffelPifo):
+    def __init__(self):
+        super().__init__()
+        self.last_finish = {}
+        self.virt_time = 1
+
+    def get_rank(self, flow):
+        # We don't change the flow rank on enqueue if it already has one
+        if flow.rank:
+            return flow.rank
+
+        if flow.idx in self.last_finish:
+            r = max(self.virt_time, self.last_finish[flow.idx])
+        else:
+            r = self.virt_time
+
+        self.last_finish[flow.idx] = r + flow.peek().length
+        return r
+
+    def get_rank_dequeue(self, flow):
+        # Recompute rank for next packet in flow; always exists in last_finish
+        # because we never clean that up
+        pkt = flow.peek()
+        r = self.last_finish[flow.idx]
+        self.last_finish[flow.idx] = r + pkt.length
+        return r
+
+
+if __name__ == "__main__":
+    pkts = [
+        Packet(1, 1, 1),
+        Packet(1, 2, 1),
+        Packet(1, 3, 1),
+        Packet(2, 1, 1),
+        Packet(2, 2, 1),
+        Packet(2, 3, 1),
+    ]
+    Runner(pkts, Stfq()).run()
