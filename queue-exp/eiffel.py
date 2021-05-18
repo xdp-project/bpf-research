@@ -45,21 +45,19 @@ class EiffelPifo(Pifo):
             self.sort()
 
     def dequeue(self):
-        f = self.peek()
+        f = super().dequeue()
         if f is None:
             return f
 
         pkt = f.dequeue()
 
-        # If we emptied out the flow, remove it from the queue and the flow
-        # state table
+        # If we emptied out the flow, remove it from the flow state table
         if len(f) == 0:
-            super().dequeue()
             del self.flows[f.idx]
-        # Otherwise, update the flow rank and its position in the FIFO
+        # Otherwise, compute a new flow rank and re-enqueue it into the PIFO
+        # with that rank
         else:
-            f.rank = self.get_rank_dequeue(f)
-            self.sort()
+            super().enqueue(f, rank=self.get_rank_dequeue(f))
         return pkt
 
     def get_rank_dequeue(self, flow):

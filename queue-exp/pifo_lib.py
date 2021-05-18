@@ -92,8 +92,10 @@ class Queue:
 
 class Pifo(Queue):
 
-    def enqueue(self, item):
-        item.rank = self.get_rank(item)
+    def enqueue(self, item, rank=None):
+        if rank is None:
+            rank = self.get_rank(item)
+        item.rank = rank
         super().enqueue(item)
         self.sort()
 
