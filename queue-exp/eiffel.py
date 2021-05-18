@@ -27,11 +27,15 @@ class EiffelPifo(Pifo):
         super().__init__()
         self.flows = {}
 
+    def get_flow_idx(self, pkt):
+        return pkt.flow
+
     def enqueue(self, pkt):
         # If we don't have state for the flow, create it and enqueue the flow to
         # the PIFO
-        if pkt.flow not in self.flows:
-            f = Flow(pkt.flow)
+        fid = self.get_flow_idx(pkt)
+        if fid not in self.flows:
+            f = Flow(fid)
             f.enqueue(pkt)
             self.flows[f.idx] = f
             super().enqueue(f)
@@ -39,7 +43,7 @@ class EiffelPifo(Pifo):
         # Otherwise, if we *do* have state for the flow, enqueue the packet to
         # the flow,recompute its rank and update the position in the PIFO
         else:
-            f = self.flows[pkt.flow]
+            f = self.flows[fid]
             f.enqueue(pkt)
             f.rank = self.get_rank(f)
             self.sort()
@@ -61,7 +65,7 @@ class EiffelPifo(Pifo):
         return pkt
 
     def get_rank_dequeue(self, flow):
-        raise NotImplementedError
+        return flow.rank
 
 
 class Stfq(EiffelPifo):
