@@ -58,6 +58,12 @@ class Queue:
     def enqueue(self, item):
         self._list.append(item)
 
+    def peek(self):
+        try:
+            return self._list[0]
+        except IndexError:
+            return None
+
     def dequeue(self):
         try:
             return self._list.pop(0)
@@ -89,7 +95,20 @@ class Pifo(Queue):
     def enqueue(self, item):
         item.rank = self.get_rank(item)
         super().enqueue(item)
+        self.sort()
+
+    def sort(self):
         self._list.sort(key=lambda x: x.rank)
 
     def get_rank(self, item):
         raise NotImplementedError
+
+
+class Flow(Queue):
+    def __init__(self, idx):
+        super().__init__()
+        self.idx = idx
+        self.rank = 0
+
+    def __repr__(self):
+        return f"F({self.idx})"
