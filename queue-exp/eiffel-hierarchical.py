@@ -29,10 +29,10 @@ class EiffelHierarchical(Stfq):
     hierarchy by enqueueing references to itself in its parents."""
 
     def __init__(self, idx, parent=None):
+        super().__init__()
         self.idx = idx
         self.parent = parent
         self.rank = 0
-        super().__init__()
 
     def get_flow_idx(self, itm):
         if hasattr(itm, "idx"):
@@ -61,6 +61,7 @@ class EiffelHierarchical(Stfq):
 
 class Policy(Queue):
     def __init__(self):
+        super().__init__()
         self.pq1 = EiffelHierarchical(1)
         self.pq2 = EiffelHierarchical(2, parent=self.pq1)
         self.pq3 = EiffelHierarchical(3, parent=self.pq1)

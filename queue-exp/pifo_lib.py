@@ -54,8 +54,9 @@ class Runner:
 
 
 class Queue:
-    def __init__(self):
+    def __init__(self, idx=None):
         self._list = []
+        self.idx = idx
 
     def enqueue(self, item):
         self._list.append(item)
@@ -89,7 +90,7 @@ class Queue:
         return self.qlen
 
     def __repr__(self):
-        return str(self.__class__.__name__)
+        return f"{self.__class__.__name__}({self.idx})"
 
     def dump(self):
         pprint(self._list, indent=4)
