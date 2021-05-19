@@ -30,6 +30,13 @@ class EiffelPifo(Pifo):
     def get_flow_idx(self, pkt):
         return pkt.flow
 
+    def enqueue_flow(self, f, rank=None, idx=None):
+        if idx is None:
+            idx = self.get_flow_idx(f)
+        if idx not in self.flows:
+            self.flows[idx] = f
+        super().enqueue(f, rank=rank)
+
     def enqueue(self, pkt):
         # If we don't have state for the flow, create it and enqueue the flow to
         # the PIFO
@@ -37,20 +44,25 @@ class EiffelPifo(Pifo):
         if fid not in self.flows:
             f = Flow(fid)
             f.enqueue(pkt)
-            self.flows[f.idx] = f
-            super().enqueue(f)
+            self.enqueue_flow(f, idx=fid)
 
         # Otherwise, if we *do* have state for the flow, enqueue the packet to
         # the flow,recompute its rank and update the position in the PIFO
         else:
             f = self.flows[fid]
             f.enqueue(pkt)
+
+            # FIXME: This doesn't work after adding the ability for items to be
+            # enqueued multiple times with different ranks (needed for the
+            # hierarchical mode)
             f.rank = self.get_rank(f)
             self.sort()
 
     def dequeue(self):
         f = super().dequeue()
-        if f is None:
+
+        # This handles empty flows and recursive instances of PIFOs
+        if not isinstance(f, Flow):
             return f
 
         pkt = f.dequeue()
@@ -61,7 +73,8 @@ class EiffelPifo(Pifo):
         # Otherwise, compute a new flow rank and re-enqueue it into the PIFO
         # with that rank
         else:
-            super().enqueue(f, rank=self.get_rank_dequeue(f))
+            self.enqueue_flow(f, idx=f.idx, rank=self.get_rank_dequeue(f))
+
         return pkt
 
     def get_rank_dequeue(self, flow):
@@ -74,9 +87,9 @@ class Stfq(EiffelPifo):
         self.last_finish = {}
         self.virt_time = 1
 
-    def get_rank(self, flow):
+    def get_rank(self, flow, force=False):
         # We don't change the flow rank on enqueue if it already has one
-        if flow.rank:
+        if flow.rank and not force:
             return flow.rank
 
         if flow.idx in self.last_finish:

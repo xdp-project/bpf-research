@@ -44,6 +44,8 @@ class Runner:
         pprint(self.input_pkts, indent=4)
         for p in self.input_pkts:
             self.queue.enqueue(p)
+        print("  Queue state:")
+        self.queue.dump()
         output = []
         for p in self.queue:
             output.append(p)
@@ -89,6 +91,9 @@ class Queue:
     def __repr__(self):
         return str(self.__class__.__name__)
 
+    def dump(self):
+        pprint(self._list, indent=4)
+
 
 class Pifo(Queue):
 
@@ -96,11 +101,19 @@ class Pifo(Queue):
         if rank is None:
             rank = self.get_rank(item)
         item.rank = rank
-        super().enqueue(item)
+        super().enqueue((rank, item))
         self.sort()
 
     def sort(self):
-        self._list.sort(key=lambda x: x.rank)
+        self._list.sort(key=lambda x: x[0])
+
+    def dequeue(self):
+        itm = super().dequeue()
+        return itm[1] if itm else None
+
+    def peek(self):
+        itm = super().peek()
+        return itm[1] if itm else None
 
     def get_rank(self, item):
         raise NotImplementedError
@@ -114,3 +127,12 @@ class Flow(Queue):
 
     def __repr__(self):
         return f"F({self.idx})"
+
+    # Return the length of the first packet in the queue as the "length" of the
+    # flow. This is not the correct thing to do, but it works as a stopgap
+    # solution for testing the hierarchical mode, and we're only using
+    # unit-length for that anyway
+    @property
+    def length(self):
+        itm = self.peek()
+        return itm.length if itm else 0
