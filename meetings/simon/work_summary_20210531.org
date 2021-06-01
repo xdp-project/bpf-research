@@ -1,0 +1,82 @@
+#+TITLE: Progress update 2021-05-31
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Institutional duty
+- Mostly done with the GUI course
+- Just some delayed handins and returns left to correct
+- Jonathan also wants us to help correcting an assignment if we have the time
+  - A bit unsure how much time I've actually spent on the course
+  - Think I can help as long as I limit the amount of feedback I provide
+
+* Courses
+- Will hold DISCO seminar on URLLC on Friday this week
+- Need to prepare and practice a bit for approx 30 min presentation
+- Also attend PhD defense as part of introduction course
+
+* PPing
+- Mainly some code fixes/cleanup
+- Now using JSON library (stolen from iproute) instead of giant printf
+  - By default no longer has any spacing in JSON format (more efficent but harder to read)
+  - Could add a pretty-print option
+- Still need to add the start/end-of-flow messages
+  - Need to think a bit about how to do this in a generic way
+** PPing - IP anonymization
+- Have started to look into it a little bit
+- Turns out it's a whole research area of its own
+  - Many different methods, and uncertainties of how safe they are
+- Think methods have to provide a 1-to-1 mapping to be relevant
+  - I.e. methods that "groups" addresses (usually truncate) will make analysis hard
+  - Nice part with truncation methods is that it still keeps some network information, ex. approx location
+- Do we need to consider ISPs data policy (GDPR)?
+  - Otherwise, maybe utalize less anonymization at collection time, and run second run of anonymization before publishing?
+** PPing - Performance test
+- We've also talked about creating some performance benchmark for pping
+  - Compare it against Kathie's pping
+  - Hopefully show that it has low enough overhead that you can always have in on
+- Haven't really spent much thought/effort on this yet
+- General setup of this?
+  - Single machine: Just run traffic over virtual interfaces
+    - Pros: "Easy" to set up, can have very high link speeds
+    - Cons: Traffic generation will also impact system
+  - Multiple machines
+    - Pros: More "realistic", can have dedicated pping machine
+    - Cons: More complex to set up, physical link speed limitation, need hardware with XDP drivers
+
+* Meetings with Muhammad Usman
+- Last time we were generally in favor of using these meetings to coordinate our work rather than setting up separate meetings
+  - Also wanted input from Anna
+- Anything else we need to discuss regarding this?
+
+* Vacation
+- Plan to take my vacation w 29-31, 34
+  - Is this problematic for anyone involved?
+- When will others have vaction?
+- How do we handle these meetings during summer?
+
+* Other
+- AIDA meeting tomorrow
+  - Not really anything from our side?
+
+- Toke has introduced me to Dave That
+  - They may have some interest in pping, will present it in meeting
+  - Either tomorrow or next week
+
+- What do I do with the "How to get a PhD" book?
+
+* Plan
+- Complete URLLC presentation
+  - And of course host seminar on Friday
+- Handle delayed labs and returns in GUI course
+  - Maybe also correct assignment 2
+- Attend AIDA meeting
+- Attend Cristian's PhD defense
+- Attend meeting with David That (tomorrow or next week)
+- pping:
+  - Add start/end-of-flow messages
+  - Continue looking at IP anonymization
+
+

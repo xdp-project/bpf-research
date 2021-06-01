@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-05-25</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-05-25</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-05-25 tis 11:03</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org0f84e49">1. PPing</a>
+<ul>
+<li><a href="#/slide-orgf6089dd">1.1. PPing: Single instance fix</a></li>
+<li><a href="#/slide-orgd71e977">1.2. PPing: Protocol in JSON format</a></li>
+<li><a href="#/slide-orge19a8ef">1.3. PPing: Flow start and end notifications</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org160da06">2. Institutional duty</a></li>
+<li><a href="#/slide-org53b53a1">3. Courses</a></li>
+<li><a href="#/slide-org2af4521">4. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org0f84e49">
+<h2 id="org0f84e49"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Not much has happend since last time</li>
+<li>Fixed issue where only single instance of pping could run at a time
+<ul>
+<li>Think I forgot to mention in last Red Hat meeting</li>
+
+</ul></li>
+<li>There are a number of smaller fixes I need to work on
+<ul>
+<li>Both some code cleanup and JSON format improvments</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgf6089dd">
+<h3 id="orgf6089dd"><span class="section-number-3">1.1</span> PPing: Single instance fix</h3>
+<ul>
+<li>To ensure pping is always loaded with libbpf, tc program is loaded and pinned from userspace program
+<ul>
+<li>tc command only attaches pinned program, instead of loading it itself</li>
+
+</ul></li>
+<li>Was pinning program to <code>/sys/fs/bpf/pping/classifier</code></li>
+<li>Only removed pinned program on shutdown</li>
+<li>If you try to start pping again (on ex. another interface), it will fail to pin tc program as location is already occupied</li>
+<li>Fix was to simply unpin tc program as soon as it has been attached</li>
+
+</ul>
+
+</section>
+<section id="slide-orgd71e977">
+<h3 id="orgd71e977"><span class="section-number-3">1.2</span> PPing: Protocol in JSON format</h3>
+<ul>
+<li>Have added a <code>protocol</code> field (will currently only be <code>"TCP"</code>)</li>
+<li>Should <code>protocol</code> always be layer 4/transport protocol?
+<ul>
+<li>Say we add support for QUIC (over UDP), should protocol then be "QUIC" or "UDP"?</li>
+<li>Say we add support for TCP based on seq/ACK numbers, should protocol still only be "TCP"?</li>
+
+</ul></li>
+<li>Could either try to extend <code>protocol</code> field, ex:
+<ul>
+<li><code>"protocol": "TCP Timestamp"</code></li>
+<li><code>"protocol": "ICMP Echo"</code></li>
+
+</ul></li>
+<li>Or add "identifier_type", ex:
+<ul>
+<li><code>"protocol": "TCP", "identifier_type": "timestamp"</code></li>
+<li><code>"protocol": "ICMP", "identifier_type": "echo"</code></li>
+<li><code>"protocol": "UDP", "identifier_type": "QUIC spinbit"</code></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orge19a8ef">
+<h3 id="orge19a8ef"><span class="section-number-3">1.3</span> PPing: Flow start and end notifications</h3>
+<ul>
+<li>Last meeting we briefly discussed adding some type of message when flow starts/ends</li>
+<li>For start, is it only when we see SYN-flag or whenever we have no previous flow-state?</li>
+<li>For end, is it only when we see RST/FIN flag, or also when garbage collected?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org160da06">
+<h2 id="org160da06"><span class="section-number-2">2</span> Institutional duty</h2>
+<ul>
+<li>Deadline for lab 3 was last week</li>
+<li>Need to correct lab 3 this week
+<ul>
+<li>In general I probably also have to become more efficent at correcting</li>
+<li>Often spend ​~1h and write ​~500 words of feedback per correction</li>
+
+</ul></li>
+<li>Today was last supervision session</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org53b53a1">
+<h2 id="org53b53a1"><span class="section-number-2">3</span> Courses</h2>
+<ul>
+<li>Will hold seminar on URLLC next week in DISCO reading course</li>
+<li>Have read up on subject, selected papers and prepared discussion questions</li>
+<li>Still have to prepare the actual presentation</li>
+
+</ul>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org2af4521">
+<h2 id="org2af4521"><span class="section-number-2">4</span> Plan</h2>
+<ul>
+<li>Correct lab 3 in GUI course</li>
+<li>Have initial draft of URLLC presentation</li>
+<li>pping:
+<ul>
+<li>Some code cleanup</li>
+<li>Use JSON builder instead of giant printf</li>
+<li>Some changes to JSON format (mainly use ints instead of floats)</li>
+<li>Find some time to look at network data sets</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

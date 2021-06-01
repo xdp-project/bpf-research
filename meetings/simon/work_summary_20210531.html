@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-05-31</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-05-31</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-05-31 mån 13:44</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org526c2a7">1. Institutional duty</a></li>
+<li><a href="#/slide-org06fdc08">2. Courses</a></li>
+<li><a href="#/slide-org0c037c1">3. PPing</a>
+<ul>
+<li><a href="#/slide-org5850823">3.1. PPing - IP anonymization</a></li>
+<li><a href="#/slide-org6e0465b">3.2. PPing - Performance test</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org4590ce2">4. Meetings with Muhammad Usman</a></li>
+<li><a href="#/slide-org1995c93">5. Vacation</a></li>
+<li><a href="#/slide-orgd316a2e">6. Other</a></li>
+<li><a href="#/slide-orgd9fae59">7. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org526c2a7">
+<h2 id="org526c2a7"><span class="section-number-2">1</span> Institutional duty</h2>
+<ul>
+<li>Mostly done with the GUI course</li>
+<li>Just some delayed handins and returns left to correct</li>
+<li>Jonathan also wants us to help correcting an assignment if we have the time
+<ul>
+<li>A bit unsure how much time I've actually spent on the course</li>
+<li>Think I can help as long as I limit the amount of feedback I provide</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org06fdc08">
+<h2 id="org06fdc08"><span class="section-number-2">2</span> Courses</h2>
+<ul>
+<li>Will hold DISCO seminar on URLLC on Friday this week</li>
+<li>Need to prepare and practice a bit for approx 30 min presentation</li>
+<li>Also attend PhD defense as part of introduction course</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org0c037c1">
+<h2 id="org0c037c1"><span class="section-number-2">3</span> PPing</h2>
+<ul>
+<li>Mainly some code fixes/cleanup</li>
+<li>Now using JSON library (stolen from iproute) instead of giant printf
+<ul>
+<li>By default no longer has any spacing in JSON format (more efficent but harder to read)</li>
+<li>Could add a pretty-print option</li>
+
+</ul></li>
+<li>Still need to add the start/end-of-flow messages
+<ul>
+<li>Need to think a bit about how to do this in a generic way</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org5850823">
+<h3 id="org5850823"><span class="section-number-3">3.1</span> PPing - IP anonymization</h3>
+<ul>
+<li>Have started to look into it a little bit</li>
+<li>Turns out it's a whole research area of its own
+<ul>
+<li>Many different methods, and uncertainties of how safe they are</li>
+
+</ul></li>
+<li>Think methods have to provide a 1-to-1 mapping to be relevant
+<ul>
+<li>I.e. methods that "groups" addresses (usually truncate) will make analysis hard</li>
+<li>Nice part with truncation methods is that it still keeps some network information, ex. approx location</li>
+
+</ul></li>
+<li>Do we need to consider ISPs data policy (GDPR)?
+<ul>
+<li>Otherwise, maybe utalize less anonymization at collection time, and run second run of anonymization before publishing?</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-org6e0465b">
+<h3 id="org6e0465b"><span class="section-number-3">3.2</span> PPing - Performance test</h3>
+<ul>
+<li>We've also talked about creating some performance benchmark for pping
+<ul>
+<li>Compare it against Kathie's pping</li>
+<li>Hopefully show that it has low enough overhead that you can always have in on</li>
+
+</ul></li>
+<li>Haven't really spent much thought/effort on this yet</li>
+<li>General setup of this?
+<ul>
+<li>Single machine: Just run traffic over virtual interfaces
+<ul>
+<li>Pros: "Easy" to set up, can have very high link speeds</li>
+<li>Cons: Traffic generation will also impact system</li>
+
+</ul></li>
+<li>Multiple machines
+<ul>
+<li>Pros: More "realistic", can have dedicated pping machine</li>
+<li>Cons: More complex to set up, physical link speed limitation, need hardware with XDP drivers</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org4590ce2">
+<h2 id="org4590ce2"><span class="section-number-2">4</span> Meetings with Muhammad Usman</h2>
+<ul>
+<li>Last time we were generally in favor of using these meetings to coordinate our work rather than setting up separate meetings
+<ul>
+<li>Also wanted input from Anna</li>
+
+</ul></li>
+<li>Anything else we need to discuss regarding this?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org1995c93">
+<h2 id="org1995c93"><span class="section-number-2">5</span> Vacation</h2>
+<ul>
+<li>Plan to take my vacation w 29-31, 34
+<ul>
+<li>Is this problematic for anyone involved?</li>
+
+</ul></li>
+<li>When will others have vaction?</li>
+<li>How do we handle these meetings during summer?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd316a2e">
+<h2 id="orgd316a2e"><span class="section-number-2">6</span> Other</h2>
+<ul>
+<li>AIDA meeting tomorrow
+<ul>
+<li>Not really anything from our side?</li>
+
+</ul></li>
+
+<li>Toke has introduced me to Dave That
+<ul>
+<li>They may have some interest in pping, will present it in meeting</li>
+<li>Either tomorrow or next week</li>
+
+</ul></li>
+
+<li>What do I do with the "How to get a PhD" book?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd9fae59">
+<h2 id="orgd9fae59"><span class="section-number-2">7</span> Plan</h2>
+<ul>
+<li>Complete URLLC presentation
+<ul>
+<li>And of course host seminar on Friday</li>
+
+</ul></li>
+<li>Handle delayed labs and returns in GUI course
+<ul>
+<li>Maybe also correct assignment 2</li>
+
+</ul></li>
+<li>Attend AIDA meeting</li>
+<li>Attend Cristian's PhD defense</li>
+<li>Attend meeting with David That (tomorrow or next week)</li>
+<li>pping:
+<ul>
+<li>Add start/end-of-flow messages</li>
+<li>Continue looking at IP anonymization</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
