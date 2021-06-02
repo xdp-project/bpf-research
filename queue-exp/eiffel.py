@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# coding: utf-8 -*-
 #
 # eiffel.py
 #
@@ -119,12 +120,12 @@ class Fifo(EiffelPifo):
 
 if __name__ == "__main__":
     pkts = [
-        Packet(1, 1, 1),
-        Packet(1, 2, 1),
-        Packet(1, 3, 1),
-        Packet(2, 1, 1),
-        Packet(2, 2, 1),
-        Packet(2, 3, 1),
+        Packet(flow=1, idn=1, length=1),
+        Packet(flow=1, idn=2, length=1),
+        Packet(flow=1, idn=3, length=1),
+        Packet(flow=2, idn=1, length=1),
+        Packet(flow=2, idn=2, length=1),
+        Packet(flow=2, idn=3, length=1),
     ]
     Runner(pkts, Fifo()).run()
     Runner(pkts, Stfq()).run()

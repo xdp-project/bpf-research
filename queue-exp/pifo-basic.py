@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# coding: utf-8 -*-
 #
-# eiffel-experiments.py
+# pifo-basic.py
 #
 # Author:   Toke Høiland-Jørgensen (toke@toke.dk)
 # Date:     17 May 2021
@@ -44,11 +45,11 @@ class Stfq(Pifo):
 
 if __name__ == "__main__":
     pkts = [
-        Packet(1, 1, 2),
-        Packet(1, 2, 2),
-        Packet(2, 1, 1),
-        Packet(2, 2, 1),
-        Packet(2, 3, 1),
+        Packet(flow=1, idn=1, length=2),
+        Packet(flow=1, idn=2, length=2),
+        Packet(flow=2, idn=1, length=1),
+        Packet(flow=2, idn=2, length=1),
+        Packet(flow=2, idn=3, length=1),
     ]
     Runner(pkts, Fifo()).run()
     Runner(pkts, Stfq()).run()
