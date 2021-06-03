@@ -27,30 +27,72 @@ class Packet:
         self.flow = flow
         self.idn = idn
         self.length = length
-        self.rank = 0
 
     def __repr__(self):
         return f"P(F:{self.flow}, I:{self.idn}, L:{self.length})"
 
 
 class Runner:
-    def __init__(self, pkts, queue):
+    """This class is responsible for running a test on a packet scheduling
+    algorithm. It is accountable for enquing and dequeing packets. For now, it
+    does so by dequing as many packets as it enqued. In the next iteration, when
+    we add pacing, it will need to handle virtual time cycling.
+    """
+
+    def __init__(self, pkts, scheduler):
         self.input_pkts = pkts
-        self.queue = queue
+        self.scheduler = scheduler
 
     def run(self):
-        print(f"Running with queue: {self.queue}")
-        print("  Inserting packets into queue:")
+        print(f"Running with scheduler: {self.scheduler}")
+        print("  Inserting packets into scheduler:")
         pprint(self.input_pkts, indent=4)
         for p in self.input_pkts:
-            self.queue.enqueue(p)
-        print("  Queue state:")
-        self.queue.dump()
+            self.scheduler.enqueue(p)
+        print("  Scheduler state:")
+        self.scheduler.dump()
         output = []
-        for p in self.queue:
+
+        for p in self.scheduler:
             output.append(p)
         print("  Got packets from queue:")
         pprint(output, indent=4)
+
+
+class SchedulingAlgorithm():
+
+    """A queuing packet scheduling algorithm requires an abstraction that keeps
+    the queuing data structure and the algorithm separate. To create a new
+    Scheduling algorithm, inherit this class, add the scheduling data structures
+    to the constructor, and implement the constructor, enqueue, dequeue, and the
+    dump functions.
+
+    Please look at the pifo_fifo.py to see how you implement a FIFO.
+    """
+
+    def __init__(self):
+        raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
+
+    def enqueue(self, item):
+        raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
+
+    def dequeue(self):
+        raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
+
+    def dump(self):
+        raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
+
+    def __next__(self):
+        item = self.dequeue()
+        if item is None:
+            raise StopIteration
+        return item
+
+    def __iter__(self):
+        return self
+
+    def __repr__(self):
+        return f"{self.__class__.__name__} - {self.__class__.__doc__}"
 
 
 class Queue:
@@ -97,11 +139,10 @@ class Queue:
 
 
 class Pifo(Queue):
-
-    def enqueue(self, item, rank=None):
+    def enqueue(self, item, rank):
         if rank is None:
-            rank = self.get_rank(item)
-        item.rank = rank
+            raise ValueError("Rank can't be of value 'None'.")
+
         super().enqueue((rank, item))
         self.sort()
 
@@ -116,24 +157,42 @@ class Pifo(Queue):
         itm = super().peek()
         return itm[1] if itm else None
 
-    def get_rank(self, item):
-        raise NotImplementedError
-
 
 class Flow(Queue):
     def __init__(self, idx):
         super().__init__()
         self.idx = idx
-        self.rank = 0
 
     def __repr__(self):
-        return f"F({self.idx})"
+        return f"F(I:{self.idx}, Q:{self.qlen}, L:{self.length})"
 
-    # Return the length of the first packet in the queue as the "length" of the
-    # flow. This is not the correct thing to do, but it works as a stopgap
-    # solution for testing the hierarchical mode, and we're only using
-    # unit-length for that anyway
     @property
     def length(self):
-        itm = self.peek()
-        return itm.length if itm else 0
+        result = 0
+        for itm in self._list:
+            result += itm.length if itm else 0
+        return result
+
+
+class FlowTracker():
+    """This class provides us with the typical operation of keeping track of
+    flows. Use this class in your scheduling algorithms when your algorithm only
+    has one type of flows.
+    """
+
+    def __init__(self):
+        self._flows = {}
+
+    def enqueue(self, pkt, flow_id=None):
+        if not isinstance(pkt, Packet):
+            raise ValueError(f"Expected a packet, but got '{pkt}' instead.")
+        if flow_id is None:
+            flow_id = pkt.flow
+        if not flow_id in self._flows:
+            self._flows[flow_id] = Flow(flow_id)
+        flow = self._flows[flow_id]
+        flow.enqueue(pkt)
+        return flow
+
+    def get_flow(self, flow_id):
+        return self._flows[flow_id]

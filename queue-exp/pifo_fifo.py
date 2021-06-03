@@ -5,6 +5,13 @@
 #
 # pifo-fifo.py
 
+"""First in, first out (FIFO)
+
+The FIFO scheduling algorithm preserves the order of the scheduled packets. This
+implementation is here for completeness and uses a PIFO. It is here to help
+people understand how to add new scheduling algorithms to this framework.
+"""
+
 __copyright__ = """
 Copyright (c) 2021, Toke Høiland-Jørgensen <toke@toke.dk>
 Copyright (c) 2021, Frey Alfredsson <freysteinn@freysteinn.com>
@@ -26,11 +33,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from pifo_lib import Packet, Runner, Pifo
+from pifo_lib import SchedulingAlgorithm
 
 
-class Fifo(Pifo):
+class Fifo(SchedulingAlgorithm):
+    """First in, first out (FIFO)"""
+
+    def __init__(self):
+        self._pifo = Pifo()
+
+    def enqueue(self, item):
+        rank = self.get_rank(item)
+        self._pifo.enqueue(item, rank)
+
     def get_rank(self, item):
-        return self.qlen
+        return self._pifo.qlen
+
+    def dequeue(self):
+        return self._pifo.dequeue()
+
+    def dump(self):
+        self._pifo.dump()
+
 
 if __name__ == "__main__":
     pkts = [
