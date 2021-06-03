@@ -3,15 +3,15 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# pifo-stfq.py
+# pifo-wfq.py
 
-"""Start-Time Fair Queuing (STFQ)
+"""Weighted Fair Queueing (WFQ)
 
 This scheduling algorithm is mentioned in the paper "Programmable packet
-scheduling at line rate" by Sivaraman, Anirudh, et al.
-
-It schedules packets by their start time within a flow. It defines the start
-time as the finish time of the last enqueued packet within a flow.
+scheduling at line rate" by Sivaraman, Anirudh, et al. It schedules flows by
+giving them a fraction of the capacity using predefined weights. In our example,
+we defined flows with an odd number to get a weight of 50 and even numbers to
+get 100.
 """
 
 __copyright__ = """
@@ -38,22 +38,22 @@ from pifo_lib import Packet, Runner, Pifo
 from pifo_lib import SchedulingAlgorithm
 
 
-class Stfq(SchedulingAlgorithm):
-    """Start-Time Fair Queuing (STFQ)"""
+class Wfq(SchedulingAlgorithm):
+    """Weighted Fair Queueing (WFQ)"""
 
     def __init__(self):
         self._pifo = Pifo()
-
         self._last_finish = {}
         self._virt_time = 0
 
     def get_rank(self, pkt):
-        flow_id = pkt.flow
-        if flow_id in self._last_finish:
-            rank = max(self._virt_time, self._last_finish[flow_id])
+        flow = pkt.flow
+        weight = 50 if flow % 2 == 1 else 100
+        if flow in self._last_finish:
+            rank = max(self._virt_time, self._last_finish[flow])
         else:
             rank = self._virt_time
-        self._last_finish[flow_id] = rank + pkt.length
+        self._last_finish[flow] = rank + pkt.length / weight
         return rank
 
     def enqueue(self, item):
@@ -67,13 +67,13 @@ class Stfq(SchedulingAlgorithm):
         self._pifo.dump()
 
 
-
 if __name__ == "__main__":
     pkts = [
-        Packet(flow=1, idn=1, length=2),
-        Packet(flow=1, idn=2, length=2),
-        Packet(flow=2, idn=1, length=1),
-        Packet(flow=2, idn=2, length=1),
-        Packet(flow=2, idn=3, length=1),
+        Packet(flow=1, idn=1, length=100),
+        Packet(flow=1, idn=2, length=100),
+        Packet(flow=1, idn=3, length=100),
+        Packet(flow=2, idn=1, length=100),
+        Packet(flow=2, idn=2, length=100),
+        Packet(flow=2, idn=3, length=100),
     ]
-    Runner(pkts, Stfq()).run()
+    Runner(pkts, Wfq()).run()
