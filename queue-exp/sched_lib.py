@@ -48,7 +48,7 @@ class Runner:
         print("  Inserting packets into scheduler:")
         pprint(self.input_pkts, indent=4)
         for p in self.input_pkts:
-            self.scheduler.enqueue(p)
+            self.scheduler.enqueue(p, p)
         print("  Scheduler state:")
         self.scheduler.dump()
         output = []
@@ -70,10 +70,10 @@ class SchedulingAlgorithm():
     Please look at the pifo_fifo.py to see how you implement a FIFO.
     """
 
-    def __init__(self):
-        raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
+    def __init__(self, name=None):
+        self._name = name
 
-    def enqueue(self, item):
+    def enqueue(self, ref, item):
         raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
 
     def dequeue(self):
@@ -83,16 +83,19 @@ class SchedulingAlgorithm():
         raise NotImplementedError(self.__class__.__name__ + ' missing implementation')
 
     def __next__(self):
-        item = self.dequeue()
-        if item is None:
+        pkt = self.dequeue()
+        if pkt is None:
             raise StopIteration
-        return item
+        return pkt
 
     def __iter__(self):
         return self
 
     def __repr__(self):
-        return f"{self.__class__.__name__} - {self.__class__.__doc__}"
+        result = f"{self.__class__.__name__} - {self.__class__.__doc__}"
+        if self._name is not None:
+            result = f"{self._name}: {result}"
+        return result
 
 
 class Queue:
@@ -100,8 +103,8 @@ class Queue:
         self._list = []
         self.idx = idx
 
-    def enqueue(self, item):
-        self._list.append(item)
+    def enqueue(self, ref, rank=None):
+        self._list.append(ref)
 
     def peek(self):
         try:
@@ -139,11 +142,11 @@ class Queue:
 
 
 class Pifo(Queue):
-    def enqueue(self, item, rank):
+    def enqueue(self, ref, rank):
         if rank is None:
             raise ValueError("Rank can't be of value 'None'.")
 
-        super().enqueue((rank, item))
+        super().enqueue((rank, ref))
         self.sort()
 
     def sort(self):
@@ -160,8 +163,7 @@ class Pifo(Queue):
 
 class Flow(Queue):
     def __init__(self, idx):
-        super().__init__()
-        self.idx = idx
+        super().__init__(idx)
 
     def __repr__(self):
         return f"F(I:{self.idx}, Q:{self.qlen}, L:{self.length})"

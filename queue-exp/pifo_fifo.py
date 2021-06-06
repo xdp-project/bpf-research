@@ -32,22 +32,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from pifo_lib import Packet, Runner, Pifo
-from pifo_lib import SchedulingAlgorithm
+from sched_lib import Packet, Runner, Pifo, SchedulingAlgorithm
 
 
 class Fifo(SchedulingAlgorithm):
     """First in, first out (FIFO)"""
 
-    def __init__(self):
+    def __init__(self, name=None):
+        super().__init__(name)
         self._pifo = Pifo()
 
-    def enqueue(self, item):
-        rank = self.get_rank(item)
-        self._pifo.enqueue(item, rank)
-
-    def get_rank(self, item):
+    def get_rank(self, _):
+        """Rank the items in FIFO order."""
         return self._pifo.qlen
+
+    def enqueue(self, ref, item):
+        rank = self.get_rank(item)
+        self._pifo.enqueue(ref, rank)
 
     def dequeue(self):
         return self._pifo.dequeue()

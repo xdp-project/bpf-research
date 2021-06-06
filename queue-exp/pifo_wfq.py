@@ -34,31 +34,36 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from pifo_lib import Packet, Runner, Pifo
-from pifo_lib import SchedulingAlgorithm
+from sched_lib import Packet, Runner, Pifo, SchedulingAlgorithm
 
 
 class Wfq(SchedulingAlgorithm):
     """Weighted Fair Queueing (WFQ)"""
 
-    def __init__(self):
+    def __init__(self, name=None):
+        super().__init__(name)
         self._pifo = Pifo()
         self._last_finish = {}
         self._virt_time = 0
 
-    def get_rank(self, pkt):
-        flow = pkt.flow
+    def get_rank(self, item):
+        """Rank the items by their start time, which we calculate from the
+        finish time of the last packet. However, we divide the packet's length
+        with weights to prioritize them. We determine the weights by splitting
+        the flow-ids into odd and even numbers.
+        """
+        flow = item.flow
         weight = 50 if flow % 2 == 1 else 100
         if flow in self._last_finish:
             rank = max(self._virt_time, self._last_finish[flow])
         else:
             rank = self._virt_time
-        self._last_finish[flow] = rank + pkt.length / weight
+        self._last_finish[flow] = rank + item.length / weight
         return rank
 
-    def enqueue(self, item):
+    def enqueue(self, ref, item):
         rank = self.get_rank(item)
-        self._pifo.enqueue(item, rank)
+        self._pifo.enqueue(ref, rank)
 
     def dequeue(self):
         return self._pifo.dequeue()

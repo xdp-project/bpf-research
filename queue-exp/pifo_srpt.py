@@ -36,15 +36,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from pifo_lib import Packet, Runner, Pifo
-from pifo_lib import SchedulingAlgorithm
-from pifo_lib import FlowTracker
+from sched_lib import Packet, Runner, Pifo, SchedulingAlgorithm
+from sched_lib import FlowTracker
 
 
 class Srpt(SchedulingAlgorithm):
     """Shortest Remaining Processing Time"""
 
-    def __init__(self):
+    def __init__(self, name=None):
+        super().__init__(name)
         self._pifo = Pifo()
         self._flow_tracker = FlowTracker()
 
@@ -57,22 +57,24 @@ class Srpt(SchedulingAlgorithm):
             else:
                 self._remains[pkt.flow] = pkt.length
 
-    def get_rank(self, pkt):
-        rank = self._remains[pkt.flow]
-        self._remains[pkt.flow] -= pkt.length
+    def get_rank(self, item):
+        """Rank the items by their remaining total flow length."""
+
+        rank = self._remains[item.flow]
+        self._remains[item.flow] -= item.length
         return rank
 
-    def enqueue(self, item):
+    def enqueue(self, ref, item):
         flow = self._flow_tracker.enqueue(item)
         rank = self.get_rank(item)
         self._pifo.enqueue(flow, rank)
 
     def dequeue(self):
         flow = self._pifo.dequeue()
-        pkt = None
+        item = None
         if flow is not None:
-            pkt = flow.dequeue()
-        return pkt
+            item = flow.dequeue()
+        return item
 
     def dump(self):
         self._pifo.dump()
