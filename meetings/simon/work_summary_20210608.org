@@ -1,0 +1,87 @@
+#+TITLE: Progress update 2021-06-08
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Have updated JSON format
+  - Uses JSON-writer from iproute
+  - Times now as nsec ints (instead of sec floats)
+  - Added "flow events" (end/start of flow)
+
+** PPing - Flow events
+#+BEGIN_SRC json
+{
+    "timestamp": 1623082102774541300,
+    "src_ip": "10.11.1.1",
+    "src_port": 35478,
+    "dest_ip": "10.11.1.2",
+    "dest_port": 5201,
+    "protocol": "TCP",
+    "flow_event": "opening", //or closing
+    "reason": "SYN", //or SYN-ACK, FIN, FIN-ACK, RST, TIMEOUT
+    "triggered_by": "src" //src = egress, dest = ingress, userspace-cleanup
+}
+#+END_SRC
+
+- Opening will only be from egress
+- FIN-closing will only be from ingress
+
+** PPing - Event "protocol"
+- Do I need to consider extensibility of map structs at this point?
+- Is TLV coding really sufficent?
+  - Only really works if extending tail?
+  - Only matters if reader is more updated than writer?
+
+** PPing - Concurrency
+- How does map concurrency work from BPF?
+  - Can writing to a field corrupt other fields?
+  - What happens if you write to a field of a deleted entry?
+  - Spin-locks
+    - Performance impact?
+    - Do they affect ex. deletion?
+    - Verifier complexity?
+- Currently read and write flow-state for every packet on both egress and ingress
+
+** PPing - IP anonymization
+- Have started to look into it a little bit
+- Turns out it's a whole research area of its own
+  - Many different methods, and uncertainties of how safe they are
+- Think methods have to provide a 1-to-1 mapping to be relevant
+  - I.e. methods that "groups" addresses (usually truncate) will make analysis hard
+  - Nice part with truncation methods is that it still keeps some network information, ex. approx location
+- What is the ISP's data policy (GDPR)?
+
+** PPing - Performance test
+- We've also talked about creating some performance benchmark for pping
+  - Compare it against Kathie's pping
+    - Higher line rate
+    - Lower CPU utalization
+  - Overall "low enough" overhead for always on
+  - Verify that we won't impact ISP's traffic
+- General setup
+  - 3 machines: traffic generator -> pping -> data sink
+  - Look at:
+    - CPU utalization
+    - Throughput on/off
+    - Time BPF programs?
+- Traffic generator:
+  - Simone suggested [[https://trex-tgn.cisco.com/][TRex]]
+  - Is Flent suitable?
+
+* Other
+- Meeting with Dave That later today (22:00)
+- Done with GUI course (except delayed/returned labs)
+- Hosted DISCO seminar
+  - Done with most demanding part of course
+- Should be able to focus on research during summer
+
+* Plan
+- pping:
+  - Refactor pping events
+  - Update to use libbpf tc attach
+  - Continue looking at IP anonymization
+
+

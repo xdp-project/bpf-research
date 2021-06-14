@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-06-08</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-06-08</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-06-08 tis 11:49</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgb32befc">1. PPing</a>
+<ul>
+<li><a href="#/slide-org2c98013">1.1. PPing - Flow events</a></li>
+<li><a href="#/slide-org55c8992">1.2. PPing - Event "protocol"</a></li>
+<li><a href="#/slide-org9cb7a2a">1.3. PPing - Concurrency</a></li>
+<li><a href="#/slide-orgf86dd22">1.4. PPing - IP anonymization</a></li>
+<li><a href="#/slide-org544d432">1.5. PPing - Performance test</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org2cc0032">2. Other</a></li>
+<li><a href="#/slide-org054c40e">3. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgb32befc">
+<h2 id="orgb32befc"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Have updated JSON format
+<ul>
+<li>Uses JSON-writer from iproute</li>
+<li>Times now as nsec ints (instead of sec floats)</li>
+<li>Added "flow events" (end/start of flow)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org2c98013">
+<h3 id="org2c98013"><span class="section-number-3">1.1</span> PPing - Flow events</h3>
+<div class="org-src-container">
+
+<pre  class="src src-json" ><code trim>{
+    <span style="color: #a020f0;">"timestamp"</span>: <span style="color: #008b8b;">1623082102774541300</span>,
+    <span style="color: #a020f0;">"src_ip"</span>: <span style="color: #8b2252;">"10.11.1.1"</span>,
+    <span style="color: #a020f0;">"src_port"</span>: <span style="color: #008b8b;">35478</span>,
+    <span style="color: #a020f0;">"dest_ip"</span>: <span style="color: #8b2252;">"10.11.1.2"</span>,
+    <span style="color: #a020f0;">"dest_port"</span>: <span style="color: #008b8b;">5201</span>,
+    <span style="color: #a020f0;">"protocol"</span>: <span style="color: #8b2252;">"TCP"</span>,
+    <span style="color: #a020f0;">"flow_event"</span>: <span style="color: #8b2252;">"opening"</span>, //or closing
+    <span style="color: #a020f0;">"reason"</span>: <span style="color: #8b2252;">"SYN"</span>, //or SYN-ACK, FIN, FIN-ACK, RST, TIMEOUT
+    <span style="color: #a020f0;">"triggered_by"</span>: <span style="color: #8b2252;">"src"</span> //src = egress, dest = ingress, userspace-cleanup
+}
+</code></pre>
+</div>
+
+<ul>
+<li>Opening will only be from egress</li>
+<li>FIN-closing will only be from ingress</li>
+
+</ul>
+
+</section>
+<section id="slide-org55c8992">
+<h3 id="org55c8992"><span class="section-number-3">1.2</span> PPing - Event "protocol"</h3>
+<ul>
+<li>Do I need to consider extensibility of map structs at this point?</li>
+<li>Is TLV coding really sufficent?
+<ul>
+<li>Only really works if extending tail?</li>
+<li>Only matters if reader is more updated than writer?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org9cb7a2a">
+<h3 id="org9cb7a2a"><span class="section-number-3">1.3</span> PPing - Concurrency</h3>
+<ul>
+<li>How does map concurrency work from BPF?
+<ul>
+<li>Can writing to a field corrupt other fields?</li>
+<li>What happens if you write to a field of a deleted entry?</li>
+<li>Spin-locks
+<ul>
+<li>Performance impact?</li>
+<li>Do they affect ex. deletion?</li>
+<li>Verifier complexity?</li>
+
+</ul></li>
+
+</ul></li>
+<li>Currently read and write flow-state for every packet on both egress and ingress</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf86dd22">
+<h3 id="orgf86dd22"><span class="section-number-3">1.4</span> PPing - IP anonymization</h3>
+<ul>
+<li>Have started to look into it a little bit</li>
+<li>Turns out it's a whole research area of its own
+<ul>
+<li>Many different methods, and uncertainties of how safe they are</li>
+
+</ul></li>
+<li>Think methods have to provide a 1-to-1 mapping to be relevant
+<ul>
+<li>I.e. methods that "groups" addresses (usually truncate) will make analysis hard</li>
+<li>Nice part with truncation methods is that it still keeps some network information, ex. approx location</li>
+
+</ul></li>
+<li>What is the ISP's data policy (GDPR)?</li>
+
+</ul>
+
+</section>
+<section id="slide-org544d432">
+<h3 id="org544d432"><span class="section-number-3">1.5</span> PPing - Performance test</h3>
+<ul>
+<li>We've also talked about creating some performance benchmark for pping
+<ul>
+<li>Compare it against Kathie's pping
+<ul>
+<li>Higher line rate</li>
+<li>Lower CPU utalization</li>
+
+</ul></li>
+<li>Overall "low enough" overhead for always on</li>
+<li>Verify that we won't impact ISP's traffic</li>
+
+</ul></li>
+<li>General setup
+<ul>
+<li>3 machines: traffic generator -&gt; pping -&gt; data sink</li>
+<li>Look at:
+<ul>
+<li>CPU utalization</li>
+<li>Throughput on/off</li>
+<li>Time BPF programs?</li>
+
+</ul></li>
+
+</ul></li>
+<li>Traffic generator:
+<ul>
+<li>Simone suggested <a href="https://trex-tgn.cisco.com/">TRex</a></li>
+<li>Is Flent suitable?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org2cc0032">
+<h2 id="org2cc0032"><span class="section-number-2">2</span> Other</h2>
+<ul>
+<li>Meeting with Dave That later today (22:00)</li>
+<li>Done with GUI course (except delayed/returned labs)</li>
+<li>Hosted DISCO seminar
+<ul>
+<li>Done with most demanding part of course</li>
+
+</ul></li>
+<li>Should be able to focus on research during summer</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org054c40e">
+<h2 id="org054c40e"><span class="section-number-2">3</span> Plan</h2>
+<ul>
+<li>pping:
+<ul>
+<li>Refactor pping events</li>
+<li>Update to use libbpf tc attach</li>
+<li>Continue looking at IP anonymization</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

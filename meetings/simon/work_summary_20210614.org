@@ -1,0 +1,53 @@
+#+TITLE: Progress update 2021-06-14
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Added "flow events" (end/start of flow)
+- Switched to libbpf's new API for attaching tc programs
+  - No longer need to rely on external scrips calling the tc command
+  - No longer need to temporarily pin the program
+- Have updated document on measurement study
+
+** PPing: Measurement study
+- Have updated my [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md][document]] on measurement-study related issues a bit
+- The anonymization part is still challenging
+  - Think we should keep port numbers
+  - Think we should use some 1-to-1 mapping for IP anonymization, ex CryptoPan
+    - Vunlerable to traffic injection attacks and predictible traffic patterns
+- Intend for the [[https://github.com/xdp-project/bpf-examples/pull/17][PR]] to be used to discuss it, but so far empty
+
+** PPing: Performance study
+- Before we do the measurement study, should probably do the performance analysis
+- Last time we discussed a setup with 3 machines
+  - data source -> middlebox with pping -> data sink
+- Javid could help with setting up some VMs for this?
+- Limited experience, how do I go about this?
+  - Read up, write some scripts, ask for feedback?
+
+* Reported study activity and financing
+- Got a mail from Sara Westlindh about study activity and financing
+  - She had reported it in LADKOk
+  - Wanted to know if info in ISP was accurate
+  - Can't find the info in the ISP?
+
+* ISP didn't pass
+- They require a more detailed time-plan
+  - Mainly 2 year long phase on developing framework+tools for monitoring
+  - Also 2 year long phase on optimization/automation methods based on monitoring
+  - Also need supervisor comments on COVID related delays
+- Should probably revise it ASAP?
+
+* AIDA WP2 meeting
+- WP2 meeting tomorrow
+- This presentation was supposed to cover various frameworks from KaU's side?
+- Once again, nothing for me to really prepare?
+
+* Plan
+- Revise ISP
+- Check out MedComNet (mainly keynotes and session 4)
+- Minor pping cleanup
+- Mainly work on performance analysis?

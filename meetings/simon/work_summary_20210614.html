@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-06-14</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-06-14</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-06-14 mån 13:14</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgbc69f3d">1. PPing</a>
+<ul>
+<li><a href="#/slide-orgf591771">1.1. PPing: Measurement study</a></li>
+<li><a href="#/slide-orgd563498">1.2. PPing: Performance study</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org30a64de">2. Reported study activity and financing</a></li>
+<li><a href="#/slide-org0c5030f">3. ISP didn't pass</a></li>
+<li><a href="#/slide-orgd71c5c4">4. AIDA WP2 meeting</a></li>
+<li><a href="#/slide-org2d4b746">5. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgbc69f3d">
+<h2 id="orgbc69f3d"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Added "flow events" (end/start of flow)</li>
+<li>Switched to libbpf's new API for attaching tc programs
+<ul>
+<li>No longer need to rely on external scrips calling the tc command</li>
+<li>No longer need to temporarily pin the program</li>
+
+</ul></li>
+<li>Have updated document on measurement study</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf591771">
+<h3 id="orgf591771"><span class="section-number-3">1.1</span> PPing: Measurement study</h3>
+<ul>
+<li>Have updated my <a href="https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md">document</a> on measurement-study related issues a bit</li>
+<li>The anonymization part is still challenging
+<ul>
+<li>Think we should keep port numbers</li>
+<li>Think we should use some 1-to-1 mapping for IP anonymization, ex CryptoPan
+<ul>
+<li>Vunlerable to traffic injection attacks and predictible traffic patterns</li>
+
+</ul></li>
+
+</ul></li>
+<li>Intend for the <a href="https://github.com/xdp-project/bpf-examples/pull/17">PR</a> to be used to discuss it, but so far empty</li>
+
+</ul>
+
+</section>
+<section id="slide-orgd563498">
+<h3 id="orgd563498"><span class="section-number-3">1.2</span> PPing: Performance study</h3>
+<ul>
+<li>Before we do the measurement study, should probably do the performance analysis</li>
+<li>Last time we discussed a setup with 3 machines
+<ul>
+<li>data source -&gt; middlebox with pping -&gt; data sink</li>
+
+</ul></li>
+<li>Javid could help with setting up some VMs for this?</li>
+<li>Limited experience, how do I go about this?
+<ul>
+<li>Read up, write some scripts, ask for feedback?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org30a64de">
+<h2 id="org30a64de"><span class="section-number-2">2</span> Reported study activity and financing</h2>
+<ul>
+<li>Got a mail from Sara Westlindh about study activity and financing
+<ul>
+<li>She had reported it in LADKOk</li>
+<li>Wanted to know if info in ISP was accurate</li>
+<li>Can't find the info in the ISP?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org0c5030f">
+<h2 id="org0c5030f"><span class="section-number-2">3</span> ISP didn't pass</h2>
+<ul>
+<li>They require a more detailed time-plan
+<ul>
+<li>Mainly 2 year long phase on developing framework+tools for monitoring</li>
+<li>Also 2 year long phase on optimization/automation methods based on monitoring</li>
+<li>Also need supervisor comments on COVID related delays</li>
+
+</ul></li>
+<li>Should probably revise it ASAP?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd71c5c4">
+<h2 id="orgd71c5c4"><span class="section-number-2">4</span> AIDA WP2 meeting</h2>
+<ul>
+<li>WP2 meeting tomorrow</li>
+<li>This presentation was supposed to cover various frameworks from KaU's side?</li>
+<li>Once again, nothing for me to really prepare?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org2d4b746">
+<h2 id="org2d4b746"><span class="section-number-2">5</span> Plan</h2>
+<ul>
+<li>Revise ISP</li>
+<li>Check out MedComNet (mainly keynotes and session 4)</li>
+<li>Minor pping cleanup</li>
+<li>Mainly work on performance analysis?</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
