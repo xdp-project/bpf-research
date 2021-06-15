@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# coding: utf-8 -*-
 #
 # eiffel-hiearch.py
 #
@@ -84,26 +85,26 @@ class Policy(Queue):
 
 if __name__ == "__main__":
     pkts = [
-        Packet(1, 1, 1),
-        Packet(1, 2, 1),
-        Packet(1, 3, 1),
-        Packet(2, 1, 1),
-        Packet(2, 2, 1),
-        Packet(2, 3, 1),
-        Packet(2, 4, 1),
-        Packet(2, 5, 1),
-        Packet(3, 1, 1),
-        Packet(3, 2, 1),
-        Packet(3, 3, 1),
-        Packet(4, 1, 1),
-        Packet(4, 2, 1),
-        Packet(4, 3, 1),
-        Packet(4, 4, 1),
-        Packet(4, 5, 1),
-        Packet(4, 6, 1),
-        Packet(4, 7, 1),
-        Packet(4, 8, 1),
-        Packet(4, 9, 1),
-        Packet(4, 10, 1),
+        Packet(flow=1, idn=1, length=1),
+        Packet(flow=1, idn=2, length=1),
+        Packet(flow=1, idn=3, length=1),
+        Packet(flow=2, idn=1, length=1),
+        Packet(flow=2, idn=2, length=1),
+        Packet(flow=2, idn=3, length=1),
+        Packet(flow=2, idn=4, length=1),
+        Packet(flow=2, idn=5, length=1),
+        Packet(flow=3, idn=1, length=1),
+        Packet(flow=3, idn=2, length=1),
+        Packet(flow=3, idn=3, length=1),
+        Packet(flow=4, idn=1, length=1),
+        Packet(flow=4, idn=2, length=1),
+        Packet(flow=4, idn=3, length=1),
+        Packet(flow=4, idn=4, length=1),
+        Packet(flow=4, idn=5, length=1),
+        Packet(flow=4, idn=6, length=1),
+        Packet(flow=4, idn=7, length=1),
+        Packet(flow=4, idn=8, length=1),
+        Packet(flow=4, idn=9, length=1),
+        Packet(flow=4, idn=10, length=1),
     ]
     Runner(pkts, Policy()).run()
