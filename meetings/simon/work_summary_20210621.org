@@ -1,0 +1,66 @@
+#+TITLE: Progress update 2021-06-14
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Switched to libbpf's new API for attaching tc programs
+  - No longer need to rely on external scrips calling the tc command
+  - No longer need to temporarily pin the program
+- Time to merge?
+- Have updated document on measurement study
+- Started slightly with performance evaluation
+
+** PPing: Using libbpf for attaching tc
+- Libbpf recently added an API for attaching TC programs
+- No longer need to rely on external scripts for attaching program
+- No longer need to temporarily pin the program
+- Will attempt to create clsact qdisc, but never remove it
+  - Safer than always removing it as done before
+  - ...but means program doesn't completely clean up after itself
+
+** PPing: Measurement study
+- Have updated my [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md][document]] on measurement-study related issues a bit
+- The anonymization part is still challenging
+  - Leaning towards using CryptoPan for IP-addresses
+    - Prefix-preserving 1-to-1 mapping
+    - Somewhat commonly used, ex. by CAIDA
+  - Unsure how safe it is publish the data set
+    - There are a number of (theoretical) de-anonymization attacks
+    - Can maybe check with PriSec for help/feedback
+  - So far, only gotten feedback from Toke
+
+** PPing: Performance study
+- Javid has set me up with 3 VMs to experiment with
+- Have started toying around a little bit
+  - So far only using iperf and Flent
+  - May switch to packet generators later, but more complicated to set up
+    - Especially for valid TCP traffic
+- Writing down some initial results in [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md][measurement document]]
+- I have no idea what I'm doing, any feedback appreciated
+
+*** Performance study: Findings so far
+- Planned to mainly refer to document
+- But some overall points
+  - No XDP-support in NIC drivers
+  - XDP kills received throughput by disabling GRO
+    - Maybe add option for using tc-ingress instead?
+  - Kathie's pping uses 100% of a CPU core
+  - eBPF pping seems to have much lower overhead
+    - Needs more formal testing, but guestimating ~5%
+
+* Other
+- Rewritten ISP
+- Upcomming meetings during the summer?
+
+* Plan
+- Clean up commits and merge
+- Continue with performance analysis
+- pping features that may be interesting
+  - ICMP echo support (verify accuracy)
+  - tc-ingress support (alt. to XDP)
+  - Option to disable packet/byte counting (save performance)
+  - RTT-based sampling interval (for measurement study)
+

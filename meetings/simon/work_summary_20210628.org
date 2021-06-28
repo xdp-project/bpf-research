@@ -1,0 +1,77 @@
+#+TITLE: Progress update 2021-06-28
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* ISP
+- Awaiting feedback from Anna
+- Think it would be good if we could get it in this week
+
+* PPing
+- Have not made much progress on the performance study
+- Have merged output improvments to master
+  - Started new PR for various improvements
+- Added ICMP support
+- Added tc ingress hook
+- Some minor improvements to attach/detach procedure
+- Working on RTT-based sampling
+  - Will base it on sRTT (1/8*rtt + 7/8*prev_rtt)
+  - Default sampling rate to 1*sRTT
+
+** PPing: Performance study
+- Have not made much progress since last
+  - A bit unsure in what direction to go
+- VM NIC lacks XDP driver (now have a tc alternative that could be used instead)
+- Uncertainties how VM resources may be shared
+- Toke suggested using a single machine with network namespaces instead
+  - Guess you must take great care to pin processes to different CPU cores
+- Alternative would be to set up multiple physical machines
+  - Guess it might be a bit tricky with current situation (summer + pandemic)
+- How to "fairly" compare Kathie's pping
+  - Both directions vs single direction
+  - Usage of sampling
+
+** PPing: Performance observations
+- Noted down some early observations in [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md][document]] in [[https://github.com/xdp-project/bpf-examples/pull/17][PR]]
+- Kathie's pping generally has much higher overhead
+  - Can easily use 100% of one CPU core
+  - Can decrease throughput slightly
+- eBPF pping has low overhead for single stream
+- ...but just 10 streams with no sampling causes considerable overhead
+  - Significant userspace overhead (~12%)
+  - Significant system overhead (~20%)
+  - Timestamp map fills up with about 3k entries
+  - If map becomes full, load drops back to "normal"
+    - Load related to pushing and printing RTT events or creating/deleting timestamp entries
+- eBPF pping murders received throughput due to XDP disabling GRO
+  - XDP does not support jumboframes at this time
+
+** PPing: ICMP support
+- Added support for ICMP (and ICMPv6) echo request/reply
+- Uses 16-bit sequence number as identifier
+- Uses 16-bit echo identifiers as port
+  - Linux uses different identifiers for different ping processes
+  - Windows appears to use static identifier
+- Appears to report slightly lower RTTs than ping
+  - On my machine, ~0.08 ms
+- Concerns:
+  - Cannot differentiate from TCP traffic in ppviz format
+  - Relies on userspace flow timeout for flow-state cleanup (300 sec)
+  - Verifier processed instructions up to about 850k (1m limit)
+
+** PPing: Added tc ingress hook
+- Can use tc-ingress as an alternative to XDP
+- Some machines may lack XDP drivers, falling back on XDP generic is unefficient
+- The XDP hook may be occupied by another program
+- XDP disables GRO, tc does not
+- Currently loads all programs, resulting in long(er) load time
+
+* Plan
+- Continue with performance analysis
+  - VM-based or single-machine network namespace based?
+- pping features
+  - Finish RTT-based sampling
+  - Option to disable packet/byte counting (save performance)
+

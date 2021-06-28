@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-06-14</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-06-14</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-06-21 mån 14:59</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgaaca3a2">1. PPing</a>
+<ul>
+<li><a href="#/slide-org51f1ab7">1.1. PPing: Using libbpf for attaching tc</a></li>
+<li><a href="#/slide-orgacb7d9e">1.2. PPing: Measurement study</a></li>
+<li><a href="#/slide-orga891eef">1.3. PPing: Performance study</a>
+<ul>
+<li><a href="#/slide-orgee4f2a7">1.3.1. Performance study: Findings so far</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#/slide-org0e19124">2. Other</a></li>
+<li><a href="#/slide-orgcc9738b">3. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgaaca3a2">
+<h2 id="orgaaca3a2"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Switched to libbpf's new API for attaching tc programs
+<ul>
+<li>No longer need to rely on external scrips calling the tc command</li>
+<li>No longer need to temporarily pin the program</li>
+
+</ul></li>
+<li>Time to merge?</li>
+<li>Have updated document on measurement study</li>
+<li>Started slightly with performance evaluation</li>
+
+</ul>
+
+</section>
+<section id="slide-org51f1ab7">
+<h3 id="org51f1ab7"><span class="section-number-3">1.1</span> PPing: Using libbpf for attaching tc</h3>
+<ul>
+<li>Libbpf recently added an API for attaching TC programs</li>
+<li>No longer need to rely on external scripts for attaching program</li>
+<li>No longer need to temporarily pin the program</li>
+<li>Will attempt to create clsact qdisc, but never remove it
+<ul>
+<li>Safer than always removing it as done before</li>
+<li>&#x2026;but means program doesn't completely clean up after itself</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgacb7d9e">
+<h3 id="orgacb7d9e"><span class="section-number-3">1.2</span> PPing: Measurement study</h3>
+<ul>
+<li>Have updated my <a href="https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md">document</a> on measurement-study related issues a bit</li>
+<li>The anonymization part is still challenging
+<ul>
+<li>Leaning towards using CryptoPan for IP-addresses
+<ul>
+<li>Prefix-preserving 1-to-1 mapping</li>
+<li>Somewhat commonly used, ex. by CAIDA</li>
+
+</ul></li>
+<li>Unsure how safe it is publish the data set
+<ul>
+<li>There are a number of (theoretical) de-anonymization attacks</li>
+<li>Can maybe check with PriSec for help/feedback</li>
+
+</ul></li>
+<li>So far, only gotten feedback from Toke</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orga891eef">
+<h3 id="orga891eef"><span class="section-number-3">1.3</span> PPing: Performance study</h3>
+<ul>
+<li>Javid has set me up with 3 VMs to experiment with</li>
+<li>Have started toying around a little bit
+<ul>
+<li>So far only using iperf and Flent</li>
+<li>May switch to packet generators later, but more complicated to set up
+<ul>
+<li>Especially for valid TCP traffic</li>
+
+</ul></li>
+
+</ul></li>
+<li>Writing down some initial results in <a href="https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md">measurement document</a></li>
+<li>I have no idea what I'm doing, any feedback appreciated</li>
+
+</ul>
+
+</section>
+<section id="slide-orgee4f2a7">
+<h4 id="orgee4f2a7"><span class="section-number-4">1.3.1</span> Performance study: Findings so far</h4>
+<ul>
+<li>Planned to mainly refer to document</li>
+<li>But some overall points
+<ul>
+<li>No XDP-support in NIC drivers</li>
+<li>XDP kills received throughput by disabling GRO
+<ul>
+<li>Maybe add option for using tc-ingress instead?</li>
+
+</ul></li>
+<li>Kathie's pping uses 100% of a CPU core</li>
+<li>eBPF pping seems to have much lower overhead
+<ul>
+<li>Needs more formal testing, but guestimating ~5%</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org0e19124">
+<h2 id="org0e19124"><span class="section-number-2">2</span> Other</h2>
+<ul>
+<li>Rewritten ISP</li>
+<li>Upcomming meetings during the summer?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgcc9738b">
+<h2 id="orgcc9738b"><span class="section-number-2">3</span> Plan</h2>
+<ul>
+<li>Clean up commits and merge</li>
+<li>Continue with performance analysis</li>
+<li>pping features that may be interesting
+<ul>
+<li>ICMP echo support (verify accuracy)</li>
+<li>tc-ingress support (alt. to XDP)</li>
+<li>Option to disable packet/byte counting (save performance)</li>
+<li>RTT-based sampling interval (for measurement study)</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

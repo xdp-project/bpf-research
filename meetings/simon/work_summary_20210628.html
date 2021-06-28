@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-06-28</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-06-28</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-06-28 mån 15:08</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org2325c58">1. ISP</a></li>
+<li><a href="#/slide-org97835d4">2. PPing</a>
+<ul>
+<li><a href="#/slide-org2ab8e8c">2.1. PPing: Performance study</a></li>
+<li><a href="#/slide-orge4e9019">2.2. PPing: Performance observations</a></li>
+<li><a href="#/slide-orgd977100">2.3. PPing: ICMP support</a></li>
+<li><a href="#/slide-org7b5e74b">2.4. PPing: Added tc ingress hook</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org9af960b">3. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org2325c58">
+<h2 id="org2325c58"><span class="section-number-2">1</span> ISP</h2>
+<ul>
+<li>Awaiting feedback from Anna</li>
+<li>Think it would be good if we could get it in this week</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org97835d4">
+<h2 id="org97835d4"><span class="section-number-2">2</span> PPing</h2>
+<ul>
+<li>Have not made much progress on the performance study</li>
+<li>Have merged output improvments to master
+<ul>
+<li>Started new PR for various improvements</li>
+
+</ul></li>
+<li>Added ICMP support</li>
+<li>Added tc ingress hook</li>
+<li>Some minor improvements to attach/detach procedure</li>
+<li>Working on RTT-based sampling
+<ul>
+<li>Will base it on sRTT (1/8*rtt + 7/8*prev_rtt)</li>
+<li>Default sampling rate to 1*sRTT</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org2ab8e8c">
+<h3 id="org2ab8e8c"><span class="section-number-3">2.1</span> PPing: Performance study</h3>
+<ul>
+<li>Have not made much progress since last
+<ul>
+<li>A bit unsure in what direction to go</li>
+
+</ul></li>
+<li>VM NIC lacks XDP driver (now have a tc alternative that could be used instead)</li>
+<li>Uncertainties how VM resources may be shared</li>
+<li>Toke suggested using a single machine with network namespaces instead
+<ul>
+<li>Guess you must take great care to pin processes to different CPU cores</li>
+
+</ul></li>
+<li>Alternative would be to set up multiple physical machines
+<ul>
+<li>Guess it might be a bit tricky with current situation (summer + pandemic)</li>
+
+</ul></li>
+<li>How to "fairly" compare Kathie's pping
+<ul>
+<li>Both directions vs single direction</li>
+<li>Usage of sampling</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orge4e9019">
+<h3 id="orge4e9019"><span class="section-number-3">2.2</span> PPing: Performance observations</h3>
+<ul>
+<li>Noted down some early observations in <a href="https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/MEASUREMENT_STUDY.md">document</a> in <a href="https://github.com/xdp-project/bpf-examples/pull/17">PR</a></li>
+<li>Kathie's pping generally has much higher overhead
+<ul>
+<li>Can easily use 100% of one CPU core</li>
+<li>Can decrease throughput slightly</li>
+
+</ul></li>
+<li>eBPF pping has low overhead for single stream</li>
+<li>&#x2026;but just 10 streams with no sampling causes considerable overhead
+<ul>
+<li>Significant userspace overhead (~12%)</li>
+<li>Significant system overhead (~20%)</li>
+<li>Timestamp map fills up with about 3k entries</li>
+<li>If map becomes full, load drops back to "normal"
+<ul>
+<li>Load related to pushing and printing RTT events or creating/deleting timestamp entries</li>
+
+</ul></li>
+
+</ul></li>
+<li>eBPF pping murders received throughput due to XDP disabling GRO
+<ul>
+<li>XDP does not support jumboframes at this time</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgd977100">
+<h3 id="orgd977100"><span class="section-number-3">2.3</span> PPing: ICMP support</h3>
+<ul>
+<li>Added support for ICMP (and ICMPv6) echo request/reply</li>
+<li>Uses 16-bit sequence number as identifier</li>
+<li>Uses 16-bit echo identifiers as port
+<ul>
+<li>Linux uses different identifiers for different ping processes</li>
+<li>Windows appears to use static identifier</li>
+
+</ul></li>
+<li>Appears to report slightly lower RTTs than ping
+<ul>
+<li>On my machine, ~0.08 ms</li>
+
+</ul></li>
+<li>Concerns:
+<ul>
+<li>Cannot differentiate from TCP traffic in ppviz format</li>
+<li>Relies on userspace flow timeout for flow-state cleanup (300 sec)</li>
+<li>Verifier processed instructions up to about 850k (1m limit)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org7b5e74b">
+<h3 id="org7b5e74b"><span class="section-number-3">2.4</span> PPing: Added tc ingress hook</h3>
+<ul>
+<li>Can use tc-ingress as an alternative to XDP</li>
+<li>Some machines may lack XDP drivers, falling back on XDP generic is unefficient</li>
+<li>The XDP hook may be occupied by another program</li>
+<li>XDP disables GRO, tc does not</li>
+<li>Currently loads all programs, resulting in long(er) load time</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org9af960b">
+<h2 id="org9af960b"><span class="section-number-2">3</span> Plan</h2>
+<ul>
+<li>Continue with performance analysis
+<ul>
+<li>VM-based or single-machine network namespace based?</li>
+
+</ul></li>
+<li>pping features
+<ul>
+<li>Finish RTT-based sampling</li>
+<li>Option to disable packet/byte counting (save performance)</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
