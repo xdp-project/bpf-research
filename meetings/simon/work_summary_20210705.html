@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-07-05</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-07-05</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-07-05 mån 14:58</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org393f599">1. PPing</a>
+<ul>
+<li><a href="#/slide-orgb06aed3">1.1. PPing: ICMP support</a></li>
+<li><a href="#/slide-org9438f95">1.2. PPing: Added tc ingress hook</a></li>
+<li><a href="#/slide-org17ce16e">1.3. PPing: RTT-based sampling</a></li>
+<li><a href="#/slide-orga86b528">1.4. PPing: What is src and dest</a></li>
+<li><a href="#/slide-org8ab9647">1.5. PPing: Performance study</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgfe58d36">2. IAB Workshop</a></li>
+<li><a href="#/slide-org9f9bf2e">3. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org393f599">
+<h2 id="org393f599"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Have merged output improvments to master
+<ul>
+<li>Started new PR for various improvements</li>
+
+</ul></li>
+<li>Added ICMP support</li>
+<li>Added tc ingress hook</li>
+<li>Some minor improvements to attach/detach procedure
+<ul>
+<li>For tc cleanup to work properly, libbpf needs to be updated</li>
+
+</ul></li>
+<li>RTT-based sampling rate</li>
+<li>What is src and dest?</li>
+<li>Performance study</li>
+
+</ul>
+
+</section>
+<section id="slide-orgb06aed3">
+<h3 id="orgb06aed3"><span class="section-number-3">1.1</span> PPing: ICMP support</h3>
+<ul>
+<li>Added support for ICMP (and ICMPv6) echo request/reply</li>
+<li>Uses 16-bit sequence number as identifier</li>
+<li>Uses 16-bit echo identifiers as port
+<ul>
+<li>Linux uses different identifiers for different ping processes</li>
+<li>Windows appears to use static identifier</li>
+
+</ul></li>
+<li>Appears to report slightly lower RTTs than ping
+<ul>
+<li>On my machine, ~0.08 ms</li>
+
+</ul></li>
+<li>Concerns:
+<ul>
+<li>Cannot differentiate from TCP traffic in ppviz format</li>
+<li>Relies on userspace flow timeout for flow-state cleanup (300 sec)</li>
+<li>Verifier processed instructions up to about 850k (1m limit)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org9438f95">
+<h3 id="org9438f95"><span class="section-number-3">1.2</span> PPing: Added tc ingress hook</h3>
+<ul>
+<li>Can use tc-ingress as an alternative to XDP</li>
+<li>XDP and tc path essentially use the same code, just different context setup
+<ul>
+<li>tc program requires more instructions to verify though</li>
+
+</ul></li>
+<li>Currently loads all programs, resulting in long(er) load time</li>
+
+</ul>
+
+</section>
+<section id="slide-org17ce16e">
+<h3 id="org17ce16e"><span class="section-number-3">1.3</span> PPing: RTT-based sampling</h3>
+<ul>
+<li>Based on a smoothed RTT
+<ul>
+<li>srtt = 7/8*prev_srtt + 1/8*rtt</li>
+
+</ul></li>
+<li>Sampling interval is C * sRTT, i.e. C=1 for approx. one sample per RTT</li>
+<li>Used some fixed-point arithmetic to support non-integer C (ex C=0.1)</li>
+<li>Potential issue:
+<ul>
+<li>sRTT update rate is tied to sampling rate</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orga86b528">
+<h3 id="orga86b528"><span class="section-number-3">1.4</span> PPing: What is src and dest</h3>
+<ul>
+<li>I consider src and dest from the sender's perspective</li>
+<li>Kathie considers src and dest from receiver/reply perspective</li>
+<li>Output from my and Katie's tool don't match
+<ul>
+<li>Should probably swap for ppviz format</li>
+<li>Also swap for standard and JSON format?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org8ab9647">
+<h3 id="org8ab9647"><span class="section-number-3">1.5</span> PPing: Performance study</h3>
+<ul>
+<li>Still not making that much progress here</li>
+<li>After Red Hat meeting, was a bit unsure how to proceed</li>
+<li>During last supervisor meeting, decided to continue with the VM-based setup
+<ul>
+<li>Will use the tc hook</li>
+<li>For comparing with Kathie's pping:
+<ul>
+<li>Will run without sampling rate limit</li>
+<li>Will run eBPF pping on both interfaces but Kathie's on single</li>
+<li>Will use either standard or ppviz format</li>
+
+</ul></li>
+
+</ul></li>
+<li>Have prepared some simple scripts for testing and plotting</li>
+<li>Hoped to have some nice graphs today
+<ul>
+<li>Had no internet access on Friday</li>
+<li>VM's behaving a bit weirdly today
+<ul>
+<li>Neither my or Kathie's pping seems to correctly see the traffic moving through</li>
+<li>Traffic no longer seems to flow exactly like expected
+<ul>
+<li>Suspecting it might be because of ARP flux (incorrect IP-MAC mapping)</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgfe58d36">
+<h2 id="orgfe58d36"><span class="section-number-2">2</span> IAB Workshop</h2>
+<ul>
+<li>Not sure I fully understand the setup
+<ul>
+<li>Mainly focused on discussions between invited participants and their topics?</li>
+
+</ul></li>
+<li>Paper idea:
+<ul>
+<li>Focus on how eBPF enables always-on monitoring</li>
+<li>Use pping as an example</li>
+<li>Present some early performance results that hopefully shows this is viable&#x2026;</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org9f9bf2e">
+<h2 id="org9f9bf2e"><span class="section-number-2">3</span> Plan</h2>
+<ul>
+<li>Watch some of Netdev</li>
+<li>Work more with the performance study
+<ul>
+<li>Figure out and solve issue with current setup</li>
+<li>Identify performance issue</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

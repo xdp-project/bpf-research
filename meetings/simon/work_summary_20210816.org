@@ -1,0 +1,69 @@
+#+TITLE: Progress update 2021-08-16
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Timestamp and match on both ingress and egress
+- Wait for response before "opening" connection
+- Switched src and dest
+- Some performance tests
+
+** PPing - handling both directions
+- Kathie's pping timestamped and matched in both directions
+- Originally I only timestamped on egress and matched on ingress
+  - If you wanted to measure both directions, run multiple instances of pping
+  - This approach would not really work at the ISP due to how they used NAT?
+- Doing both directions adds some additional complexities
+  - FIN will close one direction, RST both
+  - Have added "match_on_egress" field to JSON output to seperate between entries that include local processing time and not
+  - Have added optional "local filtering" to avoid RTTs for traffic to the local host
+    - Implemented by FIB lookup (please have a look at this)
+
+*** PPing - both directions - code changes
+- Ending up rewriting significant part of BPF code
+  - Rejected by verifier on 5.4 kernel (which my VMs use...)
+  - Despite more complicated code, verifier passes it much faster now (850k -> 150k proc. ins.)
+- Should probably have some tests by now...
+
+** PPing - wait for response before opening flow
+- Used to simply report flow opened/closed when I created/deleted a flow entry
+  - Will report some uncessary open/close events for flows we never get a response from
+- Will now wait for a response before reporting flow opened
+  - Do still not wait for final ACK in SYN -> SYN-ACK -> ACK handshake
+  - Will still timestamp initial SYN-packet
+- Will only report on flow closing if it has been first been "opened"
+- Introduces unlikely concurrency issue where multiple flow-opened reports are pushed
+
+** PPing - switch src and dest
+- Used to report src and dest from the timestamped packet's perspective
+- To be consistent with Kathie's pping, instead use reply-packet's perspective
+- Ex. RTT for packet going A -> B -> A (with pping on A)
+  - Would before report A as src and B as dest
+  - Will now report B as src and A as dest
+
+** PPing - performance tests
+- Managed to get started after resolving an ARP flux issue
+- Still simple iperf3 tests
+- Small writeup [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/measurements/MEASUREMENT_STUDY.md#some-more-thorough-iperf3-tests-2021-07-16][here]], full results on [[https://kau.app.box.com/s/epoif0wi2qlffjxpcwmg4ibv7lsojwvo][Box]]
+  - eBPF pping = epping, Kathie's pping = kpping
+- epping works well for single flow, falls appart for many flows
+  - Pushing and printing many RTT events has big performance impact
+  - Timestamp map quickly fills up
+  - Map cleaning inefficient and somewhat broken
+- Large variations between runs, will repeat tests once I can access VMs again
+
+* The things I didn't do..
+- Missed the netdev conference
+  - Traveling in regions with poor connectivity
+- Didn't send anything in to the IAB workshop
+  - Rewriting pping and tests took longer than I anticipated
+
+* Other
+- eBPF summit 18-19/8
+- I go on vacation (again) next week
+- Will start as lab supervisor in programming techniques (DVGA01)
+
+

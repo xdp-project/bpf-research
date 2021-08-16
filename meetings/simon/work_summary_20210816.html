@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-08-16</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-08-16</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-08-16 mån 14:57</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgea3c7eb">1. PPing</a>
+<ul>
+<li><a href="#/slide-org39d498c">1.1. PPing - handling both directions</a>
+<ul>
+<li><a href="#/slide-orgb78ffd7">1.1.1. PPing - both directions - code changes</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org822a5b2">1.2. PPing - wait for response before opening flow</a></li>
+<li><a href="#/slide-orgf434f1e">1.3. PPing - switch src and dest</a></li>
+<li><a href="#/slide-org8ce2851">1.4. PPing - performance tests</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgd7f1c1b">2. The things I didn't do..</a></li>
+<li><a href="#/slide-orgaf992ca">3. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgea3c7eb">
+<h2 id="orgea3c7eb"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Timestamp and match on both ingress and egress</li>
+<li>Wait for response before "opening" connection</li>
+<li>Switched src and dest</li>
+<li>Some performance tests</li>
+
+</ul>
+
+</section>
+<section id="slide-org39d498c">
+<h3 id="org39d498c"><span class="section-number-3">1.1</span> PPing - handling both directions</h3>
+<ul>
+<li>Kathie's pping timestamped and matched in both directions</li>
+<li>Originally I only timestamped on egress and matched on ingress
+<ul>
+<li>If you wanted to measure both directions, run multiple instances of pping</li>
+<li>This approach would not really work at the ISP due to how they used NAT?</li>
+
+</ul></li>
+<li>Doing both directions adds some additional complexities
+<ul>
+<li>FIN will close one direction, RST both</li>
+<li>Have added "match_on_egress" field to JSON output to seperate between entries that include local processing time and not</li>
+<li>Have added optional "local filtering" to avoid RTTs for traffic to the local host
+<ul>
+<li>Implemented by FIB lookup (please have a look at this)</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgb78ffd7">
+<h4 id="orgb78ffd7"><span class="section-number-4">1.1.1</span> PPing - both directions - code changes</h4>
+<ul>
+<li>Ending up rewriting significant part of BPF code
+<ul>
+<li>Rejected by verifier on 5.4 kernel (which my VMs use&#x2026;)</li>
+<li>Despite more complicated code, verifier passes it much faster now (850k -&gt; 150k proc. ins.)</li>
+
+</ul></li>
+<li>Should probably have some tests by now&#x2026;</li>
+
+</ul>
+
+</section>
+<section id="slide-org822a5b2">
+<h3 id="org822a5b2"><span class="section-number-3">1.2</span> PPing - wait for response before opening flow</h3>
+<ul>
+<li>Used to simply report flow opened/closed when I created/deleted a flow entry
+<ul>
+<li>Will report some uncessary open/close events for flows we never get a response from</li>
+
+</ul></li>
+<li>Will now wait for a response before reporting flow opened
+<ul>
+<li>Do still not wait for final ACK in SYN -&gt; SYN-ACK -&gt; ACK handshake</li>
+<li>Will still timestamp initial SYN-packet</li>
+
+</ul></li>
+<li>Will only report on flow closing if it has been first been "opened"</li>
+<li>Introduces unlikely concurrency issue where multiple flow-opened reports are pushed</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf434f1e">
+<h3 id="orgf434f1e"><span class="section-number-3">1.3</span> PPing - switch src and dest</h3>
+<ul>
+<li>Used to report src and dest from the timestamped packet's perspective</li>
+<li>To be consistent with Kathie's pping, instead use reply-packet's perspective</li>
+<li>Ex. RTT for packet going A -&gt; B -&gt; A (with pping on A)
+<ul>
+<li>Would before report A as src and B as dest</li>
+<li>Will now report B as src and A as dest</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org8ce2851">
+<h3 id="org8ce2851"><span class="section-number-3">1.4</span> PPing - performance tests</h3>
+<ul>
+<li>Managed to get started after resolving an ARP flux issue</li>
+<li>Still simple iperf3 tests</li>
+<li>Small writeup <a href="https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/measurements/MEASUREMENT_STUDY.md#some-more-thorough-iperf3-tests-2021-07-16">here</a>, full results on <a href="https://kau.app.box.com/s/epoif0wi2qlffjxpcwmg4ibv7lsojwvo">Box</a>
+<ul>
+<li>eBPF pping = epping, Kathie's pping = kpping</li>
+
+</ul></li>
+<li>epping works well for single flow, falls appart for many flows
+<ul>
+<li>Pushing and printing many RTT events has big performance impact</li>
+<li>Timestamp map quickly fills up</li>
+<li>Map cleaning inefficient and somewhat broken</li>
+
+</ul></li>
+<li>Large variations between runs, will repeat tests once I can access VMs again</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd7f1c1b">
+<h2 id="orgd7f1c1b"><span class="section-number-2">2</span> The things I didn't do..</h2>
+<ul>
+<li>Missed the netdev conference
+<ul>
+<li>Traveling in regions with poor connectivity</li>
+
+</ul></li>
+<li>Didn't send anything in to the IAB workshop
+<ul>
+<li>Rewriting pping and tests took longer than I anticipated</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgaf992ca">
+<h2 id="orgaf992ca"><span class="section-number-2">3</span> Other</h2>
+<ul>
+<li>eBPF summit 18-19/8</li>
+<li>I go on vacation (again) next week</li>
+<li>Will start as lab supervisor in programming techniques (DVGA01)</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1500, height:900, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

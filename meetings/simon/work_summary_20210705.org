@@ -1,0 +1,83 @@
+#+TITLE: Progress update 2021-07-05
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1500, height:900, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing
+- Have merged output improvments to master
+  - Started new PR for various improvements
+- Added ICMP support
+- Added tc ingress hook
+- Some minor improvements to attach/detach procedure
+  - For tc cleanup to work properly, libbpf needs to be updated
+- RTT-based sampling rate
+- What is src and dest?
+- Performance study
+
+** PPing: ICMP support
+- Added support for ICMP (and ICMPv6) echo request/reply
+- Uses 16-bit sequence number as identifier
+- Uses 16-bit echo identifiers as port
+  - Linux uses different identifiers for different ping processes
+  - Windows appears to use static identifier
+- Appears to report slightly lower RTTs than ping
+  - On my machine, ~0.08 ms
+- Concerns:
+  - Cannot differentiate from TCP traffic in ppviz format
+  - Relies on userspace flow timeout for flow-state cleanup (300 sec)
+  - Verifier processed instructions up to about 850k (1m limit)
+
+** PPing: Added tc ingress hook
+- Can use tc-ingress as an alternative to XDP
+- XDP and tc path essentially use the same code, just different context setup
+  - tc program requires more instructions to verify though
+- Currently loads all programs, resulting in long(er) load time
+
+** PPing: RTT-based sampling
+- Based on a smoothed RTT
+  - srtt = 7/8*prev_srtt + 1/8*rtt
+- Sampling interval is C * sRTT, i.e. C=1 for approx. one sample per RTT
+- Used some fixed-point arithmetic to support non-integer C (ex C=0.1)
+- Potential issue:
+  - sRTT update rate is tied to sampling rate
+
+** PPing: What is src and dest
+- I consider src and dest from the sender's perspective
+- Kathie considers src and dest from receiver/reply perspective
+- Output from my and Katie's tool don't match
+  - Should probably swap for ppviz format
+  - Also swap for standard and JSON format?
+
+** PPing: Performance study
+- Still not making that much progress here
+- After Red Hat meeting, was a bit unsure how to proceed
+- During last supervisor meeting, decided to continue with the VM-based setup
+  - Will use the tc hook
+  - For comparing with Kathie's pping:
+    - Will run without sampling rate limit
+    - Will run eBPF pping on both interfaces but Kathie's on single
+    - Will use either standard or ppviz format
+- Have prepared some simple scripts for testing and plotting
+- Hoped to have some nice graphs today
+  - Had no internet access on Friday
+  - VM's behaving a bit weirdly today
+    - Neither my or Kathie's pping seems to correctly see the traffic moving through
+    - Traffic no longer seems to flow exactly like expected
+      - Suspecting it might be because of ARP flux (incorrect IP-MAC mapping)
+
+* IAB Workshop
+- Not sure I fully understand the setup
+  - Mainly focused on discussions between invited participants and their topics?
+- Paper idea:
+  - Focus on how eBPF enables always-on monitoring
+  - Use pping as an example
+  - Present some early performance results that hopefully shows this is viable...
+
+* Plan
+- Watch some of Netdev
+- Work more with the performance study
+  - Figure out and solve issue with current setup
+  - Identify performance issue
+
