@@ -28,7 +28,6 @@
 \usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
 
 
-
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
 \AtBeginDocument{%
@@ -339,14 +338,51 @@ network interface.
 \end{itemize}
 
 
-\section{Programmable Packet Scheduling Frameworks in eBPF}
+\section{A Programmable Packet Scheduling Framework in eBPF}
+
+\begin{figure}
+  \includegraphics[width=\linewidth]{ebpf_pps_flow.png} %% This image is outdated and does not relfect the text.
+  \label{fig:ebpf_pps_flow}
+\end{figure}
+
+Our vision is to create an eBPF based programmable packet scheduling framework
+that is flexible enough to share it between XDP and a Qdisc. We concluded that
+there are four necessary components needed for such a framework, shown in figure
+\ref{fig:ebpf_pps_flow}.
 
 \begin{itemize}
-  \item Explain how we fulfill our requirements for a programmable schedulers using eBPF.
-        \begin{itemize}
-          \item How we want to either use eBPF helpers or eBPF maps to manipulate packet scheduling data structures.
-        \end{itemize}
+        \item A PIFO/Eiffel eBPF map for queing packets.
+        \item A enqueue eBPF hook responsible for redirecting packets to the PIFO/Eiffel eBPF map.
+        \item A dequeue eBPF hook responsible for dequing the next packet from the PIFO/Eiffel eBPF map.
+        \item Optionally, an eBPF based timer that handles pacing.
 \end{itemize}
+
+
+In our representation, we have decided that the best course of action was to
+create a new eBPF map type for our Eiffel-based queue structures. Due to eBPF's
+instruction count constraint, we would like to make sure that we are not wasting
+instructions on queue manipulation by using a map type with helper functions.
+Also, by using a new map type, we allow more flexibility by manipulating the
+queues outside of the eBPF queuing hook.
+
+From a programmer's perspective, the eBPF hook references the queues using
+identifiers to the specific queues in the map. It is then up to the enqueue and
+dequeue hooks to decide which queue to direct the packet using those identities.
+The enqueue hook is different depending on if we are using XDP or a Qdisc. In
+XDP, the enqueue hook is an XDP program that redirects the packet to an eBPF map
+using XDP\_REDIRECT. Furthermore, the network device driver now provides a new
+hook responsible for dequeuing packets from the queue maps. This hook returns a
+reference to a dequeued packet. However, because the eBPF verifier does not
+allow returning a direct pointer to the packet, the verifier is now aware of the
+packets using BTF. The device driver supports bulking of packets by repeatedly
+calling the dequeue hook before it does the transfer.
+
+To introduce shaping into our new programmable scheduling framework, we use the
+newly introduced eBPF timers API. These timers are implemented using a new type
+struct type that we can store inside different eBPF map types. This new time
+type allows both microsecond and nanosecond precision and is based on
+\textit{hrtimers} in the Linux kernel. These timers then call eBPF hooks that
+manipulate the Eiffel maps for the driver to dequeue later.
 
 
 \section{eBPF-Qdisc}
