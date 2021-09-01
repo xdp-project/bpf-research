@@ -346,7 +346,7 @@ network interface.
 \end{figure}
 
 Our vision is to create an eBPF based programmable packet scheduling framework
-that is flexible enough to share it between XDP and a Qdisc. We concluded that
+that is flexible enough to share between XDP and a Qdisc. We concluded that
 there are four necessary components needed for such a framework, shown in figure
 \ref{fig:ebpf_pps_flow}.
 
@@ -357,10 +357,9 @@ there are four necessary components needed for such a framework, shown in figure
         \item Optionally, an eBPF based timer that handles pacing.
 \end{itemize}
 
-
 In our representation, we have decided that the best course of action was to
 create a new eBPF map type for our Eiffel-based queue structures. Due to eBPF's
-instruction count constraint, we would like to make sure that we are not wasting
+instruction count constraint, we would like to ensure that we are not wasting
 instructions on queue manipulation by using a map type with helper functions.
 Also, by using a new map type, we allow more flexibility by manipulating the
 queues outside of the eBPF queuing hook.
@@ -378,11 +377,11 @@ packets using BTF. The device driver supports bulking of packets by repeatedly
 calling the dequeue hook before it does the transfer.
 
 To introduce shaping into our new programmable scheduling framework, we use the
-newly introduced eBPF timers API. These timers are implemented using a new type
-struct type that we can store inside different eBPF map types. This new time
-type allows both microsecond and nanosecond precision and is based on
-\textit{hrtimers} in the Linux kernel. These timers then call eBPF hooks that
-manipulate the Eiffel maps for the driver to dequeue later.
+newly introduced eBPF timers API. The API implements timers using a new struct
+type that we can store inside eBPF maps and supports both microsecond and
+nanosecond precision, using the \textit{hrtimers} in the Linux kernel. In our
+packet scheduling algorithms, these timers call eBPF hooks that manipulate the
+Eiffel maps for the driver to dequeue later.
 
 
 \section{eBPF-Qdisc}
@@ -396,11 +395,15 @@ manipulate the Eiffel maps for the driver to dequeue later.
 
 
 \section{eXpress Data Queueing (XDQ)}
+% Frey: Should we just say ``XDP quing'' or ''Queing in XDP`` I personally don't like not having a name.
 
-\begin{itemize}
-  \item Explain where XDQ attaches into XDP.
-  \item Explain what changes are needed to make it a reality.
-\end{itemize}
+% Frey: Here, I would like to have an image that shows the design when we have created the complete picture.
+
+Our design extends XDP by adding a new dequeue hook into the network drivers. We
+rely on standard XDP to enqueue packets into BPF queue maps. However, the new
+dequeue hook supports bulking by having the driver repeatedly dequeue packets
+from the dequeue hook before it transmits the packets.
+
 
 \section{Evaluation of eBPF-Qdisc and XDQ}
 
