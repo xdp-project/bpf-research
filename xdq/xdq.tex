@@ -110,41 +110,33 @@
 
 The Linux kernel is a widely used platform in devices that range from IoT
 devices, cellphones, home and enterprise routers to servers and cloud offerings.
-A common task done by all network equipment and devices is packet scheduling,
-which the equipment uses to prioritize different traffic between hosts. On
-smartphones, the packet scheduler might want to prioritize video streaming over
-application updates. A cloud provider might wish to schedule fairness between
-customers or even prioritize some customers over others. With the growing number
-of devices and their diverse network requirements, there is a need for increased
-flexibility in the rapid deployment and interaction with schedulers. However,
-network equipment and devices tend to have a limited set of packet schedulers
-available with a few parameters that the customers could control. Therefore,
-researchers and network vendors have turned to programmable packet schedulers
-to allow the customers to write schedulers optimized for their domain-specific
-use cases.
+One of the revolutionary technologies of the Linux kernel is the BPF framework,
+which has changed the way we extend the kernel. This framework is an in-kernel
+runtime environment that allows domain-specific code to execute within the
+kernel safely using predefined hooks. One such hook is the Linux eXpress Data
+Path\cite{hoiland2018express}, or XDP, which has found numerous uses in the
+industry, such as DoS attack mitigation, load-balancers, and intrusion
+prevention systems.
 
-Currently, the Linux kernel provides the Queuing Disciplines (Qdiscs) for
-handling packet scheduling. Adding new Qdiscs requires writing new Linux kernel
-modules in the C programming language. However, kernel modules have full access
-to the Linux kernel internals and do not provide a safe execution environment. A
-minor bug in a Qdisc could crash the whole kernel. Consequently, vendors tend
-not to provide third-party Qdiscs because of security reasons. Third-party
-providers also need to recompile their modules for every kernel update, which
-further limits the deployment of specialized packet schedulers. Therefore, to
-support programmable schedulers that can be rapidly and safely deployed, we
-propose two programmable packet scheduling frameworks for the Linux kernel using
-the eBPF execution environment. The eBPF framework is an in-kernel runtime
-environment that allows specialized code to execute within the kernel safely and
-without being recompiled. Our first framework is a Qdisc called eBPF-Qdisc,
-which allows the programmer to write new packet schedulers in eBPF that can use
-all existing Qdisc infrastructures. The second framework we call Express Data
-Queueing (XDQ) and expands upon Express Data Path
-(XDP)\cite{hoiland2018express}. XDP is a framework that allows programmers to
-attach eBPF code to the network interface's transmit path. These programs can
-alter and redirect the packets, giving the programmer the option of bypassing
-the Linux kernel's network stack for added performance, including the Qdisc
-layer. XDQ extends on XDP by providing programmers with the ability to write
-packet schedulers for the XDP datapath.
+XDP provides a high-performance programmable network data path and allows
+programmers to process packets early out of the driver. While XDP excels in
+forwarding packets, it currently has no mechanism for queueing or reordering
+packets and cannot implement traffic scheduling policies.
+
+Packet scheduling is a common task on network equipment, which it uses to
+prioritize different traffic between hosts. On smartphones, the packet scheduler
+might want to prioritize video streaming over application updates. A cloud
+provider might wish to schedule fairness between customers or even prioritize
+some customers over others. With the growing number of devices and their diverse
+network requirements, there is a need for increased flexibility in the rapid
+deployment and interaction with schedulers.
+
+This paper presents our work on adding programmable packet scheduling to XDP,
+which we also provide as a Qdisc. We have designed a programmable packet
+scheduling framework in BPF using recently proposed schemes for programmable
+queues. This extension allows programmers to define their packet schedulers
+using BPF while benefiting from the XDP fast data path.
+
 
 \begin{itemize}
 \item Explain the structure of this technical report.
