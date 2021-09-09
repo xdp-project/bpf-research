@@ -99,7 +99,7 @@
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{XDP, eBPF, BPF, Queueing, Linux, Scheduling}
+\keywords{XDP, BPF, BPF, Queueing, Linux, Scheduling}
 
 %%
 %% This command processes the author and affiliation and title
@@ -108,34 +108,11 @@
 
 \section{Introduction}
 
-The Linux kernel is a widely used platform in devices that range from IoT
-devices, cellphones, home and enterprise routers to servers and cloud offerings.
-One of the revolutionary technologies of the Linux kernel is the BPF framework,
-which has changed the way we extend the kernel. This framework is an in-kernel
-runtime environment that allows domain-specific code to execute within the
-kernel safely using predefined hooks. One such hook is the Linux eXpress Data
-Path\cite{hoiland2018express}, or XDP, which has found numerous uses in the
-industry, such as DoS attack mitigation, load-balancers, and intrusion
-prevention systems.
+The Linux kernel is a widely used platform in devices that range from IoT devices, cellphones, home and enterprise routers to servers and cloud offerings. One of the revolutionary technologies of the Linux kernel is the BPF framework, which has changed the way we extend the kernel. This framework is an in-kernel runtime environment that allows domain-specific code to execute within the kernel safely using predefined hooks. One such hook is the Linux eXpress Data Path\cite{hoiland2018express}, or XDP, which has found numerous uses in the industry, such as DoS attack mitigation, load-balancers, and intrusion prevention systems.
 
-XDP provides a high-performance programmable network data path and allows
-programmers to process packets early out of the driver. While XDP excels in
-forwarding packets, it currently has no mechanism for queueing or reordering
-packets and cannot implement traffic scheduling policies.
+XDP provides a high-performance programmable network data path and allows programmers to process packets early out of the driver. While XDP excels in forwarding packets, it currently has no mechanism for queuing or reordering of packets and cannot implement traffic scheduling policies. Packet scheduling is a common task on network equipment, and like for other aspects of networking, there is a growing interest for bringing programmability to this domain. For the Linux kernel, making packet scheduling fully programmable through BPF is the obvious answer to this trend.
 
-Packet scheduling is a common task on network equipment, which it uses to
-prioritize different traffic between hosts. On smartphones, the packet scheduler
-might want to prioritize video streaming over application updates. A cloud
-provider might wish to schedule fairness between customers or even prioritize
-some customers over others. With the growing number of devices and their diverse
-network requirements, there is a need for increased flexibility in the rapid
-deployment and interaction with schedulers.
-
-This paper presents our work on adding programmable packet scheduling to XDP,
-which we also provide as a Qdisc. We have designed a programmable packet
-scheduling framework in BPF using recently proposed schemes for programmable
-queues. This extension allows programmers to define their packet schedulers
-using BPF while benefiting from the XDP fast data path.
+This paper presents our work on adding programmable packet scheduling to XDP, which we also provide as a Qdisc. We have designed a programmable packet scheduling framework in BPF using recently proposed schemes for programmable queues. This extension allows programmers to define their packet schedulers using BPF while benefiting from the XDP fast data path.
 
 
 \begin{itemize}
@@ -260,25 +237,25 @@ traffic.
 \end{itemize}
 
 
-\section{The extended Berkeley Packet Filter (eBPF)}
+\section{The BPF framework}
 
-The eBPF framework is an in-kernel runtime environment that allows specialized
+The BPF framework is an in-kernel runtime environment that allows specialized
 programs to execute in the kernel safely. These programs attach themselves to
 hooks provided by the different subsystems of the kernel. These hooks limit what
-the programs can do and define what type of eBPF programs can exist. These types
+the programs can do and define what type of BPF programs can exist. These types
 of programs vary but predominantly, they are related to networking, tracing, and
-security. At its core, eBPF is an instruction set. However, as a framework, it
-provides a key-value store that enables inter-process communication called eBPF
-maps, in-kernel helper functions, and toolchains to create and manage eBPF
+security. At its core, BPF is an instruction set. However, as a framework, it
+provides a key-value store that enables inter-process communication called BPF
+maps, in-kernel helper functions, and toolchains to create and manage BPF
 programs from user-space.
 
-\todo[inline]{Frey: Because we all know what eBPF is, I am going to collapse these eBPF sections and make it shorter and simpler.}
+\todo[inline]{Frey: Because we all know what BPF is, I am going to collapse these BPF sections and make it shorter and simpler.}
 
 \begin{itemize}
   \item Explain h
-  \item Explain eBPF maps and their scope.
-  \item Explain what hooks are and that eBPF allows helper functions.
-  \item Explain how eBPF programs are loaded using the bpf system call.
+  \item Explain BPF maps and their scope.
+  \item Explain what hooks are and that BPF allows helper functions.
+  \item Explain how BPF programs are loaded using the bpf system call.
 \end{itemize}
 
 
@@ -286,8 +263,8 @@ programs from user-space.
 
 \todo[inline]{Frey: I think I will remove this section either completely, or at least remove the extra details.}
 
-The eBPF instruction set is 64-bit and consists of eleven registers listed in
-table ~\ref{table:eBPF_registers}. It contains a little over a hundred
+The BPF instruction set is 64-bit and consists of eleven registers listed in
+table ~\ref{table:BPF_registers}. It contains a little over a hundred
 instructions. However, the current format defines the opcode as the first octet
 of the instruction. Therefore, in the current design, it could only support 256
 instructions. The currently available instructions are limited to Arithmetic
@@ -296,7 +273,7 @@ memory, and branch instructions.
 
 \begin{table}
   \caption{Frequency of Special Characters}
-  \label{tab:freq}
+  \label{table:BPF_registers}
   \begin{tabular}{ll}
     \toprule
     Register & Type                    \\
@@ -307,13 +284,12 @@ memory, and branch instructions.
     R10      & Read-only stack pointer \\
     \bottomrule
 \end{tabular}
-\label{table:eBPF_registers}
 \end{table}
 
 
 \subsection{Express Data Path (XDP)}
 
-XDP is a type of eBPF program that are attached directly to the RX path of a
+XDP is a type of BPF program that are attached directly to the RX path of a
 network interface.
 
 \begin{itemize}
@@ -322,73 +298,46 @@ network interface.
 \end{itemize}
 
 
-\subsection{eBPF Qdisc Classifiers}
+\subsection{BPF Qdisc Classifiers}
 
 \begin{itemize}
-  \item Explain that the Qdisc layer currently supports two types of eBPF programs. These programs are a eBPF based classifier and filters.
-  \item Explain why these eBPF programs
+  \item Explain that the Qdisc layer currently supports two types of BPF programs. These programs are a BPF based classifier and filters.
+  \item Explain why these BPF programs
 \end{itemize}
 
 
-\section{A Programmable Packet Scheduling Framework in eBPF}
+\section{A Programmable Packet Scheduling Framework in BPF}
 
 \begin{figure}
-  \includegraphics[width=\linewidth]{bpf_pps_flow.png} %% This image is outdated and does not relfect the text.
-  \label{fig:bpf_pps_flow}
+
+  \includegraphics[width=\linewidth]{bpf_pps_flow.pdf}
 
   \caption{The figure depicts the three new BPF hooks our framework provides to
            implement programmable packet scheduling. The main hooks are the enque and deque
            hooks, with the optional timer hook. In the case of XDP, the enque hook is the
-           traditional XDP hook.}
-
+           traditional XDP hook.\label{fig:bpf_pps_flow}}
 \end{figure}
 
-Our vision is to create an eBPF based programmable packet scheduling framework
-that is flexible enough to share between XDP and a Qdisc. We concluded that
-there are four necessary components needed for such a framework, shown in figure
-\ref{fig:bpf_pps_flow}.
+Our vision is to create an BPF based programmable packet scheduling framework that is flexible enough to share between the XDP and kernel Qdisc layers. The design is depicted in Figure \ref{fig:bpf_pps_flow}, which shows the basic building blocks for our design without the specifics of XDP nor the Qdisc subsystem.
+
+These building blocks are then further broken down as follows:
 
 \begin{itemize}
-        \item A PIFO/Eiffel eBPF map for queing packets.
-        \item A enque eBPF hook responsible for redirecting packets to the PIFO/Eiffel eBPF map.
-        \item A deque eBPF hook responsible for dequing the next packet from the PIFO/Eiffel eBPF map.
-        \item Optionally, an eBPF based timer that handles pacing.
+        \item Queue map: This new BPF map implements a PIFO and is the main building block for the programmer to create packet schedulers.
+        \item Enqueue hook: This BPF hook is responsible for redirecting packets to BPF queue maps. This is the standard XDP hook in the case of XDP. However, it is a new hook in Qdiscs.
+        \item Timer hook: This is an optional hook and is only required for algorithms that delay packets, e.g., packet pacing or traffic shaping. It is responsible for dequeuing and enqueuing packets from different PIFOs to introduce delayed packets. We implement timers using the newly introduced BPF timer API. This API allows the programmer to schedule BPF programs to be run at a specified time in the future, which can be used to release held packets.
+        \item Dequeue hook: This hook is responsible for delivering the packet from the packet scheduling algorithm. In XDP, this is a new hook that each driver calls to transmit a packet. It can deliver bulking by repeatedly calling the hook to dequeue multiple packets before it transmits them.
 \end{itemize}
 
-In our representation, we have decided that the best course of action was to
-create a new eBPF map type for our Eiffel-based queue structures. Due to eBPF's
-instruction count constraint, we would like to ensure that we are not wasting
-instructions on queue manipulation by using a map type with helper functions.
-Also, by using a new map type, we allow more flexibility by manipulating the
-queues outside of the eBPF queuing hook.
-
-From a programmer's perspective, the eBPF hook references the queues using
-identifiers to the specific queues in the map. It is then up to the enque and
-deque hooks to decide which queue to direct the packet using those identities.
-The enque hook is different depending on if we are using XDP or a Qdisc. In
-XDP, the enque hook is an XDP program that redirects the packet to an eBPF map
-using XDP\_REDIRECT. Furthermore, the network device driver now provides a new
-hook responsible for dequeuing packets from the queue maps. This hook returns a
-reference to a dequed packet. However, because the eBPF verifier does not
-allow returning a direct pointer to the packet, the verifier is now aware of the
-packets using BTF. The device driver supports bulking of packets by repeatedly
-calling the deque hook before it does the transfer.
-
-To introduce shaping into our new programmable scheduling framework, we use the
-newly introduced eBPF timers API. The API implements timers using a new struct
-type that we can store inside eBPF maps and supports both microsecond and
-nanosecond precision, using the \textit{hrtimers} in the Linux kernel. In our
-packet scheduling algorithms, these timers call eBPF hooks that manipulate the
-Eiffel maps for the driver to deque later.
+Our design represents the PIFO data structure as an eBPF map. This representation allows the BPF programs to use a familiar map interface to reference PIFOs straightforwardly in their scheduling algorithm. From a programmer's perspective, the eBPF hooks reference the queues like any other map type. The enqueue hook can decide which queue to direct the packet to by a map reference. Similarly, the dequeue hook can pick which queue map to dequeue from and return a reference to the dequeued packet to the kernel for transmission. The BPF packet scheduling hooks can set BPF timers that trigger BPF programs at specified times if the scheduling algorithm needs to implement shaping and pacing. The BPF timer API supports both microsecond and nanosecond precision using the kernel's \textit{hrtimers}, making it ideal for our use case.
 
 
-\section{eBPF-Qdisc}
+\section{BPF-Qdisc}
 
 \begin{itemize}
-  \item Explain the building blocks of Cong Wang's eBPF-Qdisc.
-  \item Explain that is a classfull Qdisc.
+  \item Explain the building blocks of Cong Wang's BPF-Qdisc.
   \item Explain what changes are needed to make it better.
-  \item Explain the limitations of the eBPF-Qdisc.
+  \item Explain the limitations of the BPF-Qdisc.
 \end{itemize}
 
 
@@ -403,17 +352,17 @@ dequeue hook supports bulking by having the driver repeatedly dequeue packets
 from the dequeue hook before it transmits the packets.
 
 
-\section{Evaluation of eBPF-Qdisc and XDQ}
+\section{Evaluation of BPF-Qdisc and XDQ}
 
 \begin{itemize}
-  \item Compare a type of scheduling algorithm using eBPF-Qdisc and XDQ performance to Qdiscs that does the same functionality.
-  \item Compare eBPF-Qdisc and XDQ performance to eachother.
+  \item Compare a type of scheduling algorithm using BPF-Qdisc and XDQ performance to Qdiscs that does the same functionality.
+  \item Compare BPF-Qdisc and XDQ performance to eachother.
 \end{itemize}
 
 \section{Conclusion}
 
 \begin{itemize}
-  \item Reiterate main points of design, and summarise results.
+  \item Reiterate main points of design, and summarize results.
 \end{itemize}
 
 
