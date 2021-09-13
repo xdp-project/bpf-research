@@ -136,6 +136,13 @@ traffic.
 
 \section{Linux Kernel Networking Subsystem}
 
+\begin{figure}
+
+  \includegraphics[width=\linewidth]{network-overview.pdf}
+
+  \caption{\label{fig:network_overview}}
+\end{figure}
+
 \begin{itemize}
   \item Explain on a high level the Linux Kernel Networking stack using a diagram.
 \end{itemize}
@@ -301,8 +308,7 @@ network interface.
 \subsection{BPF Qdisc Classifiers}
 
 \begin{itemize}
-  \item Explain that the Qdisc layer currently supports two types of BPF programs. These programs are a BPF based classifier and filters.
-  \item Explain why these BPF programs
+  \item Explain what the current BPF support in Qdisc does.
 \end{itemize}
 
 
@@ -334,17 +340,10 @@ Our design represents the PIFO data structure as an eBPF map. This representatio
 
 \section{BPF-Qdisc}
 
-\begin{itemize}
-  \item Explain the building blocks of Cong Wang's BPF-Qdisc.
-  \item Explain what changes are needed to make it better.
-  \item Explain the limitations of the BPF-Qdisc.
-\end{itemize}
+Due to XDP being only available in ingress and not at egress, queuing is only suitable for forwarded packets. However, if we want to support packets from the local machine, we provide a BPF-Qdisc that supports XDQ the same way as in XDP. To support this, we have created a new Qdisc that includes two separate hooks for ingress and egress to reflect our original design.
 
 
 \section{eXpress Data Queueing (XDQ)}
-% Frey: Should we just say ``XDP quing'' or ''Queing in XDP`` I personally don't like not having a name.
-
-% Frey: Here, I would like to have an image that shows the design when we have created the complete picture.
 
 Our design extends XDP by adding a new dequeue hook into the network drivers. We
 rely on standard XDP to enqueue packets into BPF queue maps. However, the new
