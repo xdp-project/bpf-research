@@ -296,16 +296,14 @@ memory, and branch instructions.
 
 \subsection{Express Data Path (XDP)}
 
-XDP is a type of BPF program that are attached directly to the RX path of a
-network interface.
+XDP\cite{hoiland2018express} is a type of BPF program that is attached directly to the RX path of a network interface to allow the programmer direct manipulation of packets from the network driver. Its primary use cases are high-performance packet processing and the ability to bypass the kernel's network stack by redirecting the packet to different locations, such as back out the same device, to another device, or dropping the packet entirely. XDP also provides helper functions that allow the programmer to call particular parts of the network stack, such as fib lookups.
 
-\begin{itemize}
-  \item Explain that XDP hooks directly to the RX path of a network driver and allows direct manipulation of the packet.
-  \item Explain how XDP allows you to bypass the Linux network stack and redirect or drop the packets.
-\end{itemize}
+While XDP excels at forwarding packets, it does not support packet reordering or packet scheduling. Our objective in this paper is to extend XDP to support packet scheduling. This support includes adding helper functions and extra hooks for dequeuing and pacing operations.
 
 
 \subsection{BPF Qdisc Classifiers}
+
+
 
 \begin{itemize}
   \item Explain what the current BPF support in Qdisc does.
@@ -318,10 +316,8 @@ network interface.
 
   \includegraphics[width=\linewidth]{bpf_pps_flow.pdf}
 
-  \caption{The figure depicts the three new BPF hooks our framework provides to
-           implement programmable packet scheduling. The main hooks are the enque and deque
-           hooks, with the optional timer hook. In the case of XDP, the enque hook is the
-           traditional XDP hook.\label{fig:bpf_pps_flow}}
+  \caption{Depicted are the BPF hooks needed to implement programmable packet scheduling using our new proposed framework. The main hooks are the enqueue and dequeue hooks, with the optional timer hook. Queueing works the same in both XDP and the Qdisc. However, they do not use the same enqueue and dequeue hooks.\label{fig:bpf_pps_flow}}
+
 \end{figure}
 
 Our vision is to create an BPF based programmable packet scheduling framework that is flexible enough to share between the XDP and kernel Qdisc layers. The design is depicted in Figure \ref{fig:bpf_pps_flow}, which shows the basic building blocks for our design without the specifics of XDP nor the Qdisc subsystem.
