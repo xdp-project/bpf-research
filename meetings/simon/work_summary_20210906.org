@@ -1,0 +1,146 @@
+#+TITLE: Progress update 2021-09-06
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have made a number of changes to pping:
+  - RTT-based sampling rate  
+  - Timestamp and match on both ingress and egress
+  - Wait for response before "opening" connection
+  - Switched src and dest
+  - Improved map-cleanup  
+- Started with some performance tests
+
+** PPing - RTT-based sampling rate
+- Have added an option to adapt sample rate to flow RTT
+  - By default based on min-RTT
+  - Can optionally use sRTT
+    - sRTT update rate tied to sampling rate
+    - Using sRTT-based sampling rate will cause sRTT to grow quickly, shrink slowly
+
+** PPing - handling both directions
+- Kathie's pping timestamped and matched in both directions
+- Originally I only timestamped on egress and matched on ingress
+  - If you wanted to measure both directions, run multiple instances of pping
+  - This approach would not really work at the ISP due to how they used NAT?
+- Doing both directions adds some additional complexities
+  - FIN will close one direction, RST both
+  - Have added "match_on_egress" field to JSON output to seperate between entries that include local processing time and not
+  - Have added optional "local filtering" to avoid RTTs for traffic to the local host
+    - Implemented by FIB lookup (please have a look at this)
+
+*** PPing - both directions - code changes
+- Ending up rewriting significant part of BPF code
+  - Rejected by verifier on 5.4 kernel (which my VMs use...)
+  - Despite more complicated code, verifier passes it much faster now (850k -> 150k proc. ins.)
+- Should probably have some tests by now...
+
+** PPing - wait for response before opening flow
+- Used to simply report flow opened/closed when I created/deleted a flow entry
+  - Will report some uncessary open/close events for flows we never get a response from
+- Will now wait for a response before reporting flow opened
+  - Do still not wait for final ACK in SYN -> SYN-ACK -> ACK handshake
+  - Will still timestamp initial SYN-packet
+- Will only report on flow closing if it has been first been "opened"
+- Introduces unlikely concurrency issue where multiple flow-opened reports are pushed
+
+** PPing - switch src and dest
+- Used to report src and dest from the timestamped packet's perspective
+- To be consistent with Kathie's pping, instead use reply-packet's perspective
+- Ex. RTT for packet going A -> B -> A
+  - Would before report A as src and B as dest
+  - Will now report B as src and A as dest
+
+** PPing - improved map cleanup
+- Instead of looping through maps from userspace, use BPF iterators
+- Runs a BPF program for each map element
+  - Avoids having to copy contents to userspace
+- Loses "map statistics" (nr elements in map and nr elements removed)
+- Further improvements
+  - Shorter flow timeout for ICMP and "non-open" TCP?
+  - Shorter timestamp timeout - based on flow RTT?
+
+
+* PPing - performance tests
+- Have done some simple tests using Javid's VMs to try and evaluate pping performance
+- Generate traffic from VM-1 sent to VM-3 with iperf3
+  - Traffic forwarded by VM-2 where pping runs
+- Run tests without pping (baseling), with Kathie's pping (k-pping) and my eBPF pping (e-pping)
+  - eBPF pping runs on TC-hook (VMXNET3 driver lacks XDP support)
+  - eBPF pping runs with no sampling (for fair comparison against Kathie's pping)
+  - Measure system CPU utalization because hard to measure pping utalization
+
+** Initial results
+- Small writeup [[https://github.com/simosund/bpf-examples/blob/Measurement_study/pping/measurements/MEASUREMENT_STUDY.md#some-more-thorough-iperf3-tests-2021-07-16][here]], full results on [[https://kau.app.box.com/s/epoif0wi2qlffjxpcwmg4ibv7lsojwvo][Box]]   
+- e-pping works well for single flow, falls appart for "many" flows (>100)
+- Have discovered a number of issues with e-pping:
+  - Map cleanup is slow and partly broken (hopefully fixed now)
+  - Timestamp map gets filled up with stale entries
+  - Pushing and printing many RTT-events requires a lot of CPU
+  - Many of the pushed events are lost (never printed out)
+- Seem to get large variations between repeated tests
+
+** e-pping problems
+- Map cleanup slow/broken:
+  - Fixed by using BPF-iterators to do map cleanup in kernel-space
+- Timestamp map gets filled with stale entries
+  - Large number of entries due to combination of high rate (1000 timestamps/s/flow) and longer RTTs
+  - Guessing stale entries due to delayed ACK and retransmissions
+  - Can be mitigated through sampling, faster map cleanup and increasing map size
+- CPU usage when pushing/printing many RTT-events
+  - Both the act of pushing the event and the act of printing out the event seems to be problematic
+  - Pushing of events can potentially be optimzied by minimizing event data and may switching to BPF ringbuffer
+  - Not sure too much can be done about printing the printing of events, other than printing less of them
+- Lost events
+  - Likely largely tied to above issue
+  - Can potentially be improved through batch processing and sampling
+
+** Large variations between runs
+- Can observe large variations between test runs (upwards of double CPU usage)
+  - Variations in CPU usage and network throughput even without any pping
+  - Also some variations in pping behaviour (potentially caused by above point)
+- Due to VMs, my setup, iperf, something else?
+- If issue cannot be solved, need to average results from maaany runs to get valid results
+  - Takes time and disk space
+
+*** Example - two runs with 500 flows
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/pping_comparison_500_flows_run_2.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/pping_comparison_500_flows_run_3.png]]
+
+* Update VM kernel version
+- VM's use old 5.4 kernel, need newer (>=5.11 seems to work)
+- Unsure of best approach:
+  - Update Ubuntu to 21.04 (currently 20.04)
+  - Compile and install custom kernel
+- VM has insufficent disk to compile kernel on them
+  - Have compiled on another machine based on config from VM
+- If I screwed something up, hard to solve remotely (cannot access grub boot menu)
+
+* PPing description for Anna's Red Hat report
+- If I haven't already, will push update to README with intro + brief figure description
+  - NOTE: Will be on "misc fixes" branch (net yet merged upstream)
+- RTT example figure
+  - Currently only have plots over CPU, iperf-reported throughput/RTT/retrans and map cleaning
+  - Could use ppviz to visualize pping output
+  - Could throw together some simple RTT timeline or similar depending on when you need it
+
+* Courses
+- Need to schedule meeting to discuss PhD/licensiate defense for intro course
+- Started KLL course, first session on Friday (10/9)
+  - Have a fair bit of litterature I need to get through
+- DISCO course
+  - Next seminar end-ish of month
+
+* Other
+- Have started as lab supervisor in programming techniques (DVGA01)
+  - Lab supervision on-site
+  - Planning kinda a mess, may only be needed for initial part of course
+- Work computer
+  - We talked slightly about this ages ago
+  - Currently have "unmanaged" Linux computer at work, and personal laptop
+  - Current setup normally not an issue, although may lack access to some software (Office, VPN etc)
+

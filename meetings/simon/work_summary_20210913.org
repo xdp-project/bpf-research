@@ -1,0 +1,73 @@
+#+TITLE: Progress update 2021-09-13
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Not much has happend code wise
+  - Only pushed a couple of updates to documentation
+- Currently trying to test pping performance
+- Have a couple of issues
+  - Large variations between runs
+  - Confusion around interaction between GRO/TSO and delayed ACK
+
+** Updates to documentation
+- Simply added a bit of an intro and a brief figure description that Anna then used for the Red Hat report
+- Naming pping:
+  - Have internally (and for Red Hat report) used:
+    - k-pping as short for Kathie's pping
+    - e-pping as short for eBPF pping (originally) or perhaps evovled/extended pping
+  - Suggestions for better names?
+
+
+** Large variations between runs
+- Can observe large variations between test runs (upwards of almost double CPU usage)
+  - Variations in CPU usage and network throughput even without any pping
+  - Also some variations in pping behaviour (potentially caused by above point)
+- Due to VMs, my setup, iperf, something else?
+  - Javid thought it could be due to how VMs handled memory
+  - Suggested to wait some minutes between tests - did not help
+- If issue cannot be solved, need to average results from maaany runs to get valid results
+  - Takes time and disk space
+
+*** Example - two runs with 500 flows
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/pping_comparison_500_flows_run_2.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/pping_comparison_500_flows_run_3.png]]
+
+* Pushing many events
+- My results from 500 flows showed that pushing many events used a lot of CPU
+- Test without pushing any events showed relatively small overhead
+- Test with pushing but witout printing shows some overhead
+  - Considerably more than without pushing any events
+  - Considerably less than when printing the events
+  - No lost events
+- Jesper mentioned some parameter for doing batch processing
+  - Can't find anything for the perf_buffer__poll() API
+
+
+* How does the send/receive offloads work with delayed ACK?
+- Test with 500 flows showed many stale timestamp entries
+  - Could be due to retransmissions
+  - Thought it might also be connected to delayed ACKs
+- With TSO/GSO/GRO enabled tc sees "merged" packets
+  - Saw roughly 1 ack for every "merged" packet
+  - Will every other 1500-byte packet still be ACKED?
+  - Can TSO/GSO in combination with GRO lose TCP timestamps?
+- With TSO/GSO/GRO disabled
+  - Only get an ACK for ~16th packet
+    - The ACKs seems to acknowledge 4-30 1448 byte segements
+  - tc egress still sees "merged" packet (60KB) if running on endhost
+    
+
+* Other
+- Lab supervision in DVGA01
+- Courses
+  - DISCO reading - next seminar on 20/9
+  - KLL - next meeting on 24/9
+- Linux Plumbers Conference (LPC 2021)
+  - Seems to have a track for BPF and networking
+
+
