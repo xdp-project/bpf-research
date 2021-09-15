@@ -303,11 +303,7 @@ While XDP excels at forwarding packets, it does not support packet reordering or
 
 \subsection{BPF Qdisc Classifiers}
 
-
-
-\begin{itemize}
-  \item Explain what the current BPF support in Qdisc does.
-\end{itemize}
+Currently, the Qdisc layer only has a BPF classifier capable of manipulating packets and directing them into excising Qdiscs that are not programmable using BPF. While this does provide a form of programable packet scheduling, it relies exclusively on the Qdisc layer, which XDP can not use. We aim to provide a BPF based packet scheduling framework for XDP and as a standalone Qdisc.
 
 
 \section{A Programmable Packet Scheduling Framework in BPF}
