@@ -1,0 +1,36 @@
+#+TITLE: Progress update 2021-09-20
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* PPing - Improved map cleanup
+- Used static 300s timeout to remove old flows
+- Have added shorter 30s timeout for "non-opened" flows (seen no reply) and ICMP
+- Working on adding RTT-based timeout for timestamp entries
+
+* PPing - Performance tests
+- Have had problems replicating results - large variations between runs
+  - Tried waiting 5 min between runs - no difference
+- Based on discussions with Anna & Red Hat, still belive it could be connected to the VMs and their networking
+- Also observed some other strange behavior, such as only every ~16th packet getting ACKed
+- Currently in process of setting up 3 physical machines
+  - If variations gone - likely some issue with VM setup
+  - Otherwise, issue with test setup (iperf? Linux network conf?)
+
+* PPing - IMC poster
+- On Friday Anna notified me that [[https://conferences.sigcomm.org/imc/2021/cfposters/][ACM Internet Measurement Conference (IMC) 2021]] has a poster session
+- Deadline was extened to 22/9
+- Think it could be a good opportunity to get some early feedback on pping
+- Will need to throw together an extended abstract (2 pages) by Wednesday
+
+* Other
+- Lab supervision in DVGA01
+- Courses
+  - DISCO reading - seminar today
+  - KLL - next meeting on 24/9
+- Linux Plumbers Conference (LPC 2021)
+  - 16:00 - 20:00 this entire week
+
+

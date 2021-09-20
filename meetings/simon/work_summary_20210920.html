@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2021-09-20</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2021-09-20</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2021-09-20 mån 13:51</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org776add4">1. PPing - Improved map cleanup</a></li>
+<li><a href="#/slide-org207c173">2. PPing - Performance tests</a></li>
+<li><a href="#/slide-org92dc9fe">3. PPing - IMC poster</a></li>
+<li><a href="#/slide-org2eee1b3">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org776add4">
+<h2 id="org776add4"><span class="section-number-2">1</span> PPing - Improved map cleanup</h2>
+<ul>
+<li>Used static 300s timeout to remove old flows</li>
+<li>Have added shorter 30s timeout for "non-opened" flows (seen no reply) and ICMP</li>
+<li>Working on adding RTT-based timeout for timestamp entries</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org207c173">
+<h2 id="org207c173"><span class="section-number-2">2</span> PPing - Performance tests</h2>
+<ul>
+<li>Have had problems replicating results - large variations between runs
+<ul>
+<li>Tried waiting 5 min between runs - no difference</li>
+
+</ul></li>
+<li>Based on discussions with Anna &amp; Red Hat, still belive it could be connected to the VMs and their networking</li>
+<li>Also observed some other strange behavior, such as only every ~16th packet getting ACKed</li>
+<li>Currently in process of setting up 3 physical machines
+<ul>
+<li>If variations gone - likely some issue with VM setup</li>
+<li>Otherwise, issue with test setup (iperf? Linux network conf?)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org92dc9fe">
+<h2 id="org92dc9fe"><span class="section-number-2">3</span> PPing - IMC poster</h2>
+<ul>
+<li>On Friday Anna notified me that <a href="https://conferences.sigcomm.org/imc/2021/cfposters/">ACM Internet Measurement Conference (IMC) 2021</a> has a poster session</li>
+<li>Deadline was extened to 22/9</li>
+<li>Think it could be a good opportunity to get some early feedback on pping</li>
+<li>Will need to throw together an extended abstract (2 pages) by Wednesday</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org2eee1b3">
+<h2 id="org2eee1b3"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Lab supervision in DVGA01</li>
+<li>Courses
+<ul>
+<li>DISCO reading - seminar today</li>
+<li>KLL - next meeting on 24/9</li>
+
+</ul></li>
+<li>Linux Plumbers Conference (LPC 2021)
+<ul>
+<li>16:00 - 20:00 this entire week</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
