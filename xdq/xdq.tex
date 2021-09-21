@@ -114,25 +114,25 @@ XDP provides a high-performance programmable network data path and allows progra
 
 This paper presents our work on adding programmable packet scheduling to XDP, which we also provide as a Qdisc. We have designed a programmable packet scheduling framework in BPF using recently proposed schemes for programmable queues. This extension allows programmers to define their packet schedulers using BPF while benefiting from the XDP fast data path.
 
-
 \begin{itemize}
 \item Explain the structure of this technical report.
 \end{itemize}
 
+
 \section{Packet Scheduling, Traffic Shaping, and Queue Management}
 
-The main function of the packet scheduler is to arrange or rearrange packets
-in order to meet some specific criteria. However, they can also be used to shape
-traffic.
+The primary function of the packet scheduler is to arrange or rearrange packets to meet some specific requirements within a network. Most of these requirements are to prioritize one type of traffic over another. For instance, video streaming services would like to ensure that clients get fair access to their video streams. Moreover, a service provider might want to prioritize traffic of their productions servers over their testing servers. Therefore, having the flexibility to adapt the packet scheduling algorithm to the requirements of the network in question can significantly improve its overall quality.
 
-\todo[inline]{Frey: This text should not sound like it is explaining packet scheduling from scratch. We assume that the audience have the main overview of what a packet scheduler is.}
+Another crucial component related to packet schedulers is the capability of delaying packets. This capability allows packet scheduling algorithms to provide traffic shaping or pacing.  This capability can restrict a service from dominating the traffic or ensure that high-priority packets never get delayed.
+
+On the other hand, queue management is how many packets the queues can queue. A significant problem in today's environments is buffer bloat, where buffers favor large buffers for throughput by sacrificing latency. Buffer bloat can negatively affect low latency applications such as video conferencing, online gaming, and other interactive applications. Therefore, queue management is an integral part of the queueing process, while it is not usually considered part of the packet scheduling algorithm.
+
 
 \begin{itemize}
-  \item Explain the basic concepts of packet schedulers.
-  \item Explain the difference between schedulers and queues.
   \item Explain the difference between a work-conserving and non-work conserving scheduling.
   \item Use a short round-robin scheduling example.
 \end{itemize}
+
 
 \section{Linux Kernel Networking Subsystem}
 
@@ -146,6 +146,7 @@ traffic.
 \begin{itemize}
   \item Explain on a high level the Linux Kernel Networking stack using a diagram.
 \end{itemize}
+
 
 \subsection{The Linux Kernel Packet Queueing Discipline (Qdisc)}
 
