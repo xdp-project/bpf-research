@@ -1,0 +1,82 @@
+#+TITLE: Progress update 2021-09-27
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- More aggressive map cleanup + debug info
+- Not that much on the testing front
+- IMC '21 extended abstract (for poster)
+
+* PPing - more aggressive map cleanup
+- Previously had static limits for when entry could be deleted
+  - 300s for flow
+  - 10s for packet timestamp
+- Flows still use static limits, but had added shorter ones for "unopened" flows and ICMP flows
+- For timestamp entries, have added RTT-based timeout
+  - If entry older than 8*sRTT it can be deleted
+  - Store current sRTT with timestamp to avoid flow lookup from each timestamp entry
+
+** PPing - RTT based timeout - bad idea?
+- If RTT grows quickly (ex. due to bufferbloat), may delete entry before it can be matched
+  - Loses an RTT sample and prevents sRTT from updating
+  - As map cleaning is only performed once per second, mainly an isssue for flows with large RTT
+- Alternative design:
+  - Allow entry to be deleted if we've already matched a later timestamp
+  - Pros:
+    - Should only delete "safe" entries
+  - Cons:
+    - Need to keep track of last matched timestamp
+    - TCP specific (need separate logic for ICMP and other protocols)
+    - Need to do flow lookup for each timestamp entry
+- As map cleaning performed at 1 Hz, entries will still sit around for ~500ms even for very short RTTs
+
+** PPing - map cleanup debug info
+- Before switching to bpf_iter implementation, userspace component reported nr entries processed and deleted
+- Currently Adding this info back + tracking nr elements automatically deleted from matching etc.
+  - BPF side tracking done, just need to add userspace reporting
+- Lots of #ifdef DEBUG in the code...
+
+* Performance testing
+- Not too much has happened on this front
+- Updated VMs from 5.4 kernel to 5.14 kernel with CONFIG_PREEMT=y
+  - Still considerable variations between runs
+  - Much higher CPU utalization for multiple flows
+- Have also gotten 3 physical machines, but not set up yet
+  - Currently 1GB NICs, 1GB switch and no XDP...
+  - ...but can hopefully get better NICs and switch later
+
+** Single flow before (left) and after (right) kernel update
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/single_flow_5.4_kernel.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/single_flow_5.14_kernel.png]]
+
+** Multiple flows before (left) and after (right) kernel update
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/100_flows_5.4_kernel.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/100_flows_5.14_kernel.png]]
+
+** Variations between iperf runs
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/iperf_variation_100_flows.png]]
+
+** Synced RTTs between flows
+
+** Synced CPU utalization on VM3
+
+* IMC Poster
+- Anna suggested I send something in for the AMC Internet Measurement Conference (IMC) poster session
+- Submitted a two page extended abstract before deadline 23/09
+- Largely similar to Red Hat report
+- Used PPing for Kathie's implementation, and ePPing for mine
+    
+
+* Other
+- Linux Plumbers Conference (LPC 2021)
+  - Tried to listen while working - not a great success
+  - Will likely rewatch some segments on youtube
+
+
