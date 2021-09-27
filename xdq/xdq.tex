@@ -121,18 +121,17 @@ This paper presents our work on adding programmable packet scheduling to XDP, wh
 
 \section{Packet Scheduling, Traffic Shaping, and Queue Management}
 
-The main function of the packet scheduler is to arrange or rearrange packets
-in order to meet some specific criteria. However, they can also be used to shape
-traffic.
+The primary function of the packet scheduler is to arrange or rearrange packets to meet some specific requirements within its network. Most of these requirements is to prioritize one type of traffic over another. For instance, a video streaming services would like to ensure that clients get fair access to their video streams. And a service provider might want to prioritize the traffic of their productions servers over their testing servers.
 
-\todo[inline]{Frey: This text should not sound like it is explaining packet scheduling from scratch. We assume that the audience have the main overview of what a packet scheduler is.}
+Another important component related to packet schedulers is the capability of delaying packets. This capability allows packet scheduling algorithms to provide traffic shaping or pacing.  service from using all of the traffic, or it could make sure that important traffic never gets delayed.
+
+Queue management, on the otherhand, is how many packets the queues are able to queue up. A large problem in today's environments is buffer bloat, where buffers tend to favor large buffers for throughput with the cost of latency. Buffer bloat can have negative affects on low latency applications such as video conferecing, on-line gaming, and other interactive applications. Queue management is therefore an important part of the queueing process, while it is not usually concidered part of the packet scheudling algorithms.
 
 \begin{itemize}
-  \item Explain the basic concepts of packet schedulers.
-  \item Explain the difference between schedulers and queues.
   \item Explain the difference between a work-conserving and non-work conserving scheduling.
   \item Use a short round-robin scheduling example.
 \end{itemize}
+
 
 \section{Linux Kernel Networking Subsystem}
 
