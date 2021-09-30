@@ -114,18 +114,29 @@ XDP provides a high-performance programmable network data path and allows progra
 
 This paper presents our work on adding programmable packet scheduling to XDP, which we also provide as a Qdisc. We have designed a programmable packet scheduling framework in BPF using recently proposed schemes for programmable queues. This extension allows programmers to define their packet schedulers using BPF while benefiting from the XDP fast data path.
 
-
 \begin{itemize}
 \item Explain the structure of this technical report.
 \end{itemize}
 
+
 \section{Packet Scheduling, Traffic Shaping, and Queue Management}
 
-The primary function of the packet scheduler is to arrange or rearrange packets to meet some specific requirements within its network. Most of these requirements is to prioritize one type of traffic over another. For instance, a video streaming services would like to ensure that clients get fair access to their video streams. And a service provider might want to prioritize the traffic of their productions servers over their testing servers.
+The primary function of the packet scheduler is to arrange or rearrange packets to meet some specific requirements within a network. Most of these requirements are to prioritize traffic or create fairness. For instance, video streaming services would like to ensure that clients get fair access to their video streams. Moreover, a service provider might want to prioritize traffic of their productions servers over their testing servers. Therefore, having the flexibility to adapt the packet scheduling algorithm to the requirements of the network in question can significantly improve its overall quality.
 
-Another important component related to packet schedulers is the capability of delaying packets. This capability allows packet scheduling algorithms to provide traffic shaping or pacing.  service from using all of the traffic, or it could make sure that important traffic never gets delayed.
+Another crucial component related to packet schedulers is the capability of delaying packets. This capability allows packet scheduling algorithms to provide traffic shaping, as seen in figure \ref{fig:traffic_shaping}. This capability can restrict a service from dominating the traffic or ensure that high-priority packets never get delayed.
 
-Queue management, on the otherhand, is how many packets the queues are able to queue up. A large problem in today's environments is buffer bloat, where buffers tend to favor large buffers for throughput with the cost of latency. Buffer bloat can have negative affects on low latency applications such as video conferecing, on-line gaming, and other interactive applications. Queue management is therefore an important part of the queueing process, while it is not usually concidered part of the packet scheudling algorithms.
+On the other hand, queue management is how many packets the queues can queue. A significant problem in today's environments is buffer bloat, where buffers favor large buffers for throughput by sacrificing latency. Buffer bloat can negatively affect low latency applications such as video conferencing, online gaming, and other interactive applications. Therefore, queue management is an integral part of the queueing process, while it is not usually considered part of the packet scheduling algorithm.
+
+\begin{figure}
+  \includegraphics[width=\linewidth]{traffic-policy.pdf}
+  \caption{\label{fig:traffic_policy}}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\linewidth]{traffic-shaping.pdf}
+  \caption{\label{fig:traffic_shaping}}
+\end{figure}
+
 
 \begin{itemize}
   \item Explain the difference between a work-conserving and non-work conserving scheduling.
@@ -135,16 +146,15 @@ Queue management, on the otherhand, is how many packets the queues are able to q
 
 \section{Linux Kernel Networking Subsystem}
 
+The Linux kernel Networking stack is highly mature and a flexible piece of software. It contains a hardware abstraction layer, a traffic control layer responsible for routing and firewall rules, and layers responsible for handling the TCP/IP networking layers. Part of the traffic control layer is the Queueing discipline layer or the Qdisc layer for short. This layer gives the Linux kernel flexible packet scheduling capabilities and an interface to create new packet schedulers as loadable kernel modules. However, due to the immense speed increases in modern network devices, the kernel's networking stack has become a bottleneck. This obstacle has prompted network vendors and researchers to create alternative solutions to mitigate this performance bottleneck. One such solution is DPDK which bypasses the Linux kernel and communicates directly to the networking hardware. An alternative solution to bypassing the Linux kernel is XDP, which creates a fast data path within the Linux kernel while retaining the kernel and user-space separation.
+
+The leading networking data structure in the Linux kernel is the sk\_buff. The sk\_buff is a large data structure with multiple fields related to all layers in the network stack and gets populated through each layer of the network stack, including the Qdisc layer. However, XDP handles network packets in the driver right after a DMA synchronization. Therefore, it does not use the sk\_buff data structure but represents the packet using a slimmer data structure called xdp\_mp, which does not get converted into a sk\_buff unless the XDP hook passes the packet onto the network stack.
+
 \begin{figure}
-
   \includegraphics[width=\linewidth]{network-overview.pdf}
-
   \caption{\label{fig:network_overview}}
 \end{figure}
 
-\begin{itemize}
-  \item Explain on a high level the Linux Kernel Networking stack using a diagram.
-\end{itemize}
 
 \subsection{The Linux Kernel Packet Queueing Discipline (Qdisc)}
 
@@ -178,6 +188,12 @@ Queue management, on the otherhand, is how many packets the queues are able to q
 \end{itemize}
 
 
+\begin{figure}
+  \includegraphics[width=\linewidth]{round-robin.pdf}
+  \caption{\label{fig:round_robin}}
+\end{figure}
+
+
 \section{Programmable Packet Schedulers}
 
 \todo[inline]{Frey: Maybe this section could be combined with the above section if we find a better name for them.}
@@ -195,6 +211,17 @@ Queue management, on the otherhand, is how many packets the queues are able to q
 
 
 \subsection{PIFO and SP-PIFO}
+
+% The size of these figures need to be adjusted
+%\begin{figure}
+%  \includegraphics[width=\linewidth]{pifo.pdf}
+%  \caption{\label{fig:pifo}}
+%\end{figure}
+%
+%\begin{figure}
+%  \includegraphics[width=\linewidth]{pifo-hierarchy.pdf}
+%  \caption{\label{fig:pifo_hierarchy}}
+%\end{figure}
 
 \begin{itemize}
   \item Explain what PIFO\cite{Sivaraman2016} is.
