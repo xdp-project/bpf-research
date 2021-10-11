@@ -1,0 +1,48 @@
+#+TITLE: Progress update 2021-10-11
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Not much to report
+- Have added some additional map cleaning debug info
+  - Can now compare nr entries deleted "automatically" (matched) vs timed out
+  - Will update plotting scripts to show this
+- Played around a little with offloads and RFS (Receive Flow Steering)
+- Started setting up physical machines...
+  - Pretty old hardware, i7-3770 and i7-4790 CPUs (released 2012 and 2014)
+  - One of the machines was missing a harddrive...
+  - Another is using 60% of a CPU core for kacpi_notify, need to check it up
+
+* PPing - New testing metodolgy
+- Currently measure CPU utalization of entire machine + network throughput
+  - Toke pointed out that it may be hard getting consistent result because machine might run random background tasks
+  - Paper from Simone stated it was hard getting consistent result without pinning CPUs
+- Toke suggested different approach
+  - Don't measure CPU
+  - Look at overhead in terms of reduced throughput
+  - To bottleneck, pin all packet processing to single core
+  - Pin PPing/ePPing to separate CPU core
+
+* Courses
+- Philosphy and Theory of Science started with no warning
+  - Has a pretty hectic schedule - 120h over the comming 5 weeks (22/11)
+- Also have about ~40h for KLL course in the comming 5 weeks
+- Also 20% institutional duty
+- So not that much time over to actually work on PPing related stuff right now
+
+* Other
+- CNCF is hosting [[https://www.cncf.io/events/cloud-native-ebpf-north-america/][eBPF]] day today (starts 18:00) - registration $20
+  - Will also be recorded and uploaded to youtube
+  - [[https://events.linuxfoundation.org/cloud-native-ebpf-day-north-america/program/schedule/][Schedule]]
+- Frey presents during session 3 of Inria WOS 2021 tomorrow
+  - [[https://team.inria.fr/wide/wos/][Registration]] is open until 16:00 today
+- Perhaps relevant for Frey
+  - Toke and I attended a meeting with Dave Tath where Matt Mathis presented his roundsgate concept
+  - Basically buffer all packets for some interval (ex 100ms) and then transmit them all
+    - Useful for testing purposes, descretizing TCP congestion windows
+  - Could maybe be added to the list of "example implementations"?
+- My supervision meetings (18/10 and 8/11) collide with seminars in theory of science
+
+

@@ -1,0 +1,98 @@
+#+TITLE: Progress update 2021-10-04
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- More aggressive map cleanup + debug info
+- Idea for new testing methodolgy
+- IMC '21 extended abstract (for poster)
+
+* PPing - more aggressive map cleanup
+- Previously had static limits for when entry could be deleted
+  - 300s for flow
+  - 10s for packet timestamp
+- Flows still use static limits, but had added shorter ones for "unopened" flows and ICMP flows
+- For timestamp entries, have added RTT-based timeout
+  - If entry older than 8*sRTT it can be deleted
+  - Store current sRTT with timestamp to avoid flow lookup from each timestamp entry
+
+** PPing - RTT based timeout - bad idea?
+- If RTT grows quickly (ex. due to bufferbloat), may delete entry before it can be matched
+  - Loses an RTT sample and prevents sRTT from updating
+  - As map cleaning is only performed once per second, mainly an isssue for flows with large RTT
+- Alternative design:
+  - Allow entry to be deleted if we've already matched a later timestamp
+- As map cleaning performed at 1 Hz, entries will still sit around for ~500ms even for very short RTTs
+
+** What is actually the desired behvaior when map is full?
+- Right now when timestamp map is full essentially get random subsampling of RTTs
+- Desired behavior should inform design of cleanup
+- Only sample some flows, or subsample all flows? 
+
+** PPing - map cleanup debug info
+- Before switching to bpf_iter implementation, userspace component reported nr entries processed and deleted
+- Have added this info back + tracking nr elements automatically deleted from matching etc.
+- Adds some "unnecessary" components, but guarded by ifdef DEBUG so can be compiled out
+
+* Performance testing
+- Updated VMs from 5.4 kernel to 5.14 kernel with CONFIG_PREEMT=y
+  - Much higher CPU utalization for multiple flows
+- Variations likely inherent in how the tests are set up
+  - Javid showed that nothing weird was going on with the VMs
+  - Simone's paper points out that it's hard to get consistent results without pinning CPUs
+
+*** Single flow before (left) and after (right) kernel update
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/single_flow_5.4_kernel.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/single_flow_5.14_kernel.png]]
+
+*** Multiple flows before (left) and after (right) kernel update
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/100_flows_5.4_kernel.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/100_flows_5.14_kernel.png]]
+
+** Some questions regarding the VMs
+- Why is CPU utalization reported by vSphere much higher than reported from inside the machines?
+- Despite CPU utalization much lower than 100%, "readiness" and "latency" reports that VM is waiting to schedule on physical CPU due to contention 3-6% of the time?
+
+*** CPU utalization "inside" and "outside" the VM
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/mpstat_CPU.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/vSphere_CPU.png]]
+
+** Pysical machines
+- Have also gotten 3 physical machines, but not set up yet
+  - Currently 1GB NICs, 1GB switch and no XDP...
+  - ...but can hopefully get better NICs and switch later
+- Toke suggested skipping the switch and connect the machines directly to eachother
+   
+
+** Couple of other oddities
+- Not necessarily anything wrong, just found these results a bit surprising
+*** Synced RTTs between flows
+#+ATTR_HTML: :style width: 900px;
+[[file:./images/RTT_sync.png]]
+
+    
+*** Synced CPU utalization on VM3
+#+ATTR_HTML: :style width: 900px;
+[[file:./images/VM3_CPU_sync.png]]
+
+* IMC Poster
+- Anna suggested I send something in for the AMC Internet Measurement Conference (IMC) poster session
+- Submitted a two page extended abstract before deadline 23/09
+- Largely similar to Red Hat report
+  - Still managed to burn a couple of days on it
+- Used PPing for Kathie's implementation, and ePPing for mine
+
+* Courses
+- Preparing short (15 min) lecture for KLL course
+- Theory of science course started out of nowhere
+  - Lecture today and on thursday
+
+
