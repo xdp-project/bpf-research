@@ -26,7 +26,7 @@
 
 \usepackage{mwe}
 \usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
-
+\usepackage{cleveref}
 
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
@@ -108,17 +108,25 @@
 
 \section{Introduction}
 
-The Linux kernel is a widely used platform in devices that range from IoT devices, cellphones, home and enterprise routers to servers and cloud offerings. One of the revolutionary technologies of the Linux kernel is the BPF framework, which has changed the way we extend the kernel. This framework is an in-kernel runtime environment that allows domain-specific code to execute within the kernel safely using predefined hooks. One such hook is the Linux eXpress Data Path\cite{hoiland2018express}, or XDP, which introduces a fast data-path within the Linux kernel and has found numerous uses in the industry, such as Denial-of-Service attack mitigation, load-balancers, and intrusion prevention systems.
+The Linux kernel is a widely used platform in devices that range from IoT equipment, cellphones, home and enterprise routers to servers and cloud offerings. One of the prominent technologies of the Linux kernel is the BPF framework~\cite{ebpf}, which gives us a flexible way to extend the kernel. This framework is an in-kernel runtime environment that allows domain-specific code to execute within the kernel safely using predefined hooks. One such hook is the Linux eXpress Data Path~\cite{hoiland2018express}, or XDP, which introduces a fast data-path within the Linux kernel and has found numerous uses in the industry such as Denial-of-Service (DoS) attack mitigation, load-balancers, and intrusion prevention systems.
 
-XDP provides a high-performance programmable network data path and allows programmers to process packets early out of the driver. While XDP excels in forwarding packets, it currently has no mechanism for queuing or reordering of packets and cannot implement traffic scheduling policies. Packet scheduling is a common task on network equipment, and like for other aspects of networking, there is a growing interest for bringing programmability to this domain. For the Linux kernel, making packet scheduling fully programmable through BPF is the obvious answer to this trend.
+XDP provides a high-performance programmable network data path and allows programmers to process packets early out of the driver and even bypass the kernel's network stack for increased performance. While XDP excels in forwarding packets, it currently has no mechanism for queuing or reordering packets and can not implement traffic scheduling policies. Packet scheduling is a common task on network equipment, and most devices that provide packet scheduling algorithms provide only a handful of predefined packet schedulers. Therefore, there is a growing interest in bringing more flexible programmability to this domain. The kernel's network stack provides a traffic control system called Queuing discipline (Qdisc) capable of packet scheduling. However, it does not provide the means of implementing complete packet schedulers in BPF, nor can it be used in XDP when bypassing the kernel's networking stack.
 
-This paper presents our work on adding programmable packet scheduling to XDP, which we also provide as a Qdisc. We have designed a programmable packet scheduling framework in BPF using recently proposed schemes for programmable queues. This extension allows programmers to define their packet schedulers using BPF while benefiting from the XDP fast data path.
+% Frey: This sentence stops a bit too abruptly.
 
+This paper presents our work on adding programmable packet scheduling to XDP. We have designed a programmable packet scheduling framework in BPF using recently proposed schemes for programmable queues. This extension allows programmers to define their packet schedulers using BPF while benefiting from the XDP fast data path.
+
+% Frey: The last paragraph could be rewritten to list the contributions.
+% - A BPF packet scheduling framework.
+% - XDP with queueing using the new framework.
+% - Qdisc with queueing using the new framework.
+% - Evaluation of the new framework.
+
+\todo[inline]{Frey: A reminder that this section should end with an overview of the structure of the paper when it has been finalized.}
 
 \section{Packet Scheduling, Traffic Shaping, and Queue Management}
 
 Packet schedulers provide the means of controlling the policy and quality requirements within a network for customers and services. However, at its core, the primary function of the packet scheduler is to arrange or rearrange packets to meet the requirements of the network. Most of these requirements are to improve the latency of specific flows or to improve fairness between flows. For instance, video streaming services would like to ensure that clients get fair access to their video streams. Moreover, a service provider might want to prioritize traffic of their productions servers over their testing servers. Therefore, having the flexibility to adapt the packet scheduling algorithm to the requirements of the network in question can significantly improve its overall quality.
-
 
 \begin{figure}
   \includegraphics[width=\linewidth]{round-robin.pdf}
@@ -126,7 +134,7 @@ Packet schedulers provide the means of controlling the policy and quality requir
   \label{fig:round_robin}
 \end{figure}
 
-A simple example of a packet scheduler is the round-robin scheduler\cite{nagle1987packet}, depicted in Figure~\ref{fig:round_robin}. This scheduler sorts the incoming packets by flow into different queues, which it then dequeues from in a round-robin fashion, or by taking one packet from each queue at the time. This simple scheduler can provide throughput fairness between flows.
+For example, if we wanted to give equal throughput to three different clients that have equal size packets, we could use the round-robin scheduler\cite{nagle1987packet}, depicted in \cref{fig:round_robin}. This scheduler sorts the incoming packets by flow into different queues, and dequeues the packets by taking one packet from each flow at the time.
 
 %\begin{figure}
 %  \includegraphics[width=\linewidth]{traffic-policy.pdf}
@@ -139,10 +147,11 @@ A simple example of a packet scheduler is the round-robin scheduler\cite{nagle19
   \label{fig:traffic_shaping}
 \end{figure}
 
-Another crucial component related to packet schedulers is the capability of delaying packets. This capability allows packet scheduling algorithms to provide traffic shaping, as seen in figure \ref{fig:traffic_shaping}. These algorithms are referred to as non-work conserving algorithms because they do not necessarily use the total capacity of the network interface, while work-conserving algorithms never delay packets and can use their total capacity. An example of a non-work conserving scheduling algorithm would be an ISP enforcing a network policy that guarantees their clients get the bandwidth they promised them.
+Another crucial component related to packet scheduling is the capability of delaying packets. This capability allows packet scheduling algorithms to provide traffic shaping, as seen in \cref{fig:traffic_shaping}. Shaping algorithms are referred to as non-work conserving algorithms because they do not necessarily use the total capacity of the network interface, while work-conserving algorithms never delay packets and can use their total capacity. An example of a non-work conserving scheduling algorithm would be an ISP enforcing a network policy that guarantees their clients their bandwidth.
 
-Queue management is also another essential topic related to packet schedulers and is the art of controlling how many packets the queues can queue. A significant problem in today's environments is bufferbloat, where network vendors have previously favored large buffers for throughput by sacrificing latency. Bufferbloat can negatively affect low latency applications such as video conferencing, online gaming, and other interactive applications. Therefore, queue management is an integral part of the queueing process, while it is not usually considered part of the packet scheduling algorithm.
+Queue management is also an essential topic related to packet scheduling and is the art of controlling how many packets queues can queue. A significant problem in today's environments is bufferbloat, where network vendors have previously favored large buffers for throughput by sacrificing latency. Bufferbloat can negatively affect low latency applications such as video conferencing, online gaming, and other interactive applications. Therefore, queue management is an integral part of the queueing process, while it is not usually considered part of the packet scheduling algorithm.
 
+% Frey: This last paragraph should contain a bit more about what bufferbloat is.
 
 \section{The Linux Kernel Networking Subsystem}
 
@@ -152,7 +161,7 @@ Queue management is also another essential topic related to packet schedulers an
   \label{fig:network_overview}
 \end{figure}
 
-The Linux kernel Networking stack is highly mature and a flexible piece of software. It contains a hardware abstraction layer, a traffic control layer responsible for routing and firewall rules, and layers responsible for handling the TCP/IP networking layers. Part of the traffic control layer is the Queueing discipline layer or the Qdisc layer for short. This layer gives the Linux kernel flexible packet scheduling capabilities and an interface to create new packet schedulers as loadable kernel modules. However, due to the immense speed increases in modern network devices, the kernel's networking stack has become a bottleneck. This obstacle has prompted network vendors and researchers to create alternative solutions to mitigate this performance bottleneck. One such solution is DPDK which bypasses the Linux kernel and communicates directly to the networking hardware. An alternative solution to bypassing the Linux kernel, which we describe in section~\ref{sec:xdp}, is XDP, which creates a fast data path within the Linux kernel while retaining the kernel and user-space separation. We provide a simplified diagram of the Linux kernel's networking infrastructure in Figure \ref{fig:network_overview} which shows the relevant parts related to our work in this paper. It shows how XDP can steer traffic either through the network stack or bypass it altogether.
+The Linux kernel networking stack is highly mature and a flexible piece of software. It contains a hardware abstraction layer, a traffic control layer responsible for routing and firewall rules, and layers responsible for handling the TCP/IP networking layers. Part of the traffic control layer is the queueing discipline layer or the Qdisc layer for short. This layer gives the Linux kernel flexible packet scheduling capabilities and an interface to create new packet schedulers as loadable kernel modules. However, due to the immense speed increases in modern network devices, the kernel's networking stack has become a bottleneck. This obstacle has prompted network vendors and researchers to create alternative solutions to mitigate this performance bottleneck. One such solution is the Data Plane Development Kit~\cite{dpdk} (DPDK) which bypasses the Linux kernel and communicates directly to the networking hardware. An alternative solution to bypassing the Linux kernel, which we describe in \cref{sec:xdp}, is XDP, which creates a fast data path within the Linux kernel while retaining the kernel and user-space separation. We provide a simplified diagram of the Linux kernel's networking infrastructure in \cref{fig:network_overview} which shows the relevant parts related to our work in this paper. It shows how XDP can steer traffic either through the network stack or bypass it altogether.
 
 % Frey: The idea of this paragraph was to prepare a bit of differences between the BPF queuing implementation between the Qdisc and XDP. However, I am commenting this section out until we have more implementation information and see how relevant this section is at that point.
 % The primary networking data structure in the Linux kernel is the sk\_buff. The sk\_buff is a large data structure with multiple fields related to all layers in the network stack and gets populated through each layer of the network stack, including the Qdisc layer. However, XDP handles network packets in the driver right after a DMA synchronization. Therefore, it does not use the sk\_buff data structure but represents the packet using a slimmer data structure called xdp\_frame, which does not get converted into a sk\_buff unless the XDP hook passes the packet onto the network stack.
@@ -160,15 +169,12 @@ The Linux kernel Networking stack is highly mature and a flexible piece of softw
 
 \subsection{The Linux Kernel Packet Queueing Discipline (Qdisc)}
 
-Packet scheduling in the Linux kernel is handled by the Qdisc subsystem. It is a mature system that is capable of wast operations, such as policing, shaping, classifying, dropping, and marking traffic.
+% Frey: Add a Figure that shows the relationship of classfull and classless hierarchies and how a classifier queues traffic into those classless Qdiscs.
+\todo[inline]{Frey: I haven't drawn the Qdisc figure in this document.}
 
-\begin{itemize}
-  \item Explain where in the network pipe the Qdiscs are located.
-  \item Explain that the Qdisc layer allows us to create hierarchies of preexisting Qdiscs.
-  \item Explain what the Qdisc classifier does.
-  \item Explain what the BPF Qdisc classifier does and why it does not fulfill our needs.
-\end{itemize}
+The Linux kernel networking stack handles traffic control using the Qdisc subsystem. It is a mature system with multiple capabilities, such as policing, shaping, classifying, dropping, and marking traffic. While the Qdisc subsystem has more capabilities than packet scheduling, we will only introduce the three main components related to scheduling. These components are classfull Qdiscs, classless Qdiscs, and classifiers. These three components allow us to define complicated packet schedulers but with limited programmable capabilities. As seen in \cref{fig:qdisc_overview}, classfull Qdiscs are used to create hierarchies of Qdiscs where the leaf nodes are classless Qdiscs. Classifiers are attached to classfull Qdiscs to determine where to queue within the packet within the hierarchy.
 
+% Frey: Here I need a bit more text explaining classfull and classless Qdiscs.
 
 %\section{Packet Schedulers in Practice}
 %
@@ -188,11 +194,11 @@ Packet scheduling in the Linux kernel is handled by the Qdisc subsystem. It is a
   \label{fig:pifo_hierarchy}
 \end{figure}
 
-Traditionally, network equipment and operating systems provide a handful of packet scheduling algorithms. This limited number of schedulers forced companies to tune the parameters of these algorithms to meet their requirements. However, modern networking equipment has started to provide programmable network capabilities, which the network engineer can leverage using specialized programming languages such as P4\cite{p4} or standard programming languages such as C, such as in the case of traditional operating systems. This new offering allows the network designers to create custom logic and custom packet scheduling solutions optimized for their specific unique use case. Therefore, instead of tuning the network to the limitations of the packet scheduling algorithm, they can tune their packet scheduling algorithm directly to their network requirements.
+Traditionally, network equipment and operating systems provide a handful of packet scheduling algorithms. This limited number of schedulers forced companies to tune the parameters of these algorithms to meet their requirements. However, modern networking equipment has started to provide programmable network capabilities, which the network engineer can leverage using specialized programming languages such as P4~\cite{p4} or standard programming languages such as C, such as in the case of traditional operating systems. This new offering allows the network designers to create custom logic and custom packet scheduling solutions optimized for their specific unique use case. Therefore, instead of tuning the network to the limitations of the packet scheduling algorithm, they can tune their packet scheduling algorithm directly to their network requirements.
 
 Consequently, the building blocks of a programmable packet scheduling framework need to be straightforward, fast, and easy to understand. Therefore, the essential part of creating a programmable packet scheduling framework is to provide a flexible data structure. Therefore, this has become an active research area to develop a flexible data structure that programmers can leverage to implement their packet schedulers. However, due to the vast speeds of modern network interfaces, severe time limitations are put on these data structures, which tend to make generic priority queues, such as red-black trees and binary heaps, unsuitable choices.
 
-In this paper, we focus on the two priority queues, PIFO and Eiffel, described in sections~\ref{sec:pifo} and \ref{sec:eiffel}. Both are simple data structures that share the following qualities. They use an integer-based ranking function to queue packets by their priority and rely on a fixed range of ranks known at initialization time. They dequeue according to the scheduled packet order. Furthermore, they both have the flexibility to create complex packet scheduling algorithms by using hierarchies, as seen in Figure~\ref{fig:pifo_hierarchy}. However, Eiffel differs in that it can make scheduling decisions on dequeue, while PIFO only makes scheduling decisions on enqueue. This distinction stems from the fact that PIFOs are well suited for both hardware and software. However, Eiffel is a software-only data structure and is, therefore, capable of more complex operations, such as flow-based scheduling, which requires scheduling on dequeue.
+In this paper, we focus on the two priority queues, PIFO and Eiffel, described in \cref{sec:pifo} and \cref{sec:eiffel}. Both are simple data structures that share the following qualities: (i) They use an integer-based ranking function to queue packets by their priority and rely on a fixed range of ranks known at initialization time; and (ii) they dequeue according to the scheduled packet order. Furthermore, they both have the flexibility to create complex packet scheduling algorithms by using hierarchies, as seen in \cref{fig:pifo_hierarchy}. However, Eiffel differs in that it can make scheduling decisions on dequeue, while PIFO only makes scheduling decisions on enqueue. This distinction stems from the fact that PIFOs are well suited for both hardware and software. However, Eiffel is a software-only data structure and is, therefore, capable of more complex operations, such as flow-based scheduling, which requires scheduling on dequeue.
 
 
 \subsection{PIFO and SP-PIFO} \label{sec:pifo}
@@ -207,7 +213,7 @@ Despite its simplicity, the Push-In First-Out data structure\cite{Sivaraman2016}
 
 \subsubsection{Data Structure}
 
-The PIFO is a priority queue where the programmer can queue packets based on their rank, where each rank is queued in a FIFO order, as shown in Figure~\ref{fig:pifo}. However, the programmer can only dequeue from the head of the PIFO and only order packets on enqueue. However, the PIFO does not allow reordering the packets within a FIFO. Nor can it reorder the packets on deqeue. This limitation does exclude the PIFO from implementing some packet scheduling algorithms, such as pFabric\cite{alizadeh2013pfabric}.
+The PIFO is a priority queue where the programmer can queue packets based on their rank, where each rank is queued in a FIFO order, as shown in \cref{fig:pifo}. However, the programmer can only dequeue from the head of the PIFO and only order packets on enqueue. However, the PIFO does not allow reordering the packets within a FIFO. Nor can it reorder the packets on deqeue. This limitation does exclude the PIFO from implementing some packet scheduling algorithms, such as pFabric\cite{alizadeh2013pfabric}.
 
 
 \subsection{Eiffel} \label{sec:eiffel}
@@ -219,17 +225,16 @@ Also, because Eiffel is a software implementation, the Eiffel paper proposes a f
 
 \section{The BPF framework}
 
-The BPF framework is an in-kernel runtime environment that allows specialized programs to execute in the kernel safely. These programs attach themselves to hooks provided by the different subsystems of the kernel. These hooks limit what the programs can do and define what type of BPF programs can exist. These types of programs vary but predominantly, they are related to networking, tracing, and security. From a user-space perspective, BPF represents the program code as a specialized BPF instruction set. However, as a framework, it provides an execution environment, a key-value store for inter-process communication called BPF maps, in-kernel helper functions, and toolchains to create and manage BPF programs from user-space.
+One of the fundamental problems with extending the Linux kernel with specialized code, such as packet schedulers, is writing the extensions as kernel modules. From a security perspective, the modules have access to the entire kernel without limits. Therefore, it is more prone to programming errors, such as pointer mishandling or ending up in infinite loops. The kernel community has created a safer way of extending the kernel called BPF. This framework is an in-kernel runtime environment that allows specialized programs to execute in the kernel safely. To support BPF, kernel programmers add appropriate BPF hooks to the kernel to offer domain-specific extendability to programmers. These hooks allow the programmers to attach BPF code that runs each time these hooks are triggered. Currently, the Linux kernel comes with numerous hooks related to networking, tracing, and security. Where each hook limits what the BPF code can access and which helper functions it can call.
 
-\begin{itemize}
-  \item Explain BPF maps and their scope.
-  \item Explain what hooks are and that BPF allows helper functions.
-\end{itemize}
+From a developer perspective, BPF programs are binaries written in the BPF instruction set that can be loaded using the bpf system call into the kernel. This instruction set and runtime are severely limited in functionality. It supports a handful of instructions, and the runtime only has a 512-byte stack. When the kernel loads the binary, it runs it through a BPF verifier that makes sure that all pointers are within bounds, that the program does not call disallowed functions, and that the code cannot run more than a million instructions. After verifying the code, the user-space application can attach the BPF program to the desired hook. However, because each hook provides a different method for attaching BPF programs, it is recommended to use the libbpf library to load the programs instead.
+
+A salient feature of BPF is that it offers interprocess communication using BPF maps. These maps are key-value stores that act as global variables within the framework and are the primary method to interact with BPF programs. They come in different types, such as arrays and hashmaps, and some of the more advanced maps offer per-CPU storage for additional performance. They provide a common way for different BPF programs to communicate and user-space applications to communicate with the BPF programs.
 
 
 \subsection{Express Data Path (XDP)} \label{sec:xdp}
 
-XDP\cite{hoiland2018express} is a type of BPF program that is attached directly to the RX path of a network interface to allow the programmer direct manipulation of packets from the network driver. Its primary use cases are high-performance packet processing and the ability to bypass the kernel's network stack by redirecting the packet to different locations, such as back out the same device, to another device, or dropping the packet entirely. XDP also provides helper functions that allow the programmer to call particular parts of the network stack, such as fib lookups.
+XDP\cite{hoiland2018express} is a type of BPF program that is attached directly to the RX path of a network interface to allow the programmer direct manipulation of packets from the network driver. Its primary use cases are high-performance packet processing and the ability to bypass the kernel's network stack by redirecting the packet to different locations, such as back out the same device, to another device, or dropping the packet entirely. XDP also provides helper functions that allow the programmer to call particular parts of the network stack, such as routing lookups.
 
 While XDP excels at forwarding packets, it does not support packet reordering or packet scheduling. Our objective in this paper is to extend XDP to support packet scheduling. This support includes adding helper functions and extra hooks for dequeuing and pacing operations.
 
@@ -249,7 +254,7 @@ Currently, the Qdisc layer only has a BPF classifier capable of manipulating pac
   \label{fig:bpf_pps_flow}
 \end{figure}
 
-We have created an BPF based programmable packet scheduling framework that is flexible enough to share between the XDP and kernel Qdisc layers. The design is depicted in Figure \ref{fig:bpf_pps_flow}, which shows the basic building blocks for our design without the specifics of XDP nor the Qdisc subsystem.
+We have created an BPF based programmable packet scheduling framework that is flexible enough to share between the XDP and kernel Qdisc layers. The design is depicted in \cref{fig:bpf_pps_flow}, which shows the basic building blocks for our design without the specifics of XDP nor the Qdisc subsystem.
 
 These building blocks are then further broken down as follows:
 
