@@ -1,0 +1,101 @@
+#+TITLE: Progress update 2021-11-23
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have changed test setup slightly
+  - Old: 100s iperf3 test
+  - New: 180s iperf3 test, first 60 sec omitted
+- Tried to setup tests on Toke's testbed
+  - Failed to get ePPing running (verifier rejection)
+- Have installed 10G NICs on my physical machines
+  - Initial results are...strange
+- Updated some plotting scripts and started using the improved map cleanup branch for tests
+  - The "new" map cleanup appears to perform much better
+
+* Tests so far
+** Tests on VMs
+- Started out with Ubuntu 5.4 kernel, virtual NICS, rx spread out on all 4 cores
+- Switched to 5.14 kernel with CONFIG_PREEMPT=y
+  - Higher CPU utalization, especially for multiple flows
+- Did some brief tests with disabeling offloads and using RFS
+
+** Tests on local machines
+- Started out with Ubuntu 5.13 kernel, 1G NICs, rx pinned to one core per interface
+- Switched to 5.14 kernel with CONFIG_PREEMPT=y
+  - Lower CPU utalization, for many flows approx 2% of single core
+- Pinned everything to single core (both NICs + PPing)
+  - Strange results
+  - PPing more efficent than baseline for single flow
+  - CPU utalization drastically increased for multiple flows (approx 80% of core)
+- Installed 10 GB NICs, rx spread out on all 8 cores
+  - Results very weird
+  - For 100+ flows, baseline has highest CPU utalization
+  - PPing generally achieves best throughput 
+  - At 500 flows, ePPing causes periodic bursts of retransmissions (~every 30 s)
+  - PPing variants have large effect on CPU utalization at M1
+          
+*** Pinning everything to single core
+- Pinning both NICs and PPing to same core gives strange result
+- Single flow on left, 100 flows on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211116/cpu_1_streams_set_pinned.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211116/cpu_100_streams_set_pinned.png]]
+
+*** 10 GB NICs results
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211123/10G_cpu_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211123/10G_cpu_100_streams.png]]
+
+*** ePPing periodic retransmissions
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20211123/periodic_retransmissions.png]]
+
+
+* Attempting to run ePPing on Toke's testbed
+- Verifier rejects due to "corrupted spill memory"
+  - If I did my math right occurs when trying to read last 64 bits of IPv6 address from stack
+
+#+BEGIN_SRC shell
+; dest->saddr = src->daddr;
+365: (61) r1 = *(u32 *)(r10 -200)
+366: (63) *(u32 *)(r10 -172) = r1
+367: (79) r1 = *(u64 *)(r10 -216)
+368: (63) *(u32 *)(r10 -188) = r1
+369: (77) r1 >>= 32
+370: (63) *(u32 *)(r10 -184) = r1
+371: (79) r1 = *(u64 *)(r10 -208)
+corrupted spill memory
+processed 210 insns (limit 1000000) max_states_per_insn 0 total_states 16 peak_states 16 mark_read 13
+#+END_SRC
+
+** What I've tried so far
+- LLVM version issue?
+  - Testbed uses clang/LLVM 10
+  - Tested using clang/LLVM 12 instead
+  - Tested uploading .o file from my machine
+- Kernel issue?
+  - Testbed has kernel 5.15
+  - Testing on my own machine, I can run ePPing with 5.15 kernel
+
+ 
+* Notes from the meeting itself
+** Problem with running on Toke's testbed  
+- Toke uses a bpf_next kernel on his testbed-lenovo (that's what the + in 5.15.0+ is for)
+- Try to compile bpf_next kernel on local machine and check if ePPing runs
+  - If it fails, regression in bpf_next, can use git bisect to find troublesome commit
+    - Inform Toke and he can help report it upstream
+  - If it succeeds, inform Toke and he can update kernel
+
+** Regarding general weirdness of results
+- Check if pause frames are enabled
+  - ethtool -E <dev>
+
+** Regarding periodic (30s) bursts
+- ICMP and unopened flows are periodically cleaned out every 30s
+- Try changing that interval and see if it affects the spikes
+- Should probably also add a pre-allocation flag to the BPF hashmaps

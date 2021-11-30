@@ -1,0 +1,25 @@
+#+TITLE: Progress update 2021-10-25
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Had set up the physical machines
+  - But then the harddrive for one of them crashed...
+- Should probably consider merging (some) of the PPing commits soon
+  - Will do a little cleanup among the commits first
+
+** PPing - IMC 2021 poster
+- My extended abstract for the IMC 2021 poster session got accepted
+- Finished up the poster itself last week
+- The poster session will be 3/11
+- What to supply as proof of student status?
+  - PhD acceptance letter?
+  - Mecenat?
+
+* Other
+- This and next week will probably be a bit higher load DVGA01 supervision
+- Been PhD student almost a year now
+  - Haven't really accomplished much yet...
+- Kitchen duty

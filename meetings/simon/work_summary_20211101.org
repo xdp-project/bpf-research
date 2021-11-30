@@ -1,0 +1,84 @@
+#+TITLE: Progress update 2021-11-01
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have tried some initial tests on my physical machines
+  - Still only 1G NICs
+  - Still large variations
+  - Some interesting differences
+- Have added some plotting scripts for summarzing results from multiple runs
+  - Reduce issue with variations between runs by looking at multiple runs
+
+** Note on CPU statistics
+- Have a very crude way to "sync" the CPU measurements with the test
+  - Simply look at interval where overall utalization is over 1%
+  - Probably better to sync based on timestamps, but in current experiments system clocks not sychronized
+
+* Even when summarzing 10 runs, considerable differences in baseline
+
+** Single flow
+- From 2 different sets of 10 runs   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/RM_set1_cpu_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/RM_set2_cpu_1_streams.png]]
+
+** 100 flows
+- From 2 different sets of 10 runs   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/RM_set1_cpu_100_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/RM_set2_cpu_100_streams.png]]
+   
+
+* On PMs, baseline CPU utalization is surprisingly low   
+- On several occassions mpstat reports 0% utalization
+#+ATTR_HTML: :style width: 900px;
+[[file:./images/RM_set2_pping_comparison_100_flows_run_1.png]]
+
+
+* On VMs, CONFIG_PREEMT=y increased CPU utalization...
+** Single flow
+- Without PREEMPT on left, with PREEMPT on right   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/VM_set0_cpu_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/VM_set1_cpu_1_streams.png]]
+
+   
+** 100 flows
+- Without PREEMPT on left, with PREEMPT on right   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/VM_set0_cpu_100_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/VM_set1_cpu_100_streams.png]]
+
+   
+
+* But on PMs, it reduced CPU utalization
+** Single flow
+- Without PREEMPT on left, with PREEMPT on right   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/RM_set0_cpu_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/RM_set1_cpu_1_streams.png]]
+
+
+** 100 flows
+- Without PREEMPT on left, with PREEMPT on right   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/RM_set0_cpu_100_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/RM_set1_cpu_100_streams.png]]
+
+
+
+* Other
+- IMC 2021 Poster presentation 3/11 4:40-5:10
+  - Will probably look at some of the other sessions as well
+- Jonas couldn't fine more than 1 NIC similar to the ones Javid had
+  - ...so he ordered some additional ones...
+  - ...but they don't have XDP

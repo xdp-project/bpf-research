@@ -1,0 +1,86 @@
+#+TITLE: Progress update 2021-11-29
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have changed test setup slightly
+  - Old: 100s iperf3 test
+  - New: 180s iperf3 test, first 60 sec omitted
+- Have installed 10G NICs on my physical machines
+  - Initial results are...strange
+- Have started running tests on Toke's testbed
+  - Results are roughly as expected (similar to VM setup)
+
+* Results
+** My testbed
+- After installing 10G NICs, results became very strange
+  - At many flows, baseline higher than both PPing variants
+- ePPing shows periodic spikes every 30s 100+ flows
+  - Burst of retransmissions, RTT spike, CPU spike at M2/M3
+    
+*** My testbed: 10 GB NICs results
+- 1 flow at left, 100 flows at right    
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/20211129/10G_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/20211129/10G_100_streams.png]]
+
+*** ePPing periodic retransmissions
+- Burst of retransmissions every 30s    
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20211129/10G_periodic_retrans.png]]
+
+*** ePPing periodic CPU spikes
+- M2 on left, M3 on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211129/10G_M2_cpu.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211129/10G_M3_cpu.png]]
+  
+ 
+** Toke's testbed
+- Initially could not get ePPing to run on his setup
+  - Toke compiled a new kernel, which fixed the issue
+- Results are similar to VM setup
+  - ePPing performs well with few flows, poorly with many
+- Variations small within runs, larger between runs
+  - At 500 flows, throughput for some runs seems to tank (~10G)
+- Throughput varies between 28-45 Gbps (depending on nr flows)
+  - Highest at 10 flows, lowest at 500
+- Difference between tc/XDP seems small
+
+*** Toke's testbed general results
+- 1 flow at left, 100 flows at right        
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/20211129/toke_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/20211129/toke_100_streams.png]]
+    
+
+*** Map cleanup
+- Usually >95% of timestamp entries matched
+- At 500 flows, drops to about 80%
+
+*** Ocasionally low throughput at 500 flows
+- Two different runs 500 flows
+#+ATTR_HTML: :style float:left; width: 450px;
+[[file:./images/20211129/toke_500_flows_run_1.png]]
+#+ATTR_HTML: :style float:right;  width: 450px;
+[[file:./images/20211129/toke_500_flows_run_2.png]]
+
+*** Seems related to receiver (M3)
+- "Normal" on left, low throughput on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211129/normal_M3_cpu.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211129/abnormal_M3_cpu.png]]
+  
+* Other
+- Course load now low after finishing courses last week
+- Insitutional duty right now fairly high
+  - Lab1 requires the most effort to correct
+- Will go on NT Winter meeting 1-2 december
+  - Will attend AIDA meeting via Zoom
+- Next week CS-retreat 8-9 december

@@ -1,0 +1,62 @@
+#+TITLE: Progress update 2021-11-16
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have updated test setup based on feedback from last meeting
+  - In total a 3 minute iperf3 test, but omitting the first minute from the results
+  - On physical machines, packet processing was already pinned to one core per NIC
+  - Tests still take about 1h per run (3min * 3 PPing variants * 5 flow variants + compression and plotting)
+  - Results seem a bit more stable (...from sample size of 2 sets of runs)
+- Now sync measurements based on time instead of CPU-load
+- Updated map cleaning plotting script to work with new bpf_iter cleanup
+
+** Variations between runs with new setup
+- 2 different sets of 10 runs
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211116/cpu_10_streams_set1.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211116/cpu_10_streams_set2.png]]
+
+** Pinning everything to single core
+- Pinning both NICs and PPing to same core gives strange result
+- Single flow on left, 100 flows on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211116/cpu_1_streams_set_pinned.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211116/cpu_100_streams_set_pinned.png]]
+
+** New map cleanup works much better
+- Old on left, new on right
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/20211116/pping_comparison_500_flows_old.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/20211116/pping_comparison_500_flows_new.png]]
+
+*** New map cleanup works much better (.cont)
+- Old on left, new on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211116/mapcleaning_500_flows_old.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211116/mapcleaning_500_flows_new.png]]
+
+
+* Physical machines
+- Have gotten 2 10G NICs from Jonas, so just missing 1 now
+  - He may get one from Hub, or he may order another one
+- Toke has given me access to his testbed which has 100G NICs
+  - Has similar setup (3 machines in chain topology), should not take much effort to adapt test scripts
+  - Not sure I can hit 100G with iperf3 (single instance, single flow ~30G)  
+
+* Other
+- Final week with a lot of course work
+  - Essay in theory of science done by tomorrow (17/11)
+  - Presentation + opposition in theory of science on monday (22/11)
+  - Disco seminar on thursday (18/11)
+  - Finsal KLL seminar on monday (22/11)
+- In december meetings will eat up a few days
+  - Forskarskolan NT Winter meeting (Dömle) 1-2/12
+  - CS retreat (Dömle) 8-9/12
+  - I go on vacation from 20/12

@@ -1,0 +1,17 @@
+#+TITLE: Progress update 2021-11-08
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Not much progress (still largley busy with courses)
+- Still have no 10G NICs, results for 1G not that interesting
+- Had a poster presentation at IMC2021 last week
+  - Mainly ended up discussing my work and BPF with a couple of PhD students
+
+* Other
+- Will remain busy with courses for a while
+- Will become more busy with lab supervision
+- Will miss next Red Hat meeting
+

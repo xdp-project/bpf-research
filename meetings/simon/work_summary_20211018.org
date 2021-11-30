@@ -1,0 +1,61 @@
+#+TITLE: Progress update 2021-10-18
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Not much to report
+- Started setting up physical machines
+  - Pretty old hardware, i7-3770 and i7-4790 CPUs (released 2012 and 2014)
+    - Will use the older one for forwarding/PPing (bottleneck)
+  - Currently only have 1G NICs
+    - Can hopefully order 10G ones
+  - One of the machines had a defective harddrive, has been replaced
+  - One was using 60% of a CPU core for kacpi_notify, seems to have been fixed with updated kernel
+
+** PPing - New testing metodolgy
+- Currently measure CPU utalization of entire machine + network throughput
+  - Toke pointed out that it may be hard getting consistent result because machine might run random background tasks
+  - Paper from Simone stated it was hard getting consistent result without pinning CPUs for packet processing
+- Toke suggested different approach
+  - Don't measure CPU
+  - Look at overhead in terms of reduced throughput
+  - To bottleneck, pin all packet processing to single core
+  - Pin PPing/ePPing to separate CPU core
+
+** PPing - IMC poster
+- Sent in an extended abstrace to IMC which got accepted
+- Now I need to make a poster
+  - A0 portrait recommended
+  - Deadline 25/10
+- I've never made a poster before, any template we typically use?
+- Poster session will be virtual, poster shared via share-screen
+
+* Courses
+- This is where I spend most of my time currently
+  - Philosophy and Theory of Science ~80h left until 22/11
+  - KLL ~40h left until 22/11
+  - ~100h left in DISCO-reading to end of year (although I think is is overprovisioned, estimate I need ~40-50h)
+- In my ISP we've also put 5 cred. (~130h) for litterature study this term
+  - Might need to delay?
+- Johan E recently mailed about RRR (Frameworks, rules and resources) course, relevant for me?
+
+* Institutional duty
+- Currently 20% in DVGA01
+  - So far only been about 15%
+  - Will likely be a bit more than 20% next week when final lab is handed in
+- Will be in DVGB03 from 8/11
+  - Heard there will be a lot of students there, so will probably effectivly be at least 20%
+
+* Other
+- AIDA WP2 workshop tomorrow - anything I need to prepare?
+- Have schedules for the upcomming DISCO meetings been sent out?
+- From 8/11 I will always have supervision until 15:00 on mondays - collides with this meeting 
+
+- Plan:
+  - Course stuff
+  - PPing poster
+  - Try Toke's testing methodolgy
+  - Finish configuring real machines and replicate tests on them
+
