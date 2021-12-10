@@ -1,0 +1,86 @@
+#+TITLE: Progress update 2021-12-06
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have run some tests on Toke's testbed
+  - Results are mostly as expected, similar to on VMs
+  - Toke's testbed is currently down
+- Have increased timestamp map size from 16384 to 65536
+  - As far as I can tell, [[https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=v5.16-rc4&id=6c90598174322b8888029e40dd84a4eb01f56afe][hash map already pre-allocated]]
+  - There is a flag to NOT pre-allocate: BPF_F_NO_PREALLOC
+
+* My testbed
+- After installing 10G NICs, results became very strange
+  - At many flows, baseline higher than both PPing variants
+  - Not related to ethernet pause frames
+- ePPing shows periodic spikes every 30s 100+ flows
+  - Burst of retransmissions, RTT spike, CPU spike at M2/M3
+  - Was not related to the 30s cleanup period
+    
+** My testbed: 10 GB NICs results
+- 1 flow at left, 100 flows at right    
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/20211129/10G_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/20211129/10G_100_streams.png]]
+
+** ePPing periodic retransmissions
+- Burst of retransmissions every 30s    
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20211129/10G_periodic_retrans.png]]
+
+** ePPing periodic CPU spikes
+- M2 on left, M3 on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211129/10G_M2_cpu.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211129/10G_M3_cpu.png]]
+
+* Toke's testbed
+- Initially could not get ePPing to run on his setup
+  - Toke compiled a new kernel, which fixed the issue
+- Results are similar to VM setup
+  - ePPing performs well with few flows, poorly with many
+- Variations small within runs, larger between runs
+  - At 500-1000 flows, throughput for some runs seems to tank (~10G)
+- Throughput varies between 25-45 Gbps (depending on nr flows)
+  - Highest at 10 flows, lowest at 1000
+- Difference between tc/XDP seems small
+
+** Toke's testbed general results
+- 1 flow at left, 100 flows at right        
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/20211129/toke_1_streams.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/20211129/toke_100_streams.png]]
+
+** Map cleanup
+- Larger number of flows reduces fraction of entries that are matched
+- 10 flows on left side, 1000 on right
+#+ATTR_HTML: :style float:left; width: 650px;
+[[file:./images/20211206/mapcleaning_10_flows_run_1.png]]
+#+ATTR_HTML: :style float:right;  width: 650px;
+[[file:./images/20211206/mapcleaning_1000_flows_run_1.png]]
+
+** Ocasionally low throughput at 500/1000 flows
+- Two different runs 500 flows
+#+ATTR_HTML: :style float:left; width: 450px;
+[[file:./images/20211129/toke_500_flows_run_1.png]]
+#+ATTR_HTML: :style float:right;  width: 450px;
+[[file:./images/20211129/toke_500_flows_run_2.png]]
+
+*** Seems related to receiver (M3)
+- "Normal" on left, low throughput on right
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20211206/M3_cpu_500flow_normal.png]]
+#+ATTR_HTML: :style float:right;  width: 750px;
+[[file:./images/20211206/M3_cpu_500flow_abnormal.png]]
+  
+* Other
+- Toke's testbed is currently down after work in CARL
+  - Not just shut down, but unplugged etc.
+- Will attempt to set it up again
+  - Does Toke have any tests he can run to check if it's working as normal?
