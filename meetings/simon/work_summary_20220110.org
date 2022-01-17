@@ -1,0 +1,59 @@
+#+TITLE: Progress update 2022-01-10
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Still in the process of testing performance, progress has been slow
+- New issues keep comming up
+- Currently in the process of merging in many old commits, so Toke might request code changes
+- Also modifying parts of my test setup
+  - Gather network metrics from sar rather than iperf3
+
+** Occassionally low throughput
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/20211213/network_details_throughput.png]]
+
+- Ocassionally throughput will tank on tests with 500-1000 flows
+- Happens on ocassional runs (roughly 1 in 10) and consistently lowers throughput throughout rest of test
+- Happens regardless of if PPing is running or not
+- Toke will update kernels, hopefully fixes it
+
+** Lower match rates at higher nr of flows
+- Lower match rate with increasing number of flows
+- With single flow, a match is found for virtually all timestamped tsval
+- With 1000 flows, only ~65% of timestamped tsvals are matched
+- This appars to be the case in actual packet trace, so not an issue with PPing
+- Only get an ACK for every ~20th TCP segment (lro, gro, gso and tso disabled)
+- Unclear as to why this happens, but is not a direct problem for PPing
+
+** Change source of network metrics
+- In my tests I've so far used the networks stats provided by iperf3
+  - Not ideal if I want to change traffic generator
+- Now gather some network statistics through sar instead
+  - Several differences in the network stats actually captured
+  - Instead of end-to-end TCP throughput captures raw traffic throughput at interface
+  - Instead of TCP retransmitts captures packet drops (at specific interface)
+  - Currently no source of RTT
+    - Run normal ping on sender?
+    - Run PPing on sender?
+    - Periodically query sender kernel for TCP sRTT?
+
+* Other
+- Now accepted for the data plane programming course
+  - Reason it did not show up when trying to apply for it was apparently that it was only open to program students
+- Will have no lab supervision this term, instead work with Johan G. on TrueDig project
+- What is the most suitable time for this meeting for everyone?
+
+* Plan
+- Continue merging work based on Toke's feedback
+- More testing
+  - run some tests with pinning packet processing to single core
+  - run some tests with different traffic generators
+  - run tests with different traffic setups
+    - ICMP traffic (only relevant for ePPing)?
+    - Mix of TCP and UDP traffic?
+    - Different configurations of timestamp sampling (only relevant for ePPing)?
+    - Bidirectional traffic?
+    - How many concurrent flows can we realisticly handle?

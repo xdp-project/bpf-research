@@ -1,0 +1,109 @@
+#+TITLE: Progress update 2022-01-17
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Changed how network metrics are collected during tests
+  - Now independent from traffic generator
+- Merging of commits ongoing
+  - Still have quite a few to go, next PR has large changes to BPF code
+  - Additional code changes may of course change performance and invalidate current/previous results
+- Did try Jespers suggestion on "batching" perf buffer events
+  - Helped a little bit, but did not fundamentally change the situation
+
+** Collection of performance metrics
+- Previously used metrics reported by iperf3 client (for network metrics) + mpstat (cpu)
+- Now use sar (cpu + "raw" network metrics) + ss (client side TCP metrics)
+  - CPU metrics virtually identical (mpstat is basically sar -P)
+  - Network metrics quite different
+    - Instend of client side TCP throughput have throughput on pping interface
+    - Instead of TCP retrans have packet drops on pping interface
+    - Added ss to get back client side TCP throughput and RTT
+  - sar and ss seem relatively lightweight, but must run some additional tests to determine impact on performance
+- Also decoupled "syncing" and omitting of start from iperf3
+  - Simply writes timestamp to file before and after test
+  - Omitting purely done in post-processing now
+
+** Merging in commits
+- Currently need to fix a few things due to libbpf deprecating old APIs
+  - Will probably push later today
+- Next PR contains some pretty large changes of the BPF code
+  - Suspect there might be a few things to address there
+
+** Batching of perf events
+- Helped a bit
+  - More events reported and a bit lower CPU utalization
+- Overall CPU utalization is still pretty high though
+- My quick implementation has some issues
+  - Seems to not report any events at all if event-rate is too low?
+  - Does not flush reports periodically and at program shutdown
+- How tricky is it to flush perf-buffer? Worth implementing?
+
+* Measurement problems
+- Had a problem where throughput would ocassionally drop on tests with 1k flows
+  - Seems to have been fixed after Toke updated kernels
+- Timestamp match rate decrese as number of flows increase
+  - Still unclear on this, but seems to be related to how packets are sent rather than PPing itself
+
+** Occassionally low throughput
+- Had a problem where the throughput dropped from around 25G to 10G on ocassional runs
+  - Would happen roughly 20 seconds into the test and then remain low for the rest of the test
+  - Happend both with/without (e)PPing
+- Seems to not occur anymore after Toke updated kernels on testbed-40g-0X
+  - Did 20 runs (60 test) with 1k flows without observing any such drops
+  - Before it happend around 3 times per 10 runs (3/30 tests)
+
+** Higher number of flows causes fewer TSecr matches
+- Even with lro, gro, gso and tso off, get ~20 full sized packets per ACK
+- With single flow, many TSvals are duplicated a specific amount of times
+- With single flow, there's typically no "gaps" between timestamps
+- With many flows, there are often "gaps" in the timestamps
+  - Each TSval is often sent multiple times, but echo only recieved once
+
+
+* Discussion around tests to run
+- Currently M2 is only bottleneck in single flow scenario
+  - For other tests running (e)PPing has no impact on throughput
+- Idea is to pin packet processing on M2 to turn it into bottleneck for multi-flow scenarios
+- Have a few questions I want to ask first...
+
+** Pinning of CPUs
+- The method I've found for pinning RX is based on writing to /proc/irq/IRQ_NUMBER/smp_affinity
+  - Unsure if this presists through reboots?
+  - Think you've configred the machine to automatically configure these on boot
+- What is the sensible way to pin the CPUs?
+  - Guessing pin all RX queues of ens1f1 to one core, ens3f1 to another and leave the rest be?
+- Can you pin packet transmission?
+  - If so, should TX be pinned to same cores as RX or separate cores?
+
+** Tests of different sampling?
+- Right now tests run wihtout any sampling to get "fair" comparison with Kathie's PPing
+- However my ePPing supports "sampling" RTTs to only get a limited rate of reports per flow
+  - Guess it would make sense to test with some different values here?
+  - Default is 100ms (i.e. 10 samples per second)
+  - Also have RTT based option
+
+** Tests with ICMP packets?
+- Unlike Kathie's PPing, have support for ICMP packets
+- Compare measured RTT to ping to validate ePPings accuracy?
+- Use ping flood (or other way to generate massive amounts of IMCP packets and responses) to check performance?
+
+** Test with UDP to get "unecessary" overhead?
+- Can not calculate RTT for pure UDP packets
+- However UDP packets are still partially processed
+- See what overhead PPing and ePPing has when running pure UDP traffic?
+
+* From the chat:
+- Toke:
+  - ss -t -i -p -n state connected
+- Lorenzo:
+  - in the past I used this one: http://traffic.comics.unina.it/software/ITG/
+- Jesper:
+  - nstat -n && sleep 10 && nstat
+  - https://github.com/xdp-project/xdp-cpumap-tc/blob/master/bin/set_irq_affinity_with_rss_conf.sh
+    - function get_iface_irqs
+  - Paper: "Understanding Host Network Stack Overheads"
+  - https://www.kali.org/tools/hping3/
+  - https://github.com/netoptimizer/network-testing/blob/master/trafgen/icmp02_ping_flood.trafgen
