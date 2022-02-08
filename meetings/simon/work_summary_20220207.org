@@ -1,0 +1,190 @@
+#+TITLE: Progress update 2022-02-07
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have given up on Flent for now
+  - Flent currently does not scale well to a large amount of flows
+- Means I've gone back to my ad-hoc collection of scripts again
+  - Done some minor fixes for this
+  - Ex. will now parse nr of retransmissions
+- Done tests with pinning traffic to single core
+  - Idea is to make the middle machine (where PPing runs) the bottleneck
+  - Tests show decreased throughput for both PPing and ePPing
+- Discovered some spikes in ePPing performance related to kernel flushing dirty pages to disk
+
+* Flent problems
+- Flent was overall a very cool tool
+  - Could largely replace thousands of lines of ad-hoc code with ~100 lines of batch file
+  - Saves all data in a nice file format
+  - Collects data at a configurable interval, my scripts are pretty much stuck at 1s
+- Unfortunatley, didn't seem to work very well with 1000 flows
+  - Think socket-stats is the main issue, but would like to have the TCP RTT
+  - The throughput also seemed really weird...
+  - Plots probably not optimized with 1k flows in mind
+
+- Toke is working on some optimizations, but until then I'll stick to my scripts
+
+** Flent test - 1k TCP streams
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220131/flent_1000_tcp_flows.png]]
+
+
+* Pinning packet processing to single core
+- Sets a single rx queue and pin all relevant IRQs to single CPU
+- Tested different ways of pinning PPing
+  - Not pinning PPing
+  - Pinning PPing to same core as irqs
+  - Pinning PPing to different core than irqs
+- The good news:
+  - (e)PPing now has a measurable impact on throughput
+  - For low number of flows ePPing has much lower overhead than PPing
+- The bad news:
+  - At high number of flows (> 100) ePPing is worse than PPing
+  - Even without sending RTT reports ePPing overhead is considerable
+
+** No pinning - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/all_cores_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/all_cores_network_1_streams.png]]
+
+
+** No pinning - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/all_cores_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/all_cores_network_1000_streams.png]]
+
+
+** Traffic pinned, PPing not - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/no_pin_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_pin_network_1_streams.png]]
+
+
+** Traffic pinned, PPing not - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/no_pin_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_pin_network_1000_streams.png]]
+
+
+
+** Traffic pinned, PPing pinned diff - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_different_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_different_network_1_streams.png]]
+
+
+** Traffic pinned, PPing pinned diff - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_different_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_different_network_1000_streams.png]]
+
+
+
+** Traffic pinned, PPing pinned same - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_same_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_same_network_1_streams.png]]
+
+
+** Traffic pinned, PPing pinned same - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_same_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_same_network_1000_streams.png]]
+
+
+
+** No RTT events - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/no_rtt_events_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1_streams.png]]
+
+
+** No RTT events - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/no_rtt_events_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1000_streams.png]]
+
+
+* How to move forward?
+- I find this performance very disappointing
+- Work on optimizing PPing...
+  - Optimize it with minimal changes in features?
+    - Ex. smarter sampling strategy, batched event pulling, try and reduce number of necessary operations etc.
+  - Optimize it by removing features
+    - Ex. no flow events, no tracking nr packets and bytes etc
+  - Fundamentally change how it operates
+    - Ex. instead of report per RTT have periodical reports with some aggregated RTT statistics
+- ...or not optimize it and just move on
+  - Work on ePPing has already draged on much longer than planned
+  - Doubt I can publish a good paper with current results...
+
+** My plan/sugesstion
+- Do reference test with minimal ePPing
+  - Basically strip away all logic except timestamping
+  - Idea is to get a sense of what optimizations could potentially achieve
+  - Think I could get it done in ~1-2 workdays
+  - No flow tracking
+    - No sampling (keeping track of last timestamp for flow)
+    - No flow open/close messages
+    - No tracking of minimum and smoothed RTT
+      - No RTT based timeout of unmatched timestamps
+    - No tracking of packets and bytes sent
+    - nr packets and bytes, averaged and min RTT etc, no sampling)
+  - No FIB lookup to determine if address is local or not
+- Could also do a reference test with dummy XDP and TC programs
+  - Simply pass packets without any processing
+  - Check if considerable overhead is added simply by attaching these probes
+- Discuss results on Red Hat meeting, decide how to move forward from there
+
+* CPU spikes caused by writing large amounts of data to disk
+- Noticed some very periodical spikes in CPU utalization for ePPing at 1k flows
+- Even with packet processing and ePPing pinned to single core, CPU utalization > 100%
+- Turned out to be kernel flushing dirty pages to disk
+  - Occurs for PPing as well, but less noticle due to it writing ~20k reports/s vs 120k reports/s for ePPing at 1k flows
+
+** CPU spikes due to disk I/O
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20220207/cpu_spikes.png]]
+
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20220207/io_spikes.png]]
+
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20220207/memory_spikes.png]]
+
+
+* Other
+- Will spend a lot of time on courses the next couple of months
+  - Data plane programming: 17% until 1/6
+  - Research ethics: ~40% until 11/3
+  - Statistical methods: ~53% between 28/2 - 28/3
+- At beginning of march, will have courses at ~110%
+- Right now, my internet connection to KaU is ocassionally very unreponsive (900ms latency)
+  - Makes some of the work frustrating
+  - Will not be an issue when we can soon go back to working at KaU
+
+
+

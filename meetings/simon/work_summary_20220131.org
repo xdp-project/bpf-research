@@ -1,0 +1,142 @@
+#+TITLE: Progress update 2022-01-31
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil reveal_single_file:t
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have ported my test setup to flent
+  - Had large issues with getting it to run well with 1k flows
+  - Have gone back to my ad-hoc collection of scripts
+- Have done some tests with pinning irqs to single core
+  - Can now see a clear impact on throughput from (e)PPing
+  - Performance seems to drop between each run...
+- Reran "TSecr match" analysis after new kernels
+  - Overall similar behavior
+- How is the PR reviewing going?
+
+* Flent problems
+- Flent was overall a very cool tool
+  - Could largely replace thousands of lines of ad-hoc code with ~100 lines of batch file
+  - Saves all data in a nice file format
+  - Collects data at a configurable interval, my scripts are pretty much stuck at 1s
+- Unfortunatley, didn't seem to work very well with 1000 flows
+  - Think socket-stats is the main issue, but would like to have the TCP RTT
+  - The throughput also seemed really weird...
+  - Plots probably not optimized with 1k flows in mind
+- If we were to use some external traffic generator, is there any way to get throughput info from flent at all?
+
+- For now, will go back to my ad-hoc scripts
+
+** Flent test - 1k TCP streams
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220131/flent_1000_tcp_flows.png]]
+
+
+# Some flent plots
+
+* Pinning packet processing to single core
+- Toke had a very convenient script for setting smp_affinity of all relevant irqs
+- Also set the number of channels to 1 (ethtool -L)
+- Tested different ways of pinning PPing
+  - Not pinning PPing
+  - Pinning PPing to same core as irqs
+  - Pinning PPing to different core than irqs
+- The good news:
+  - (e)PPing now has a measurable impact on throughput
+  - The impact from ePPing is typically a lot lower than the one from PPing
+- The bad news:
+  - Very large variations between runs, seems like a performance degrades over time
+    - I screwed up, ePPing not cleaned up properly (tc program stays attached)
+    - Running many instances of ePPing seems to cripple performance...
+  - When not pinned to same core, ePPing has higher overhead than PPing at 1k flows
+
+** No pinning - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/all_cores_1_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/all_cores_1_flows_network.png]]
+
+
+** No pinning - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/all_cores_1_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/all_cores_1_flows_network.png]]
+
+
+** Traffic pinned, PPing not - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/single_core_no_pin_1_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/single_core_no_pin_1_flows_network.png]]
+
+
+** Traffic pinned, PPing not - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/single_core_no_pin_1000_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/single_core_no_pin_1000_flows_network.png]]
+
+
+** Traffic pinned, PPing pinned same - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/single_core_pin_same_1_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/single_core_pin_same_1_flows_network.png]]
+
+
+** Traffic pinned, PPing pinned same - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/single_core_pin_same_1000_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/single_core_pin_same_1000_flows_network.png]]
+
+
+** Traffic pinned, PPing pinned diff - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/single_core_pin_different_1_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/single_core_pin_different_1_flows_network.png]]
+
+
+** Traffic pinned, PPing pinned diff - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220131/single_core_pin_different_1000_flows_cpu.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/single_core_pin_different_1000_flows_network.png]]
+
+
+* The screwup
+- Changed how PPing instances were set up in my test script
+- Used to keep a ssh-connection alive in the background running the PPing command
+- Changed to nohup so that no continuous ssh-connection is required after setup
+- While running in nohup, SIGINT no longer terminated Kathie's PPing
+- ...so changed killsignal to SIGTERM
+- My ePPing only shuts down gracefully on SIGINT
+  - Never detached the BPF programs...
+  - Later tests ran with multiple intances of the tc-BPF program (egress)
+
+* Another minor issue
+- The throughput reported by ss (delivery rate) has massive fluctuations
+  - Not consistent with throughput reported by iperf3
+  - Guess it reports "instantaneous" throughput?
+  - Simply take difference in bytes sent divided with time interval instead?
+
+** Iperf3 vs SS TCP metrics
+#+ATTR_HTML: :style float:left; width: 500px;
+[[file:./images/20220131/iperf_nopping_run1_streams1.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220131/TCP_stats_no_pping_1_flows_run_1.png]]
+
+
+
