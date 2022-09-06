@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-04-04</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-04-04</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-04-04 mån 13:55</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org2f4c62b">1. PPing</a>
+<ul>
+<li><a href="#/slide-orgb381ca1">1.1. Merging flow state for both directions of a flow</a></li>
+<li><a href="#/slide-org660046b">1.2. Performance overview, r=0</a></li>
+<li><a href="#/slide-org4f2a3d2">1.3. Performance overview, r=100</a></li>
+<li><a href="#/slide-orgbfa90f5">1.4. Performance overview, r=0 - r=100</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org34afd80">2. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org2f4c62b">
+<h2 id="org2f4c62b"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Have implemented the optimization to merge flowstate in both directions to single entry
+<ul>
+<li>Toke merged without any comments</li>
+
+</ul></li>
+<li>Currently working on fixing up the testscripts a bit
+<ul>
+<li>Fixed TCP throughput calculation to exclude retransmissions</li>
+<li>Currently updating scripts for parsing/plotting map debugging info</li>
+<li>TODO: add some parsing of Kathie's PPing output to include number of processed packets</li>
+<li>Possible TODO: Add automatic perf record on first run</li>
+<li>Possible TODO: Add some automatic interaction plots</li>
+
+</ul></li>
+<li>There is still a lot of testing to be done&#x2026;
+<ul>
+<li>Performance of different rate samplings</li>
+<li>Performance for mixed types of traffic (ex. some UDP traffic etc)</li>
+<li>Performance in opposite direction and bidirectional traffic</li>
+<li>Test of RTT accuracy (using ex. ICMP ping or tcp_info sRTT)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgb381ca1">
+<h3 id="orgb381ca1"><span class="section-number-3">1.1</span> Merging flow state for both directions of a flow</h3>
+<ul>
+<li>For each packet, ePPing needs to update state in both directions of the flow
+<ul>
+<li>Forward: Sent pkts/bytes, last timestamp, last seen identifier, refcount</li>
+<li>Reverse: Received pkts/bytes, min/smoothed RTT, refcount, flow opening</li>
+
+</ul></li>
+<li>Used to require two lookups, one in each direction</li>
+<li>Now, use a single entry to store state for both directions
+<ul>
+<li>"Sorts" the flow-tuple as key and to figure out which entry matches which direction</li>
+
+</ul></li>
+<li>Consistent performance increase, but still fairly high overhead</li>
+
+</ul>
+
+</section>
+<section id="slide-org660046b">
+<h3 id="org660046b"><span class="section-number-3">1.2</span> Performance overview, r=0</h3>
+
+<div id="orgc4c951e" class="figure">
+<p><img src="./images/20220404/performance_overview_r=0.png" alt="performance_overview_r=0.png" style="width: 1600px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org4f2a3d2">
+<h3 id="org4f2a3d2"><span class="section-number-3">1.3</span> Performance overview, r=100</h3>
+
+<div id="orga95b5a5" class="figure">
+<p><img src="./images/20220404/performance_overview_r=100.png" alt="performance_overview_r=100.png" style="width: 1600px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgbfa90f5">
+<h3 id="orgbfa90f5"><span class="section-number-3">1.4</span> Performance overview, r=0 - r=100</h3>
+
+<div id="org7e0a983" class="figure">
+<p><img src="./images/20220404/performance_overview_reffect.png" alt="performance_overview_reffect.png" style="width: 1600px;" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org34afd80">
+<h2 id="org34afd80"><span class="section-number-2">2</span> Other</h2>
+<ul>
+<li>Should I submit something to SNCNW?</li>
+<li>AIDA framework paper
+<ul>
+<li>Should I write anything in it, and if so what?</li>
+
+</ul></li>
+<li>Testbed
+<ul>
+<li>If new machines, should we only get the endhosts or entierly new testbed?</li>
+
+</ul></li>
+<li>Have finished most courses
+<ul>
+<li>Just data plane programming + DISCO reading left</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+#+TITLE: Progress update 2022-05-16
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Overview
+- Sent in the SNCNW paper
+- Working on experiments for the IMC paper
+  - Testing the limits of Kathie's PPing program
+  - Testing the accuracy of the TCP RTT estimates from ePPing
+- Have not written much on the actual IMC paper yet...
+
+* (Kathie's) PPing limits
+- Tested at what throughput Kathie's PPing starts missing packets
+  - Appears to be around 3.7 Gbps
+  - Only tested single flow on my standard testbed setup
+- Should I have some figure of this in paper?
+  - Packets per second handled by interface/PPing at various throughputs?
+  - Fraction of all packets handled by PPing at various throughputs?
+- Packet count don't match up exactly, unclear why
+
+* TCP RTT accuracy
+- Use a similar setup as for overhead test
+  - TCP flow between endhosts, monitor on middlebox
+  - Middlebox using no offloads, single core
+  - Limited to 1 Gbps so tcpdump can capture all packets
+  - Varied netem delay on reciever
+- Issues with using hardware clocks with tcpdump (gave 90 ms RTT when it should be ~0)
+- ePPing matches RTTs from PPing very well
+- Depending on tuned-adm profile on endhosts, tcptrace/tshark give quite different results
+- Unsure how to present results in a consice manner
+
+* IMC paper plan
+- Have focused on results until now
+- Will largely reuse SNCNW paper
+- Planned changes from SNCNW paper
+  - Extend description of BPF (approx one paragraph)
+  - Add back ICMP RTT accuracy results
+  - Add TCP accuracy results (a bit unclear)
+  - Extend details on experiment setup
+  - Extend explanation on why throughput drops with nr flow
+    - Add a figure on ex. processed packets?
+  - Add results on when PPing starts missing packets
+    - Possibly add figure?
+  - Maybe split introduction into related work section?
+  - Ethics section?
+
+** Time plan
+- Will try to have inital draft done by tonight
+- Have ok-ish version to hand in on Wednesday
+- Use inital part of Thursday to polish further (deadline is Thursday 14:00 CEST)
+- Will be very tight again (sorry for that)

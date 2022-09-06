@@ -1,0 +1,102 @@
+#+TITLE: Progress update 2022-05-02
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing progress
+- Work on ePPing (code) is frozen
+  - Issue with LLVM-14 will remain for a while
+- Focus on SNCNW paper + experiments
+- Ping accuracy tests
+- Testing various r-values with/without reporting
+  - Sorry, no results yet
+- Number of packets processed by Kathie's PPing
+- May have figured out why performance drops with increasing number of flows
+
+* RTT accuracy tests
+- Run ping + ePPing (in ICMP mode) directly on middlebox
+  - Get's packet-by-packet RTT, easy to compare
+- Add latency+jitter using netem on endhost
+- Patched iputils ping to always display RTT in us resolution
+  - No longer get +/- 0.5ms difference due to rounding
+- Tuning CPU C-states reduced difference from 30us to 4us
+- Took a look at nping, may use it for TCP ping
+
+** RTTs with no added latency
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220502/RTT_timeseries_no_netem.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220502/RTT_difference_no_netem.png]]
+
+** RTTs with 100 +/- 100 ms latency
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220502/RTT_timeseries_netem_100_100.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220502/RTT_difference_netem_100_100.png]]
+   
+  
+
+* Fraction of packets seen by Kathie's PPing
+- Known for a while that PPing misses a lot of packets
+  - Mainly infered from huge difference in nr. RTTs reported by ePPing and PPing
+- Have now compared output of PPing with data from sar to get actual fraction of packets PPing sees
+  - Varies between 5 - 20% depending on number of flows
+
+** Nr PPing/ePPing reports at 1 flow
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220502/reports_1_streams.png]]
+
+** Nr PPing/ePPing reports at 1000 flows
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220502/reports_1000_streams.png]]
+
+** Fraction of packets processed by PPing
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220502/kpping_fraction_processed.png]]
+   
+
+* Why performance drops with increasing number of flows
+- ePPing performance expected to drop somewhat due to more RTT samples
+- Baseline performance not expected to drop (with conntrack off)
+  - Jesper suspected cache misses, but we were unable to confirm it
+- While cache may play a role, I now think it's related to more flows -> more ACKs
+  - Reason for increase in ACKs is likely GRO on endhosts being less effective with fewer packet per flow
+
+** Throughput and sent packets
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220502/throughput.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220502/txpps.png]]
+   
+
+** Received packets and RX/TX ratio
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220502/rxpps.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220502/txrx_ratio.png]]
+
+
+** Total (TX + RX) packets
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220502/total_pps.png]]   
+
+* Progress on SNCNW paper
+- Still very far from finished  
+- Have mainly spent time on experiments + parsing/plotting results
+  - Written more code than words
+- Have sketched out content of all sections, but pretty much only written result so far
+- Hopefully rest of it will go faster
+  - Hope to have early draft by end of tomorrow
+- Leaves very little time for you to provide feedback (and for me to implement it)
+
+* Other
+- Finished DISCO reading course last week
+- Will likely skip Data Plane programming this week to focus on paper
+- IMC deadline 14:00 12/5 looking very tight right now
+  - Also CS-retreat 11-12/5, so practical deadline is ~11:00 11/5

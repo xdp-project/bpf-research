@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-03-07</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-03-07</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-03-07 mån 12:24</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org54d4f08">1. Red Hat hands on meeting</a></li>
+<li><a href="#/slide-orgd8d6ec8">2. Issue with measurement of TCP throughut</a></li>
+<li><a href="#/slide-org56a6bf0">3. Other</a></li>
+<li><a href="#/slide-org1be8fca">4. Plan</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org54d4f08">
+<h2 id="org54d4f08"><span class="section-number-2">1</span> Red Hat hands on meeting</h2>
+<ul>
+<li>Last Week Jesper and Toke were here and helped search for performance issues
+<ul>
+<li>We suspect one of the issues with many flows is related to increased L2 cache misses</li>
+<li>We identified hash map lookups as one of the main contributers to overhead</li>
+<li>We have identified two different ways to reduce the number of hash map lookups that should greatly help
+<ul>
+<li>Refcount of timestamp entries to avoid uncecessary misses</li>
+<li>Combine both directions of flow to single entry</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd8d6ec8">
+<h2 id="orgd8d6ec8"><span class="section-number-2">2</span> Issue with measurement of TCP throughut</h2>
+<ul>
+<li>Noticed that the calculated TCP throughput I had was often higher than the "raw" throughput measured at the PPing interface
+<ul>
+<li>Seems like the metrics "bytes_sent" used to calculate TCP throughput included retransmissions</li>
+<li>All the packets seem to be dropped on the other interface on the forwarding machine (before they get to the PPing interface)</li>
+
+</ul></li>
+<li>I can likely correct this issue by subtracing "bytes_retransmitted"</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org56a6bf0">
+<h2 id="org56a6bf0"><span class="section-number-2">3</span> Other</h2>
+<ul>
+<li>Should I take the Data management course?
+<ul>
+<li>Still in pilot phase, does not grant any points</li>
+
+</ul></li>
+<li>Feel a bit behind on everything right now
+<ul>
+<li>Research ethics and stats going ok</li>
+<li>Bit behind on data plane programming</li>
+<li>Bit behind on institutional duty (TRUEdig)</li>
+<li>Behind on my own research</li>
+
+</ul></li>
+<li>Course load should drop next week once Research Ethics is done</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org1be8fca">
+<h2 id="org1be8fca"><span class="section-number-2">4</span> Plan</h2>
+<ul>
+<li>While still very busy with courses, will try to fix refcount to next week</li>
+<li>Will also try to fix TCP throughput and PPing packet rate stats if enough time</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

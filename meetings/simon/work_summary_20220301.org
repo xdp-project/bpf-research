@@ -1,0 +1,98 @@
+#+TITLE: Progress update 2022-03-01
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing progress
+- Prepared final PR (...with code changes)
+  - Toke may still request changes
+- Test with rate sampling
+- Toke has fixed with conntrack
+  - Have done a quick test with it
+
+* Performance impact of rate sampling
+- Original tests have been with no sampling to test raw performance and get "fair" comparison with PPing
+  - Not a realistic setup, produces massive amount of output
+- Have done a quick test to see performance with the rate limit sampling
+  - Rate limit set to 1 RTT every 100ms (10 Hz) per flow
+  - Packets + (e)PPing pinned to single core
+- At 1k flows, only get ~4500 events/s
+  - Much lower than theoretical 10 * 1000 = 10000
+  - Likely a combination of burstiness of transmission and missing replies 
+
+** No pinning (multicore) - 10 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220301/multicore_network_10_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220301/multicore_network_1000_streams.png]]
+   
+
+** Pin single core - 10 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220301/pin_same_network_10_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_same_network_1000_streams.png]]
+   
+
+** No RTT events - 10 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220301/no_rtt_events_network_10_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1000_streams.png]]
+
+
+** Rate sampling 100ms - 10 + 1000 flows   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220301/sampling_100ms_network_10_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220221/sampling_100ms_network_1000_streams.png]]
+
+
+** Empty BPF programs (xdp), 10 + 1000 flows    
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220301/dummy_network_10_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220214/dummy_network_1000_streams.png]]
+  
+
+** Empty BPF programs (tc), no conntrack - 10 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220301/dummy_no_conntrack_network_10_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220301/dummy_no_conntrack_network_1000_streams.png]]
+   
+
+* Other noteworthy effects   
+- Both PPing and ePPing has a noticible effect on RTT
+  - Adds upwards of 0.5 ms
+  - Why? The processing overhead per packet much smaller
+- Large amount of retransmissions at 1000 flows
+  - About ~90k/s at 1000 flows (packet rate ~1.5 million pps)
+  - Corresponds to ~6% of the packets
+- Kathie's PPing seems to capture < 10% of packets in tests
+  - Based on quick glance at couple of examples
+
+** No rate sampling - 10 flows
+#+ATTR_HTML: :style width: 1500px;
+[[file:./images/20220301/pin_same_tcp_10_streams.png]]
+
+** No rate sampling - 1000 flows
+#+ATTR_HTML: :style width: 1500px;
+[[file:./images/20220301/pin_same_tcp_1000_streams.png]]
+
+
+** Empty BPF programs - 10 flows
+#+ATTR_HTML: :style width: 1500px;
+[[file:./images/20220301/dummy_tcp_10_streams.png]]
+
+** Empty BPF programs - 1000 flows
+#+ATTR_HTML: :style width: 1500px;
+[[file:./images/20220301/dummy_tcp_1000_streams.png]]

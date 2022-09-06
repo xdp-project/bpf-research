@@ -1,0 +1,169 @@
+#+TITLE: Progress update 2022-02-14
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Done tests with pinning traffic to single core
+  - Idea is to make the middle machine (where PPing runs) the bottleneck
+  - Tests show decreased throughput for both PPing and ePPing
+  - Test results show very poor results for ePPing with larger number of flows
+    - Done some quick tests to see if ePPing could easily be optimized, but they've been largely negative so far
+- Discovered some spikes in ePPing performance related to kernel flushing dirty pages to disk
+
+* Pinning packet processing to single core
+- Sets a single rx queue and pin all relevant IRQs to single CPU
+- Tested different ways of pinning PPing
+  - Not pinning PPing
+  - Pinning PPing to same core as irqs
+  - Pinning PPing to different core than irqs
+- The good news:
+  - (e)PPing now has a measurable impact on throughput
+  - For low number of flows ePPing has much lower overhead than PPing
+- The bad news:
+  - At high number of flows (> 100) ePPing is worse than PPing
+  - Even without sending RTT reports ePPing overhead is considerable
+
+** No pinning - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/all_cores_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/all_cores_network_1_streams.png]]
+
+
+** No pinning - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/all_cores_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/all_cores_network_1000_streams.png]]
+
+
+
+** Traffic pinned, PPing pinned diff - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_different_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_different_network_1_streams.png]]
+
+
+** Traffic pinned, PPing pinned diff - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_different_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_different_network_1000_streams.png]]
+
+
+
+** Traffic pinned, PPing pinned same - single flow
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_same_cpu_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_same_network_1_streams.png]]
+
+
+** Traffic pinned, PPing pinned same - 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_same_cpu_1000_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_same_network_1000_streams.png]]
+
+
+
+** No RTT events - 1 + 1000 flows
+# - For rest of tests, network + PPing pinned to same core
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1000_streams.png]]
+
+
+
+** No RTT events, PERCPU maps - 1 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220214/percpu_maps_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220214/percpu_maps_network_1000_streams.png]]
+
+
+
+** No RTT events, minimal logic - 1 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220214/min_epping_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220214/min_epping_network_1000_streams.png]]
+
+
+** Dummy BPF progs - 1 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220214/dummy_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220214/dummy_network_1000_streams.png]]
+
+
+* Time to discuss
+** What is the main use case for ePPing?
+- For evalutation to be interesting, should be related to real world use cases
+- If running on end-host, why not just fetch RTTs from kernel instead?
+- Most middleboxes likely use DPDK for improving performance, for which ePPing won't work(?)
+
+** How to move forward?
+- I find this performance very disappointing
+- Already way behind schedule
+- See two fundamentally different ways forward
+  - Cut the losses and move on
+    - Try write paper on current state of ePPing
+    - Future work on ePPing unlikely
+  - Try to fix ePPing
+    - Invest more time in investigating performance issues and modify ePPing to address them
+    - May allow for future work with ex. use case studies or extending ePPing
+
+** How to manage performance under heavy load?
+- Limited update rate of TCP timestamps
+  - More flows -> more timestamps to match -> more load
+- Currently have per-flow rate limit sampling
+  - Suffers the same issue of more flows -> more samples
+
+- Limit number of flows?
+  - Indirectly done via limit of flow state map
+- Limit information gathered per flow?
+  - Currently done in time domain with rate limit
+- Employ some much more sophisticated sampling strategy based on statistics and information theory etc?
+
+* CPU spikes caused by writing large amounts of data to disk
+- Noticed some very periodical spikes in CPU utalization for ePPing at 1k flows
+- Even with packet processing and ePPing pinned to single core, CPU utalization > 100%
+- Turned out to be kernel flushing dirty pages to disk
+  - Occurs for PPing as well, but less noticle due to it writing ~20k reports/s vs 120k reports/s for ePPing at 1k flows
+
+** CPU spikes due to disk I/O
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20220207/cpu_spikes.png]]
+
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20220207/io_spikes.png]]
+
+#+ATTR_HTML: :style width: 800px;
+[[file:./images/20220207/memory_spikes.png]]
+
+
+* Other
+- Will spend a lot of time on courses the next couple of months
+  - Data plane programming: 17% until 1/6
+  - Research ethics: ~40% until 11/3
+  - Statistical methods: ~53% between 28/2 - 28/3
+- Leaves between 23% to -30% for other PhD work (including ePPing)
+  - And the one day I have this week I'll likely have to spend on the DISCO reading course
+
+

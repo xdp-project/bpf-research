@@ -1,0 +1,35 @@
+#+TITLE: Progress update 2022-03-07
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Red Hat hands on meeting
+- Last Week Jesper and Toke were here and helped search for performance issues
+  - We suspect one of the issues with many flows is related to increased L2 cache misses
+  - We identified hash map lookups as one of the main contributers to overhead
+  - We have identified two different ways to reduce the number of hash map lookups that should greatly help
+    - Refcount of timestamp entries to avoid uncecessary misses
+    - Combine both directions of flow to single entry
+
+* Issue with measurement of TCP throughut
+- Noticed that the calculated TCP throughput I had was often higher than the "raw" throughput measured at the PPing interface
+  - Seems like the metrics "bytes_sent" used to calculate TCP throughput included retransmissions
+  - All the packets seem to be dropped on the other interface on the forwarding machine (before they get to the PPing interface)
+- I can likely correct this issue by subtracing "bytes_retransmitted"
+
+* Other
+- Should I take the Data management course?
+  - Still in pilot phase, does not grant any points
+- Feel a bit behind on everything right now
+  - Research ethics and stats going ok
+  - Bit behind on data plane programming
+  - Bit behind on institutional duty (TRUEdig)
+  - Behind on my own research
+- Course load should drop next week once Research Ethics is done
+
+* Plan    
+- While still very busy with courses, will try to fix refcount to next week
+- Will also try to fix TCP throughput and PPing packet rate stats if enough time
+

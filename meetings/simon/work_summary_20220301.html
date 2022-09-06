@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-03-01</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-03-01</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-03-01 tis 09:24</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgdce0c11">1. PPing progress</a></li>
+<li><a href="#/slide-org6912900">2. Performance impact of rate sampling</a>
+<ul>
+<li><a href="#/slide-org8457620">2.1. No pinning (multicore) - 10 + 1000 flows</a></li>
+<li><a href="#/slide-org1dbae12">2.2. Pin single core - 10 + 1000 flows</a></li>
+<li><a href="#/slide-org2275bdd">2.3. No RTT events - 10 + 1000 flows</a></li>
+<li><a href="#/slide-orga23461d">2.4. Rate sampling 100ms - 10 + 1000 flows</a></li>
+<li><a href="#/slide-org0a85b0c">2.5. Empty BPF programs (xdp), 10 + 1000 flows</a></li>
+<li><a href="#/slide-org4dc3b79">2.6. Empty BPF programs (tc), no conntrack - 10 + 1000 flows</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgf7e9a5b">3. Other noteworthy effects</a>
+<ul>
+<li><a href="#/slide-org7dce292">3.1. No rate sampling - 10 flows</a></li>
+<li><a href="#/slide-orgc1440aa">3.2. No rate sampling - 1000 flows</a></li>
+<li><a href="#/slide-orgd023870">3.3. Empty BPF programs - 10 flows</a></li>
+<li><a href="#/slide-org5c177a8">3.4. Empty BPF programs - 1000 flows</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgdce0c11">
+<h2 id="orgdce0c11"><span class="section-number-2">1</span> PPing progress</h2>
+<ul>
+<li>Prepared final PR (&#x2026;with code changes)
+<ul>
+<li>Toke may still request changes</li>
+
+</ul></li>
+<li>Test with rate sampling</li>
+<li>Toke has fixed with conntrack
+<ul>
+<li>Have done a quick test with it</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org6912900">
+<h2 id="org6912900"><span class="section-number-2">2</span> Performance impact of rate sampling</h2>
+<ul>
+<li>Original tests have been with no sampling to test raw performance and get "fair" comparison with PPing
+<ul>
+<li>Not a realistic setup, produces massive amount of output</li>
+
+</ul></li>
+<li>Have done a quick test to see performance with the rate limit sampling
+<ul>
+<li>Rate limit set to 1 RTT every 100ms (10 Hz) per flow</li>
+<li>Packets + (e)PPing pinned to single core</li>
+
+</ul></li>
+<li>At 1k flows, only get ~4500 events/s
+<ul>
+<li>Much lower than theoretical 10 * 1000 = 10000</li>
+<li>Likely a combination of burstiness of transmission and missing replies</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org8457620">
+<h3 id="org8457620"><span class="section-number-3">2.1</span> No pinning (multicore) - 10 + 1000 flows</h3>
+
+<div id="orgf9fd289" class="figure">
+<p><img src="./images/20220301/multicore_network_10_streams.png" alt="multicore_network_10_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org6bf00e0" class="figure">
+<p><img src="./images/20220301/multicore_network_1000_streams.png" alt="multicore_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org1dbae12">
+<h3 id="org1dbae12"><span class="section-number-3">2.2</span> Pin single core - 10 + 1000 flows</h3>
+
+<div id="orgfc6b0fb" class="figure">
+<p><img src="./images/20220301/pin_same_network_10_streams.png" alt="pin_same_network_10_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org33ba740" class="figure">
+<p><img src="./images/20220207/pin_same_network_1000_streams.png" alt="pin_same_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org2275bdd">
+<h3 id="org2275bdd"><span class="section-number-3">2.3</span> No RTT events - 10 + 1000 flows</h3>
+
+<div id="orgca05d74" class="figure">
+<p><img src="./images/20220301/no_rtt_events_network_10_streams.png" alt="no_rtt_events_network_10_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org9970033" class="figure">
+<p><img src="./images/20220207/no_rtt_events_network_1000_streams.png" alt="no_rtt_events_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orga23461d">
+<h3 id="orga23461d"><span class="section-number-3">2.4</span> Rate sampling 100ms - 10 + 1000 flows</h3>
+
+<div id="orgf32dfbb" class="figure">
+<p><img src="./images/20220301/sampling_100ms_network_10_streams.png" alt="sampling_100ms_network_10_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org651ec77" class="figure">
+<p><img src="./images/20220221/sampling_100ms_network_1000_streams.png" alt="sampling_100ms_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org0a85b0c">
+<h3 id="org0a85b0c"><span class="section-number-3">2.5</span> Empty BPF programs (xdp), 10 + 1000 flows</h3>
+
+<div id="org03072b6" class="figure">
+<p><img src="./images/20220301/dummy_network_10_streams.png" alt="dummy_network_10_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="orge21189d" class="figure">
+<p><img src="./images/20220214/dummy_network_1000_streams.png" alt="dummy_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org4dc3b79">
+<h3 id="org4dc3b79"><span class="section-number-3">2.6</span> Empty BPF programs (tc), no conntrack - 10 + 1000 flows</h3>
+
+<div id="org4aac1b5" class="figure">
+<p><img src="./images/20220301/dummy_no_conntrack_network_10_streams.png" alt="dummy_no_conntrack_network_10_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="orgdab5246" class="figure">
+<p><img src="./images/20220301/dummy_no_conntrack_network_1000_streams.png" alt="dummy_no_conntrack_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-orgf7e9a5b">
+<h2 id="orgf7e9a5b"><span class="section-number-2">3</span> Other noteworthy effects</h2>
+<ul>
+<li>Both PPing and ePPing has a noticible effect on RTT
+<ul>
+<li>Adds upwards of 0.5 ms</li>
+<li>Why? The processing overhead per packet much smaller</li>
+
+</ul></li>
+<li>Large amount of retransmissions at 1000 flows
+<ul>
+<li>About ~90k/s at 1000 flows (packet rate ~1.5 million pps)</li>
+<li>Corresponds to ~6% of the packets</li>
+
+</ul></li>
+<li>Kathie's PPing seems to capture &lt; 10% of packets in tests
+<ul>
+<li>Based on quick glance at couple of examples</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org7dce292">
+<h3 id="org7dce292"><span class="section-number-3">3.1</span> No rate sampling - 10 flows</h3>
+
+<div id="org47b84b3" class="figure">
+<p><img src="./images/20220301/pin_same_tcp_10_streams.png" alt="pin_same_tcp_10_streams.png" style="width: 1500px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgc1440aa">
+<h3 id="orgc1440aa"><span class="section-number-3">3.2</span> No rate sampling - 1000 flows</h3>
+
+<div id="org9350940" class="figure">
+<p><img src="./images/20220301/pin_same_tcp_1000_streams.png" alt="pin_same_tcp_1000_streams.png" style="width: 1500px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orgd023870">
+<h3 id="orgd023870"><span class="section-number-3">3.3</span> Empty BPF programs - 10 flows</h3>
+
+<div id="org3444681" class="figure">
+<p><img src="./images/20220301/dummy_tcp_10_streams.png" alt="dummy_tcp_10_streams.png" style="width: 1500px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org5c177a8">
+<h3 id="org5c177a8"><span class="section-number-3">3.4</span> Empty BPF programs - 1000 flows</h3>
+
+<div id="org98ed30b" class="figure">
+<p><img src="./images/20220301/dummy_tcp_1000_streams.png" alt="dummy_tcp_1000_streams.png" style="width: 1500px;" />
+</p>
+</div>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

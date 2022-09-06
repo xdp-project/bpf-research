@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-05-30</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-05-30</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-05-30 mån 14:03</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org3c65457">1. Overview</a></li>
+<li><a href="#/slide-orgfdb3bf4">2. The "code complexity" of ePPing</a>
+<ul>
+<li><a href="#/slide-org73530f0">2.1. "Complexity" under various configurations</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org4b41b75">3. Work on improving sampling</a></li>
+<li><a href="#/slide-org32c8f68">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org3c65457">
+<h2 id="org3c65457"><span class="section-number-2">1</span> Overview</h2>
+<ul>
+<li>Mainly worked on IMC paper</li>
+<li>Caught up a bit on course work and inst. dut.</li>
+<li>Had another look at Toke's libxdp PR and approved it, now merged
+<ul>
+<li>It should now be possible to load ePPing + other XDP programs on same interface</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgfdb3bf4">
+<h2 id="orgfdb3bf4"><span class="section-number-2">2</span> The "code complexity" of ePPing</h2>
+<ul>
+<li>On kernel version 5.17 ePPing does not pass the verifier if compiled with LLVM-14
+<ul>
+<li>The verifier hits it 1m instruction limit while going through all branches of the code (code itself is ~1500 instructions)</li>
+
+</ul></li>
+<li>Turns out that this is issue if affected both by LLVM version and kernel version</li>
+<li>Idea is to refactor code to use per-function verification
+<ul>
+<li>Still a bit unclear if this will even be possible&#x2026;</li>
+<li>&#x2026;will simply try and see</li>
+<li>backup plan may be to use bpf_loop()</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org73530f0">
+<h3 id="org73530f0"><span class="section-number-3">2.1</span> "Complexity" under various configurations</h3>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Env</th>
+<th scope="col" class="org-left">Egress</th>
+<th scope="col" class="org-left">Ingress</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">5.15, LLVM-13</td>
+<td class="org-left">367k</td>
+<td class="org-left">365k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.15, LLVM-14</td>
+<td class="org-left">218k</td>
+<td class="org-left">213k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-13</td>
+<td class="org-left">468k</td>
+<td class="org-left">626k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-14</td>
+<td class="org-left">726k</td>
+<td class="org-left">1m+</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left">5.16, LLVM-13, v3</td>
+<td class="org-left">335k</td>
+<td class="org-left">394k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-14, v3</td>
+<td class="org-left">756k</td>
+<td class="org-left">1m+</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-13, no loops</td>
+<td class="org-left">123k</td>
+<td class="org-left">200k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-14, no loops</td>
+<td class="org-left">242k</td>
+<td class="org-left">348k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-13, only parsing</td>
+<td class="org-left">66k</td>
+<td class="org-left">66k</td>
+</tr>
+
+<tr>
+<td class="org-left">5.16, LLVM-14, only parsing</td>
+<td class="org-left">66k</td>
+<td class="org-left">66k</td>
+</tr>
+</tbody>
+</table>
+
+</section>
+</section>
+<section>
+<section id="slide-org4b41b75">
+<h2 id="org4b41b75"><span class="section-number-2">3</span> Work on improving sampling</h2>
+<ul>
+<li>We discussed what to work on next during the last Red Hat meeting
+<ul>
+<li>Ended up with improving how ePPing samples and reports RTTs</li>
+
+</ul></li>
+<li>There are many possible solutions here
+<ul>
+<li>Report only abnormally high RTTs</li>
+<li>Report min/max/mean each interval</li>
+<li>Report histogram every interval</li>
+<li>Some probabalistic approach to capture RTT distribution</li>
+
+</ul></li>
+<li>Will think a bit about it, and maybe we can discuss in next week?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org32c8f68">
+<h2 id="org32c8f68"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Need to update ISP soon
+<ul>
+<li>Will likely require a large rewrite of goals section (very far behind schedule)</li>
+<li>Need to rebalance courses to account of statistics course</li>
+<li>Need to add goal matrix</li>
+
+</ul></li>
+<li>Been invited to Red Hat research day in Brno (15/9)</li>
+<li>Have 3 exam tasks in the data plane programming course</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

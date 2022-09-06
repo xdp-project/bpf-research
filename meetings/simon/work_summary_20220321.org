@@ -1,0 +1,50 @@
+#+TITLE: Progress update 2022-03-21
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Not that much has happened
+- Have implemented the "reference count" optimization of keeping track of number of outstanding timestamps
+  - Initial implementation was prone to concurrency issues, observed incorrect values
+  - Changed implementation to use atomic increments/decrements
+  - Toke has OKed code, but waiting for performance data (which I provided earlier today)
+- Currently working on merging flow and reverse flow state into singular entry lookup
+  - Got a bit confused during the Red Hat meeting, but cleared it out via email conversation
+  - Just started, but can hopefully be finish it up this week
+  - Will focus on getting hash-map implementation working this week, may switch to array + SuperFastHash later
+
+* Reference count optimization
+- Previously ePPing would (almost) always try to match a packet against stored timestamps
+  - Often unecessary map lookup as there would be no stored timestamps for that flow at all
+- So keep track of number of outstanding timestamps in flow state, only attempt match if > 0
+- Initial tests shows very small improvement without rate sampling, slightly larger improvement with rate sampling
+
+** Performance difference, r=0
+#+ATTR_HTML: :style width: 1200px;
+[[file:./images/20220321/refcount_effect_r=0.png]]
+   
+
+** Performance difference, r=100
+#+ATTR_HTML: :style width: 1200px;
+[[file:./images/20220321/refcount_effect_r=100.png]]
+
+* Other PPing things
+- Also have a bunch of minor fixes for my measurement scripts
+  - Subtract restransmitted bytes from TCP throughput
+  - Update map debug plotting scripts to handle some changes introduced in the PR
+  - Extract number of packets processed by Kathie's PPing
+- Moving the bottleneck back to the forwarding machine
+  - Ask for faster endhost?
+  - Try other traffic generators?
+  
+
+* Other
+- Finished research ethics course 11/3
+- Will finish statistics course 28/3 (next monday)
+- Should leave me with a lot more time to spend on my research
+- Have a little bit of data plane programming and TRUEdig work backlogged, but worked through most of it last week
+  - Expect to by fully cought up by end of this week
+

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-05-02</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-05-02</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-05-02 mån 14:01</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgd7112c7">1. PPing progress</a></li>
+<li><a href="#/slide-org9bf2ddb">2. RTT accuracy tests</a>
+<ul>
+<li><a href="#/slide-orgecd2aa0">2.1. RTTs with no added latency</a></li>
+<li><a href="#/slide-orgb30293f">2.2. RTTs with 100 +/- 100 ms latency</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgc1d2bb0">3. Fraction of packets seen by Kathie's PPing</a>
+<ul>
+<li><a href="#/slide-orgd58b30c">3.1. Nr PPing/ePPing reports at 1 flow</a></li>
+<li><a href="#/slide-orgd04175b">3.2. Nr PPing/ePPing reports at 1000 flows</a></li>
+<li><a href="#/slide-org9da3c21">3.3. Fraction of packets processed by PPing</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgd1f3671">4. Why performance drops with increasing number of flows</a>
+<ul>
+<li><a href="#/slide-orga87a850">4.1. Throughput and sent packets</a></li>
+<li><a href="#/slide-org67493c1">4.2. Received packets and RX/TX ratio</a></li>
+<li><a href="#/slide-orgc273467">4.3. Total (TX + RX) packets</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgb3f0c5f">5. Progress on SNCNW paper</a></li>
+<li><a href="#/slide-org2472aaf">6. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgd7112c7">
+<h2 id="orgd7112c7"><span class="section-number-2">1</span> PPing progress</h2>
+<ul>
+<li>Work on ePPing (code) is frozen
+<ul>
+<li>Issue with LLVM-14 will remain for a while</li>
+
+</ul></li>
+<li>Focus on SNCNW paper + experiments</li>
+<li>Ping accuracy tests</li>
+<li>Testing various r-values with/without reporting
+<ul>
+<li>Sorry, no results yet</li>
+
+</ul></li>
+<li>Number of packets processed by Kathie's PPing</li>
+<li>May have figured out why performance drops with increasing number of flows</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org9bf2ddb">
+<h2 id="org9bf2ddb"><span class="section-number-2">2</span> RTT accuracy tests</h2>
+<ul>
+<li>Run ping + ePPing (in ICMP mode) directly on middlebox
+<ul>
+<li>Get's packet-by-packet RTT, easy to compare</li>
+
+</ul></li>
+<li>Add latency+jitter using netem on endhost</li>
+<li>Patched iputils ping to always display RTT in us resolution
+<ul>
+<li>No longer get +/- 0.5ms difference due to rounding</li>
+
+</ul></li>
+<li>Tuning CPU C-states reduced difference from 30us to 4us</li>
+<li>Took a look at nping, may use it for TCP ping</li>
+
+</ul>
+
+</section>
+<section id="slide-orgecd2aa0">
+<h3 id="orgecd2aa0"><span class="section-number-3">2.1</span> RTTs with no added latency</h3>
+
+<div id="orge301feb" class="figure">
+<p><img src="./images/20220502/RTT_timeseries_no_netem.png" alt="RTT_timeseries_no_netem.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="orga65274d" class="figure">
+<p><img src="./images/20220502/RTT_difference_no_netem.png" alt="RTT_difference_no_netem.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgb30293f">
+<h3 id="orgb30293f"><span class="section-number-3">2.2</span> RTTs with 100 +/- 100 ms latency</h3>
+
+<div id="orgafa48f1" class="figure">
+<p><img src="./images/20220502/RTT_timeseries_netem_100_100.png" alt="RTT_timeseries_netem_100_100.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org62a228f" class="figure">
+<p><img src="./images/20220502/RTT_difference_netem_100_100.png" alt="RTT_difference_netem_100_100.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+
+</section>
+</section>
+<section>
+<section id="slide-orgc1d2bb0">
+<h2 id="orgc1d2bb0"><span class="section-number-2">3</span> Fraction of packets seen by Kathie's PPing</h2>
+<ul>
+<li>Known for a while that PPing misses a lot of packets
+<ul>
+<li>Mainly infered from huge difference in nr. RTTs reported by ePPing and PPing</li>
+
+</ul></li>
+<li>Have now compared output of PPing with data from sar to get actual fraction of packets PPing sees
+<ul>
+<li>Varies between 5 - 20% depending on number of flows</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgd58b30c">
+<h3 id="orgd58b30c"><span class="section-number-3">3.1</span> Nr PPing/ePPing reports at 1 flow</h3>
+
+<div id="org61c9db1" class="figure">
+<p><img src="./images/20220502/reports_1_streams.png" alt="reports_1_streams.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgd04175b">
+<h3 id="orgd04175b"><span class="section-number-3">3.2</span> Nr PPing/ePPing reports at 1000 flows</h3>
+
+<div id="orgaf135f0" class="figure">
+<p><img src="./images/20220502/reports_1000_streams.png" alt="reports_1000_streams.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org9da3c21">
+<h3 id="org9da3c21"><span class="section-number-3">3.3</span> Fraction of packets processed by PPing</h3>
+
+<div id="orgd609321" class="figure">
+<p><img src="./images/20220502/kpping_fraction_processed.png" alt="kpping_fraction_processed.png" style="width: 1400px;" />
+</p>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-orgd1f3671">
+<h2 id="orgd1f3671"><span class="section-number-2">4</span> Why performance drops with increasing number of flows</h2>
+<ul>
+<li>ePPing performance expected to drop somewhat due to more RTT samples</li>
+<li>Baseline performance not expected to drop (with conntrack off)
+<ul>
+<li>Jesper suspected cache misses, but we were unable to confirm it</li>
+
+</ul></li>
+<li>While cache may play a role, I now think it's related to more flows -&gt; more ACKs
+<ul>
+<li>Reason for increase in ACKs is likely GRO on endhosts being less effective with fewer packet per flow</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orga87a850">
+<h3 id="orga87a850"><span class="section-number-3">4.1</span> Throughput and sent packets</h3>
+
+<div id="org3762200" class="figure">
+<p><img src="./images/20220502/throughput.png" alt="throughput.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org7847dd4" class="figure">
+<p><img src="./images/20220502/txpps.png" alt="txpps.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org67493c1">
+<h3 id="org67493c1"><span class="section-number-3">4.2</span> Received packets and RX/TX ratio</h3>
+
+<div id="orge69d5b9" class="figure">
+<p><img src="./images/20220502/rxpps.png" alt="rxpps.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="orgda3f8e3" class="figure">
+<p><img src="./images/20220502/txrx_ratio.png" alt="txrx_ratio.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orgc273467">
+<h3 id="orgc273467"><span class="section-number-3">4.3</span> Total (TX + RX) packets</h3>
+
+<div id="orga19a84b" class="figure">
+<p><img src="./images/20220502/total_pps.png" alt="total_pps.png" style="width: 1400px;" />   
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgb3f0c5f">
+<h2 id="orgb3f0c5f"><span class="section-number-2">5</span> Progress on SNCNW paper</h2>
+<ul>
+<li>Still very far from finished</li>
+<li>Have mainly spent time on experiments + parsing/plotting results
+<ul>
+<li>Written more code than words</li>
+
+</ul></li>
+<li>Have sketched out content of all sections, but pretty much only written result so far</li>
+<li>Hopefully rest of it will go faster
+<ul>
+<li>Hope to have early draft by end of tomorrow</li>
+
+</ul></li>
+<li>Leaves very little time for you to provide feedback (and for me to implement it)</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org2472aaf">
+<h2 id="org2472aaf"><span class="section-number-2">6</span> Other</h2>
+<ul>
+<li>Finished DISCO reading course last week</li>
+<li>Will likely skip Data Plane programming this week to focus on paper</li>
+<li>IMC deadline 14:00 12/5 looking very tight right now
+<ul>
+<li>Also CS-retreat 11-12/5, so practical deadline is ~11:00 11/5</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

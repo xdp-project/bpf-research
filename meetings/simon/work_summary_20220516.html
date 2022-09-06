@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-05-16</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-05-16</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-05-16 mån 13:28</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org113753e">1. Overview</a></li>
+<li><a href="#/slide-orgcb17920">2. (Kathie's) PPing limits</a></li>
+<li><a href="#/slide-org9f7ce56">3. TCP RTT accuracy</a></li>
+<li><a href="#/slide-orgaca713b">4. IMC paper plan</a>
+<ul>
+<li><a href="#/slide-org3da7840">4.1. Time plan</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org113753e">
+<h2 id="org113753e"><span class="section-number-2">1</span> Overview</h2>
+<ul>
+<li>Sent in the SNCNW paper</li>
+<li>Working on experiments for the IMC paper
+<ul>
+<li>Testing the limits of Kathie's PPing program</li>
+<li>Testing the accuracy of the TCP RTT estimates from ePPing</li>
+
+</ul></li>
+<li>Have not written much on the actual IMC paper yet&#x2026;</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgcb17920">
+<h2 id="orgcb17920"><span class="section-number-2">2</span> (Kathie's) PPing limits</h2>
+<ul>
+<li>Tested at what throughput Kathie's PPing starts missing packets
+<ul>
+<li>Appears to be around 3.7 Gbps</li>
+<li>Only tested single flow on my standard testbed setup</li>
+
+</ul></li>
+<li>Should I have some figure of this in paper?
+<ul>
+<li>Packets per second handled by interface/PPing at various throughputs?</li>
+<li>Fraction of all packets handled by PPing at various throughputs?</li>
+
+</ul></li>
+<li>Packet count don't match up exactly, unclear why</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org9f7ce56">
+<h2 id="org9f7ce56"><span class="section-number-2">3</span> TCP RTT accuracy</h2>
+<ul>
+<li>Use a similar setup as for overhead test
+<ul>
+<li>TCP flow between endhosts, monitor on middlebox</li>
+<li>Middlebox using no offloads, single core</li>
+<li>Limited to 1 Gbps so tcpdump can capture all packets</li>
+<li>Varied netem delay on reciever</li>
+
+</ul></li>
+<li>Issues with using hardware clocks with tcpdump (gave 90 ms RTT when it should be ~0)</li>
+<li>ePPing matches RTTs from PPing very well</li>
+<li>Depending on tuned-adm profile on endhosts, tcptrace/tshark give quite different results</li>
+<li>Unsure how to present results in a consice manner</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgaca713b">
+<h2 id="orgaca713b"><span class="section-number-2">4</span> IMC paper plan</h2>
+<ul>
+<li>Have focused on results until now</li>
+<li>Will largely reuse SNCNW paper</li>
+<li>Planned changes from SNCNW paper
+<ul>
+<li>Extend description of BPF (approx one paragraph)</li>
+<li>Add back ICMP RTT accuracy results</li>
+<li>Add TCP accuracy results (a bit unclear)</li>
+<li>Extend details on experiment setup</li>
+<li>Extend explanation on why throughput drops with nr flow
+<ul>
+<li>Add a figure on ex. processed packets?</li>
+
+</ul></li>
+<li>Add results on when PPing starts missing packets
+<ul>
+<li>Possibly add figure?</li>
+
+</ul></li>
+<li>Maybe split introduction into related work section?</li>
+<li>Ethics section?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org3da7840">
+<h3 id="org3da7840"><span class="section-number-3">4.1</span> Time plan</h3>
+<ul>
+<li>Will try to have inital draft done by tonight</li>
+<li>Have ok-ish version to hand in on Wednesday</li>
+<li>Use inital part of Thursday to polish further (deadline is Thursday 14:00 CEST)</li>
+<li>Will be very tight again (sorry for that)</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

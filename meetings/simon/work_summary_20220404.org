@@ -1,0 +1,52 @@
+#+TITLE: Progress update 2022-04-04
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Have implemented the optimization to merge flowstate in both directions to single entry
+  - Toke merged without any comments
+- Currently working on fixing up the testscripts a bit
+  - Fixed TCP throughput calculation to exclude retransmissions
+  - Currently updating scripts for parsing/plotting map debugging info
+  - TODO: add some parsing of Kathie's PPing output to include number of processed packets
+  - Possible TODO: Add automatic perf record on first run
+  - Possible TODO: Add some automatic interaction plots
+- There is still a lot of testing to be done...
+  - Performance of different sampling rates
+  - Performance for mixed types of traffic (ex. some UDP traffic etc)
+  - Performance in opposite direction and bidirectional traffic
+  - Test of RTT accuracy (using ex. ICMP ping or tcp_info sRTT)
+
+** Merging flow state for both directions of a flow
+- For each packet, ePPing needs to update state in both directions of the flow
+  - Forward: Sent pkts/bytes, last timestamp, last seen identifier, refcount
+  - Reverse: Received pkts/bytes, min/smoothed RTT, refcount, flow opening
+- Used to require two lookups, one in each direction
+- Now, use a single entry to store state for both directions
+  - "Sorts" the flow-tuple as key and to figure out which entry matches which direction
+- Consistent performance increase, but still fairly high overhead
+
+** Performance overview, r=0
+#+ATTR_HTML: :style width: 1600px;
+[[file:./images/20220404/performance_overview_r=0.png]]
+   
+
+** Performance overview, r=100
+#+ATTR_HTML: :style width: 1600px;
+[[file:./images/20220404/performance_overview_r=100.png]]
+
+** Performance overview, r=0 - r=100
+#+ATTR_HTML: :style width: 1600px;
+[[file:./images/20220404/performance_overview_reffect.png]]
+
+* Other
+- Should I submit something to SNCNW?
+- AIDA framework paper
+  - Should I write anything in it, and if so what?
+- Testbed
+  - If new machines, should we only get the endhosts or entierly new testbed?
+- Have finished most courses
+  - Just data plane programming + DISCO reading left

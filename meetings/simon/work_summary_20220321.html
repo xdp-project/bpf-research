@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-03-21</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-03-21</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-03-21 mån 13:53</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org0a731f9">1. PPing</a></li>
+<li><a href="#/slide-orgf6a473b">2. Reference count optimization</a>
+<ul>
+<li><a href="#/slide-org3b663df">2.1. Performance difference, r=0</a></li>
+<li><a href="#/slide-org289365b">2.2. Performance difference, r=100</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org18c236a">3. Other PPing things</a></li>
+<li><a href="#/slide-org7520697">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org0a731f9">
+<h2 id="org0a731f9"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Not that much has happened</li>
+<li>Have implemented the "reference count" optimization of keeping track of number of outstanding timestamps
+<ul>
+<li>Initial implementation was prone to concurrency issues, observed incorrect values</li>
+<li>Changed implementation to use atomic increments/decrements</li>
+<li>Toke has OKed code, but waiting for performance data (which I provided earlier today)</li>
+
+</ul></li>
+<li>Currently working on merging flow and reverse flow state into singular entry lookup
+<ul>
+<li>Got a bit confused during the Red Hat meeting, but cleared it out via email conversation</li>
+<li>Just started, but can hopefully be finish it up this week</li>
+<li>Will focus on getting hash-map implementation working this week, may switch to array + SuperFastHash later</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf6a473b">
+<h2 id="orgf6a473b"><span class="section-number-2">2</span> Reference count optimization</h2>
+<ul>
+<li>Previously ePPing would (almost) always try to match a packet against stored timestamps
+<ul>
+<li>Often unecessary map lookup as there would be no stored timestamps for that flow at all</li>
+
+</ul></li>
+<li>So keep track of number of outstanding timestamps in flow state, only attempt match if &gt; 0</li>
+<li>Initial tests shows very small improvement without rate sampling, slightly larger improvement with rate sampling</li>
+
+</ul>
+
+</section>
+<section id="slide-org3b663df">
+<h3 id="org3b663df"><span class="section-number-3">2.1</span> Performance difference, r=0</h3>
+
+<div id="org14de571" class="figure">
+<p><img src="./images/20220321/refcount_effect_r=0.png" alt="refcount_effect_r=0.png" style="width: 1200px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org289365b">
+<h3 id="org289365b"><span class="section-number-3">2.2</span> Performance difference, r=100</h3>
+
+<div id="org9e7e56f" class="figure">
+<p><img src="./images/20220321/refcount_effect_r=100.png" alt="refcount_effect_r=100.png" style="width: 1200px;" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org18c236a">
+<h2 id="org18c236a"><span class="section-number-2">3</span> Other PPing things</h2>
+<ul>
+<li>Also have a bunch of minor fixes for my measurement scripts
+<ul>
+<li>Subtract restransmitted bytes from TCP throughput</li>
+<li>Update map debug plotting scripts to handle some changes introduced in the PR</li>
+<li>Extract number of packets processed by Kathie's PPing</li>
+
+</ul></li>
+<li>Moving the bottleneck back to the forwarding machine
+<ul>
+<li>Ask for faster endhost?</li>
+<li>Try other traffic generators?</li>
+
+</ul></li>
+
+</ul>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org7520697">
+<h2 id="org7520697"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Finished research ethics course 11/3</li>
+<li>Will finish statistics course 28/3 (next monday)</li>
+<li>Should leave me with a lot more time to spend on my research</li>
+<li>Have a little bit of data plane programming and TRUEdig work backlogged, but worked through most of it last week
+<ul>
+<li>Expect to by fully cought up by end of this week</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

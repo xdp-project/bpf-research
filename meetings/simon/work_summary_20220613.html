@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-06-13</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-06-13</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-06-13 mån 14:01</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgbc22350">1. Overview</a></li>
+<li><a href="#/slide-org95ff5a0">2. ePPing</a></li>
+<li><a href="#/slide-orgd6ef357">3. ISP</a>
+<ul>
+<li><a href="#/slide-org555ac1e">3.1. ISP project plan</a></li>
+<li><a href="#/slide-org4f7bc83">3.2. ISP courses</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgd5acd09">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgbc22350">
+<h2 id="orgbc22350"><span class="section-number-2">1</span> Overview</h2>
+<ul>
+<li>Have spent a fair amount of time trying to refactor ePPing to make use of global functions
+<ul>
+<li>Think I've got it working now?</li>
+<li>Down to about 200k insn</li>
+<li>Still some additional fixes required before ready for Toke to review</li>
+
+</ul></li>
+<li>Worked a bit on updating the ISP and related admin. work</li>
+<li>Updated SNCNW paper</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org95ff5a0">
+<h2 id="org95ff5a0"><span class="section-number-2">2</span> ePPing</h2>
+<ul>
+<li>Make parsing packet a global function</li>
+<li>Had to move one struct to a PER_CPU_ARRAY to avoid stack too large
+<ul>
+<li>Struct can no longer contain packet pointers</li>
+<li>Need to fix FIB lookup (for local filtering)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd6ef357">
+<h2 id="orgd6ef357"><span class="section-number-2">3</span> ISP</h2>
+<ul>
+<li>Last decided: 2021-09-24
+<ul>
+<li>But that was very late, and think it would be nice if we could get it in before the summer</li>
+
+</ul></li>
+<li>Have not really had any more COVID-related delays?</li>
+<li>Mainly want to discuss the overall project plan and courses</li>
+
+</ul>
+
+</section>
+<section id="slide-org555ac1e">
+<h3 id="org555ac1e"><span class="section-number-3">3.1</span> ISP project plan</h3>
+<ul>
+<li>Have pretty much just added some discussed directions to the short-term plan (before lic)
+<ul>
+<li>Integration of ePPing into observability framework</li>
+<li>Internet measurement study</li>
+<li>Add QUIC</li>
+<li>Measure container network latency</li>
+<li>Order of these?</li>
+
+</ul></li>
+<li>What to do with old parts on developing system monitoring and performance monitoring tools</li>
+<li>Whole part after lic was basically on optimization
+<ul>
+<li>Is this still relevant, and if so, how does it tie together with my current work</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org4f7bc83">
+<h3 id="org4f7bc83"><span class="section-number-3">3.2</span> ISP courses</h3>
+<ul>
+<li>Have 5 courses for next semester (HT22)
+<ul>
+<li>CS Colloquium (1.5 ECTS, delayed from this semester)</li>
+<li>Peer reviewing in CS (2 ECTS)</li>
+<li>Another DISCO seminar course? (4.5 ECTS?)</li>
+<li>Litterature study (5 ECTS)</li>
+<li>Some course in containerization/virtualization? (2.5 ECTS?)</li>
+
+</ul></li>
+<li>The "open" slots are course in cont./virt. (2.5) and course in ML/optimization (3)</li>
+<li>How to fill goal matrix for missing/underdetermined courses?</li>
+<li>Linux kernel hacking course?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd5acd09">
+<h2 id="orgd5acd09"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>Salary ladder 25% point should be reached by now?</li>
+<li>The SNCNW conference is later this week, so need to prepare presentation</li>
+<li>When to start meetings after summer?</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

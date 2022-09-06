@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-02-21</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-02-21</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-02-21 mån 13:53</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org408d66e">1. PPing</a></li>
+<li><a href="#/slide-orgdd06112">2. Performance impact of rate sampling</a>
+<ul>
+<li><a href="#/slide-org2a417e2">2.1. No rate sampling - 1 + 1000 flows</a></li>
+<li><a href="#/slide-org0089b71">2.2. No sampling + no events - 1 + 1000 flows</a></li>
+<li><a href="#/slide-orgae89849">2.3. Sampling (with events) - 1 + 1000 flows</a></li>
+<li><a href="#/slide-orga33f5c1">2.4. Empty BPF programs, 1 + 1000 flows</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgf9c8b4b">3. Muhammad's observability paper</a></li>
+<li><a href="#/slide-org751ea66">4. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org408d66e">
+<h2 id="org408d66e"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Prepared final PR
+<ul>
+<li>Toke may still request changes</li>
+
+</ul></li>
+<li>Test with rate sampling</li>
+<li>Toke has fixed with conntrack, but have not had time to test it yet
+<ul>
+<li>Can maybe run small test this week</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgdd06112">
+<h2 id="orgdd06112"><span class="section-number-2">2</span> Performance impact of rate sampling</h2>
+<ul>
+<li>Original tests have been with no sampling to test raw performance and get "fair" comparison with PPing
+<ul>
+<li>Not a realistic setup, produces massive amount of output</li>
+
+</ul></li>
+<li>Have done a quick test to see performance with the rate limit sampling
+<ul>
+<li>Rate limit set to 1 RTT every 100ms (10 Hz) per flow</li>
+<li>Packets + (e)PPing pinned to single core</li>
+
+</ul></li>
+<li>At 1k flows, only get ~4500 events/s
+<ul>
+<li>Much lower than theoretical 10 * 1000 = 10000</li>
+<li>Likely a combination of burstiness of transmission and missing replies</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org2a417e2">
+<h3 id="org2a417e2"><span class="section-number-3">2.1</span> No rate sampling - 1 + 1000 flows</h3>
+
+<div id="org4423590" class="figure">
+<p><img src="./images/20220207/pin_same_network_1_streams.png" alt="pin_same_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org35efd64" class="figure">
+<p><img src="./images/20220207/pin_same_network_1000_streams.png" alt="pin_same_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org0089b71">
+<h3 id="org0089b71"><span class="section-number-3">2.2</span> No sampling + no events - 1 + 1000 flows</h3>
+
+<div id="org70f4235" class="figure">
+<p><img src="./images/20220207/no_rtt_events_network_1_streams.png" alt="no_rtt_events_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org3c4edb8" class="figure">
+<p><img src="./images/20220207/no_rtt_events_network_1000_streams.png" alt="no_rtt_events_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orgae89849">
+<h3 id="orgae89849"><span class="section-number-3">2.3</span> Sampling (with events) - 1 + 1000 flows</h3>
+
+<div id="orgba7fb71" class="figure">
+<p><img src="./images/20220221/sampling_100ms_network_1_streams.png" alt="sampling_100ms_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org6010f48" class="figure">
+<p><img src="./images/20220221/sampling_100ms_network_1000_streams.png" alt="sampling_100ms_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orga33f5c1">
+<h3 id="orga33f5c1"><span class="section-number-3">2.4</span> Empty BPF programs, 1 + 1000 flows</h3>
+
+<div id="orgc1cafd5" class="figure">
+<p><img src="./images/20220214/dummy_network_1_streams.png" alt="dummy_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org81137a0" class="figure">
+<p><img src="./images/20220214/dummy_network_1000_streams.png" alt="dummy_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-orgf9c8b4b">
+<h2 id="orgf9c8b4b"><span class="section-number-2">3</span> Muhammad's observability paper</h2>
+<ul>
+<li>Muhammad wanted some help with a paragraph on network flows</li>
+<li>Does it make sense with network flows as a "fourth pillar of observability" (others being logs, metrics and traces)</li>
+<li>More a "target" of monitoring (like disk, I/O, memory, CPU etc) than a type of monitoring?</li>
+<li>Don't think it's sensible to squeeze in ePPing here</li>
+
+</ul>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org751ea66">
+<h2 id="org751ea66"><span class="section-number-2">4</span> Other</h2>
+<ul>
+<li>As previously stated, will be very busy with courses
+<ul>
+<li>Need to finish examination task for research ethics this week
+<ul>
+<li>Invovles writing reserach plan and letter with information to participants (+reflections) on "your" reserach project</li>
+<li>Can maybe use scenario of deploying ePPing at ISP?</li>
+
+</ul></li>
+<li>Also need to prepare data set for statistics course (merge + CSV format)</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

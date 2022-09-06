@@ -1,0 +1,70 @@
+#+TITLE: Progress update 2022-02-21
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* PPing
+- Prepared final PR
+  - Toke may still request changes
+- Test with rate sampling
+- Toke has fixed with conntrack, but have not had time to test it yet
+  - Can maybe run small test this week
+
+* Performance impact of rate sampling
+- Original tests have been with no sampling to test raw performance and get "fair" comparison with PPing
+  - Not a realistic setup, produces massive amount of output
+- Have done a quick test to see performance with the rate limit sampling
+  - Rate limit set to 1 RTT every 100ms (10 Hz) per flow
+  - Packets + (e)PPing pinned to single core
+- At 1k flows, only get ~4500 events/s
+  - Much lower than theoretical 10 * 1000 = 10000
+  - Likely a combination of burstiness of transmission and missing replies
+
+** No rate sampling - 1 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/pin_same_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/pin_same_network_1000_streams.png]]
+   
+
+** No sampling + no events - 1 + 1000 flows
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220207/no_rtt_events_network_1000_streams.png]]
+
+
+** Sampling (with events) - 1 + 1000 flows   
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220221/sampling_100ms_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220221/sampling_100ms_network_1000_streams.png]]
+
+
+** Empty BPF programs, 1 + 1000 flows    
+#+ATTR_HTML: :style float:left; width: 750px;
+[[file:./images/20220214/dummy_network_1_streams.png]]
+
+#+ATTR_HTML: :style float:right; width: 750px;
+[[file:./images/20220214/dummy_network_1000_streams.png]]
+  
+
+* Muhammad's observability paper
+- Muhammad wanted some help with a paragraph on network flows
+- Does it make sense with network flows as a "fourth pillar of observability" (others being logs, metrics and traces)
+- More a "target" of monitoring (like disk, I/O, memory, CPU etc) than a type of monitoring?
+- Don't think it's sensible to squeeze in ePPing here
+  
+
+* Other
+- As previously stated, will be very busy with courses
+  - Need to finish examination task for research ethics this week
+    - Invovles writing reserach plan and letter with information to participants (+reflections) on "your" reserach project
+    - Can maybe use scenario of deploying ePPing at ISP?
+  - Also need to prepare data set for statistics course (merge + CSV format)
+

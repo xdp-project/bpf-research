@@ -1,0 +1,53 @@
+#+TITLE: Progress update 2022-06-13
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil 
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Overview
+- Have spent a fair amount of time trying to refactor ePPing to make use of global functions
+  - Think I've got it working now?
+  - Down to about 200k insn
+  - Still some additional fixes required before ready for Toke to review
+- Worked a bit on updating the ISP and related admin. work
+- Updated SNCNW paper
+
+* ePPing
+- Make parsing packet a global function
+- Had to move one struct to a PER_CPU_ARRAY to avoid stack too large
+  - Struct can no longer contain packet pointers
+  - Need to fix FIB lookup (for local filtering)
+
+* ISP
+- Last decided: 2021-09-24
+  - But that was very late, and think it would be nice if we could get it in before the summer
+- Have not really had any more COVID-related delays?
+- Mainly want to discuss the overall project plan and courses
+
+** ISP project plan
+- Have pretty much just added some discussed directions to the short-term plan (before lic)
+  - Integration of ePPing into observability framework
+  - Internet measurement study
+  - Add QUIC
+  - Measure container network latency
+  - Order of these?
+- What to do with old parts on developing system monitoring and performance monitoring tools
+- Whole part after lic was basically on optimization
+  - Is this still relevant, and if so, how does it tie together with my current work
+
+** ISP courses
+- Have 5 courses for next semester (HT22)
+  - CS Colloquium (1.5 ECTS, delayed from this semester)
+  - Peer reviewing in CS (2 ECTS)
+  - Another DISCO seminar course? (4.5 ECTS?)
+  - Litterature study (5 ECTS)
+  - Some course in containerization/virtualization? (2.5 ECTS?)
+- The "open" slots are course in cont./virt. (2.5) and course in ML/optimization (3)
+- How to fill goal matrix for missing/underdetermined courses?
+- Linux kernel hacking course?
+
+* Other
+- Salary ladder 25% point should be reached by now?  
+- The SNCNW conference is later this week, so need to prepare presentation
+- When to start meetings after summer?

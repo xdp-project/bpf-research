@@ -1,0 +1,137 @@
+#+TITLE: Progress update 2022-09-06
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Overview
+- IMC paper rejected  
+- Worked on presentation for RH Brno presentation
+- Gone through some Sigcomm papers
+  - Not much *new* that's relevant for ePPing
+- Think I've discovered issue with TSval/TSecr matching
+- Minor ePPing fixes
+  - Ensure TSval increasing [[https://github.com/xdp-project/bpf-examples/pull/54][PR#54]]
+  - Optionally ignore SYN packets [[https://github.com/xdp-project/bpf-examples/pull/55][PR#55]]
+  - Minor userspace fixes [[https://github.com/xdp-project/bpf-examples/pull/57][PR#57]]
+  - Handle RST without timestamp (WIP)
+- Courses and other stuff
+
+* IMC rejection
+- Main reviewers complained at:
+  - Lackluster performance, limited testing, unclear use cases
+- Shadow TPC complained at:
+  - Lacking novelty
+- Idea was to resubmit paper soon-ish but...
+  - can I really address all these points with "minor" rewrites?
+  - can I really fit it all in a short paper?
+
+* Red Hat Research Day Brno
+- Sent in slides
+  - Similar to the updated ones in sent on the PNL list
+  - Added a couple of minor tweakes based on Simone's comments
+- Presentation is 15/9
+  - Bolaji will also attend
+  - With travel days will be gone 14-16/9
+  - My travel plan to Brno is hilariously bad
+
+* Sigcomm papers
+- Retina - passively monitor traffic at high rates
+  - DPDK based
+  - Largely builds on early discarding non-relevant packets
+  - (e)PPing needs to see every packet within a flow
+- P4 Dart
+  - Simone shared pre-print of this some time ago
+  - Good idea for detecting stale timestamp entries
+  - Ignore SYN packets to handle SYN-floods - added as option for ePPing
+
+** How P4 Dart discards stale timestamps
+- Keeps window of outstanding packets per flow
+  - Track last seen SEQ and ACK in reverse
+  - If any timestamp has lower eACK than last seen ACK -> safe to discard
+- For ePPing we could track outstanding TSvals
+  - Need to add last seen TSecr in reverse direction
+  - Any timestamp with TSval <= last seen TSecr can be deleted
+  - Faster and safer than guessing based on RTT
+  - ...but periodical cleanup process slow anyways
+
+* Issues with TSval/TSecr matching
+- RFC 7323 algorithm for how TSvals are echoed:
+  #+BEGIN_SRC c
+  if (SEG.TSval > TS.Recent && SEG.SEQ <= Last.ACK.sent)
+      TS.Recent = SEQ.TSval;
+  #+END_SRC
+- Have discovered 4 scenarios where matching first TSval with first TSecr may produce incorrect RTT
+
+** Retransmission shorter than TSval update rate
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220906/TSval_RTTerr_retrans.drawio.png]]
+- Could be solved by tracking retransmissions
+   
+** First TSecr is lost
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/20220906/TSval_RTTerr_lostTSecr.drawio.png]]
+- Maybe not an issue?
+   
+** TSval updated between ACKs
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/20220906/TSval_RTTerr_unsync_update.drawio.png]]
+- This one has me very concerened
+
+** Start monitoring in the middle of a flow
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/20220906/TSval_RTTerr_missStart.drawio.png]]
+- Could be solved by waiting for first change in TSval before timestamping   
+  
+* ePPing
+- Been writing down some different idea for how to aggregate samples
+- Have not heard any more from Danish ISP or LibreQoS guys
+- Made some smaller fixes
+
+** Ensure new TSval is increasing
+- Check for duplicate TSval was simply TSval != last-seen-TSval
+- Reordered packets could cause large issues with this check
+  - Ex. packets arriving with TS=1, TS=2, TS=1, TS=2...
+  - Mainly issue if RTT < 1ms (otherwise key-collision will block new entry)
+- Fix by requiring TSval > last-seen-TSval (considering wrap-around)
+
+** Option to ignore SYN-packets
+- Currently ePPing vulnerable to SYN-flood
+  - ePPing will open flow state for every SYN - SYN-ACK pair
+  - Due to lack of FIN/RST, will only close on timing out (5 min)
+- Easy solution (stolen from P4 Dart)
+  - Ignore SYN-packets
+  - Miss RTTs during initial handshake
+- Made it optional to skip SYN (not skipped by default)
+- Alternative harder solution
+  - Do proper TCP state tracking (detect full 3-way handshake)
+  - Protocol specific
+  - Still needs to keep flow state before handshake is complete...
+
+** Minor userspace fixes
+- Fixed clsact qdisc not beeing cleaned up if running tc ingress
+- Added more descriptive/suggestive error message if XDP fails
+- Close bpf_object on shutdown/error
+  - Unsure if this is needed?
+
+** Handle RST without timestamps
+- ePPing normally ignores TCP packets without timestamps
+  - Exit early to save performance
+- RST packets (for flow that had TCP timestamps) may not have TCP timestamps
+  - Could fail automatically cleaning up some flows (if ended with RST without timestamp)
+  - Would eventually time out (5 min)
+- Allow RST packets to be processed as normal even if they lack timestamps
+  
+* Courses
+- CS Colloquium (1.5 ECTS)
+- Peer reviewing in CS (2 ECTS)
+- Litterature study (5 ECTS)
+- Linux kernel programming (7.5 ECTS)
+  - Still no announcement/registration?
+
+* Other
+- ISP update was accepted  
+- Salary ladder 25% point - reminder
+- DAMI workshop 13/9 (unsure if going - close to Brno journey)
+- eBPF summit 28-29/9

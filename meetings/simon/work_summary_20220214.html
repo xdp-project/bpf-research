@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-02-14</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-02-14</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-02-21 mån 09:19</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org0aee10a">1. PPing</a></li>
+<li><a href="#/slide-orgeef35a4">2. Pinning packet processing to single core</a>
+<ul>
+<li><a href="#/slide-org72bef53">2.1. No pinning - single flow</a></li>
+<li><a href="#/slide-org70d5534">2.2. No pinning - 1000 flows</a></li>
+<li><a href="#/slide-org42cace5">2.3. Traffic pinned, PPing pinned diff - single flow</a></li>
+<li><a href="#/slide-org0308de1">2.4. Traffic pinned, PPing pinned diff - 1000 flows</a></li>
+<li><a href="#/slide-orgdef88f7">2.5. Traffic pinned, PPing pinned same - single flow</a></li>
+<li><a href="#/slide-orgc858dc2">2.6. Traffic pinned, PPing pinned same - 1000 flows</a></li>
+<li><a href="#/slide-org0fee232">2.7. No RTT events - 1 + 1000 flows</a></li>
+<li><a href="#/slide-orgc758d5e">2.8. No RTT events, PERCPU maps - 1 + 1000 flows</a></li>
+<li><a href="#/slide-org55af058">2.9. No RTT events, minimal logic - 1 + 1000 flows</a></li>
+<li><a href="#/slide-orgd111fda">2.10. Dummy BPF progs - 1 + 1000 flows</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org6fb5e8a">3. Time to discuss</a>
+<ul>
+<li><a href="#/slide-orgad50195">3.1. What is the main use case for ePPing?</a></li>
+<li><a href="#/slide-orgbf8c9bd">3.2. How to move forward?</a></li>
+<li><a href="#/slide-org88b39ef">3.3. How to manage performance under heavy load?</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org4ad99b1">4. CPU spikes caused by writing large amounts of data to disk</a>
+<ul>
+<li><a href="#/slide-org5050197">4.1. CPU spikes due to disk I/O</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org9e4a823">5. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org0aee10a">
+<h2 id="org0aee10a"><span class="section-number-2">1</span> PPing</h2>
+<ul>
+<li>Done tests with pinning traffic to single core
+<ul>
+<li>Idea is to make the middle machine (where PPing runs) the bottleneck</li>
+<li>Tests show decreased throughput for both PPing and ePPing</li>
+<li>Test results show very poor results for ePPing with larger number of flows
+<ul>
+<li>Done some quick tests to see if ePPing could easily be optimized, but they've been largely negative so far</li>
+
+</ul></li>
+
+</ul></li>
+<li>Discovered some spikes in ePPing performance related to kernel flushing dirty pages to disk</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgeef35a4">
+<h2 id="orgeef35a4"><span class="section-number-2">2</span> Pinning packet processing to single core</h2>
+<ul>
+<li>Sets a single rx queue and pin all relevant IRQs to single CPU</li>
+<li>Tested different ways of pinning PPing
+<ul>
+<li>Not pinning PPing</li>
+<li>Pinning PPing to same core as irqs</li>
+<li>Pinning PPing to different core than irqs</li>
+
+</ul></li>
+<li>The good news:
+<ul>
+<li>(e)PPing now has a measurable impact on throughput</li>
+<li>For low number of flows ePPing has much lower overhead than PPing</li>
+
+</ul></li>
+<li>The bad news:
+<ul>
+<li>At high number of flows (&gt; 100) ePPing is worse than PPing</li>
+<li>Even without sending RTT reports ePPing overhead is considerable</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org72bef53">
+<h3 id="org72bef53"><span class="section-number-3">2.1</span> No pinning - single flow</h3>
+
+<div id="org8c305ba" class="figure">
+<p><img src="./images/20220207/all_cores_cpu_1_streams.png" alt="all_cores_cpu_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org1ffbf6b" class="figure">
+<p><img src="./images/20220207/all_cores_network_1_streams.png" alt="all_cores_network_1_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org70d5534">
+<h3 id="org70d5534"><span class="section-number-3">2.2</span> No pinning - 1000 flows</h3>
+
+<div id="org18f5f8f" class="figure">
+<p><img src="./images/20220207/all_cores_cpu_1000_streams.png" alt="all_cores_cpu_1000_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org4bdcb47" class="figure">
+<p><img src="./images/20220207/all_cores_network_1000_streams.png" alt="all_cores_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+
+</section>
+<section id="slide-org42cace5">
+<h3 id="org42cace5"><span class="section-number-3">2.3</span> Traffic pinned, PPing pinned diff - single flow</h3>
+
+<div id="orgdf10e22" class="figure">
+<p><img src="./images/20220207/pin_different_cpu_1_streams.png" alt="pin_different_cpu_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org8c679ca" class="figure">
+<p><img src="./images/20220207/pin_different_network_1_streams.png" alt="pin_different_network_1_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org0308de1">
+<h3 id="org0308de1"><span class="section-number-3">2.4</span> Traffic pinned, PPing pinned diff - 1000 flows</h3>
+
+<div id="orge2bf8a1" class="figure">
+<p><img src="./images/20220207/pin_different_cpu_1000_streams.png" alt="pin_different_cpu_1000_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org44f45a4" class="figure">
+<p><img src="./images/20220207/pin_different_network_1000_streams.png" alt="pin_different_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+
+</section>
+<section id="slide-orgdef88f7">
+<h3 id="orgdef88f7"><span class="section-number-3">2.5</span> Traffic pinned, PPing pinned same - single flow</h3>
+
+<div id="org8cd1154" class="figure">
+<p><img src="./images/20220207/pin_same_cpu_1_streams.png" alt="pin_same_cpu_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org699c955" class="figure">
+<p><img src="./images/20220207/pin_same_network_1_streams.png" alt="pin_same_network_1_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orgc858dc2">
+<h3 id="orgc858dc2"><span class="section-number-3">2.6</span> Traffic pinned, PPing pinned same - 1000 flows</h3>
+
+<div id="org9bb5a8c" class="figure">
+<p><img src="./images/20220207/pin_same_cpu_1000_streams.png" alt="pin_same_cpu_1000_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org3e90f86" class="figure">
+<p><img src="./images/20220207/pin_same_network_1000_streams.png" alt="pin_same_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+
+</section>
+<section id="slide-org0fee232">
+<h3 id="org0fee232"><span class="section-number-3">2.7</span> No RTT events - 1 + 1000 flows</h3>
+
+<div id="org982d52d" class="figure">
+<p><img src="./images/20220207/no_rtt_events_network_1_streams.png" alt="no_rtt_events_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org3e1ebea" class="figure">
+<p><img src="./images/20220207/no_rtt_events_network_1000_streams.png" alt="no_rtt_events_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+
+</section>
+<section id="slide-orgc758d5e">
+<h3 id="orgc758d5e"><span class="section-number-3">2.8</span> No RTT events, PERCPU maps - 1 + 1000 flows</h3>
+
+<div id="org6f800ec" class="figure">
+<p><img src="./images/20220214/percpu_maps_network_1_streams.png" alt="percpu_maps_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="orgd539041" class="figure">
+<p><img src="./images/20220214/percpu_maps_network_1000_streams.png" alt="percpu_maps_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+
+</section>
+<section id="slide-org55af058">
+<h3 id="org55af058"><span class="section-number-3">2.9</span> No RTT events, minimal logic - 1 + 1000 flows</h3>
+
+<div id="org92311a9" class="figure">
+<p><img src="./images/20220214/min_epping_network_1_streams.png" alt="min_epping_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org5381e13" class="figure">
+<p><img src="./images/20220214/min_epping_network_1000_streams.png" alt="min_epping_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orgd111fda">
+<h3 id="orgd111fda"><span class="section-number-3">2.10</span> Dummy BPF progs - 1 + 1000 flows</h3>
+
+<div id="org5684cf2" class="figure">
+<p><img src="./images/20220214/dummy_network_1_streams.png" alt="dummy_network_1_streams.png" style="float:left; width: 750px;" />
+</p>
+</div>
+
+
+<div id="org9879ccb" class="figure">
+<p><img src="./images/20220214/dummy_network_1000_streams.png" alt="dummy_network_1000_streams.png" style="float:right; width: 750px;" />
+</p>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org6fb5e8a">
+<h2 id="org6fb5e8a"><span class="section-number-2">3</span> Time to discuss</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+</section>
+<section id="slide-orgad50195">
+<h3 id="orgad50195"><span class="section-number-3">3.1</span> What is the main use case for ePPing?</h3>
+<ul>
+<li>For evalutation to be interesting, should be related to real world use cases</li>
+<li>If running on end-host, why not just fetch RTTs from kernel instead?</li>
+<li>Most middleboxes likely use DPDK for improving performance, for which ePPing won't work(?)</li>
+
+</ul>
+
+</section>
+<section id="slide-orgbf8c9bd">
+<h3 id="orgbf8c9bd"><span class="section-number-3">3.2</span> How to move forward?</h3>
+<ul>
+<li>I find this performance very disappointing</li>
+<li>Already way behind schedule</li>
+<li>See two fundamentally different ways forward
+<ul>
+<li>Cut the losses and move on
+<ul>
+<li>Try write paper on current state of ePPing</li>
+<li>Future work on ePPing unlikely</li>
+
+</ul></li>
+<li>Try to fix ePPing
+<ul>
+<li>Invest more time in investigating performance issues and modify ePPing to address them</li>
+<li>May allow for future work with ex. use case studies or extending ePPing</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org88b39ef">
+<h3 id="org88b39ef"><span class="section-number-3">3.3</span> How to manage performance under heavy load?</h3>
+<ul>
+<li>Limited update rate of TCP timestamps
+<ul>
+<li>More flows -&gt; more timestamps to match -&gt; more load</li>
+
+</ul></li>
+<li>Currently have per-flow rate limit sampling
+<ul>
+<li>Suffers the same issue of more flows -&gt; more samples</li>
+
+</ul></li>
+
+<li>Limit number of flows?
+<ul>
+<li>Indirectly done via limit of flow state map</li>
+
+</ul></li>
+<li>Limit information gathered per flow?
+<ul>
+<li>Currently done in time domain with rate limit</li>
+
+</ul></li>
+<li>Employ some much more sophisticated sampling strategy based on statistics and information theory etc?</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org4ad99b1">
+<h2 id="org4ad99b1"><span class="section-number-2">4</span> CPU spikes caused by writing large amounts of data to disk</h2>
+<ul>
+<li>Noticed some very periodical spikes in CPU utalization for ePPing at 1k flows</li>
+<li>Even with packet processing and ePPing pinned to single core, CPU utalization &gt; 100%</li>
+<li>Turned out to be kernel flushing dirty pages to disk
+<ul>
+<li>Occurs for PPing as well, but less noticle due to it writing ~20k reports/s vs 120k reports/s for ePPing at 1k flows</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org5050197">
+<h3 id="org5050197"><span class="section-number-3">4.1</span> CPU spikes due to disk I/O</h3>
+
+<div id="orgc304aa4" class="figure">
+<p><img src="./images/20220207/cpu_spikes.png" alt="cpu_spikes.png" style="width: 800px;" />
+</p>
+</div>
+
+
+<div id="org42fa983" class="figure">
+<p><img src="./images/20220207/io_spikes.png" alt="io_spikes.png" style="width: 800px;" />
+</p>
+</div>
+
+
+<div id="org02ba013" class="figure">
+<p><img src="./images/20220207/memory_spikes.png" alt="memory_spikes.png" style="width: 800px;" />
+</p>
+</div>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org9e4a823">
+<h2 id="org9e4a823"><span class="section-number-2">5</span> Other</h2>
+<ul>
+<li>Will spend a lot of time on courses the next couple of months
+<ul>
+<li>Data plane programming: 17% until 1/6</li>
+<li>Research ethics: ~40% until 11/3</li>
+<li>Statistical methods: ~53% between 28/2 - 28/3</li>
+
+</ul></li>
+<li>Leaves between 23% to -30% for other PhD work (including ePPing)
+<ul>
+<li>And the one day I have this week I'll likely have to spend on the DISCO reading course</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

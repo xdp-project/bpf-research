@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-09-06</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-09-06</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-09-06 tis 17:14</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org01b6027">1. Overview</a></li>
+<li><a href="#/slide-org6d1e43e">2. IMC rejection</a></li>
+<li><a href="#/slide-orgf5b0d2c">3. Red Hat Research Day Brno</a></li>
+<li><a href="#/slide-org4015c85">4. Sigcomm papers</a>
+<ul>
+<li><a href="#/slide-org4494154">4.1. How P4 Dart discards stale timestamps</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org3feac2f">5. Issues with TSval/TSecr matching</a>
+<ul>
+<li><a href="#/slide-orgac8f0f9">5.1. Retransmission shorter than TSval update rate</a></li>
+<li><a href="#/slide-org9dba658">5.2. First TSecr is lost</a></li>
+<li><a href="#/slide-org26922a6">5.3. TSval updated between ACKs</a></li>
+<li><a href="#/slide-orge545222">5.4. Start monitoring in the middle of a flow</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org02f8814">6. ePPing</a>
+<ul>
+<li><a href="#/slide-orge1a298c">6.1. Ensure new TSval is increasing</a></li>
+<li><a href="#/slide-org3f92dbf">6.2. Option to ignore SYN-packets</a></li>
+<li><a href="#/slide-orga23f4ed">6.3. Minor userspace fixes</a></li>
+<li><a href="#/slide-orgcd0a612">6.4. Handle RST without timestamps</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org5deba72">7. Courses</a></li>
+<li><a href="#/slide-org44be5cc">8. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org01b6027">
+<h2 id="org01b6027"><span class="section-number-2">1</span> Overview</h2>
+<ul>
+<li>IMC paper rejected</li>
+<li>Worked on presentation for RH Brno presentation</li>
+<li>Gone through some Sigcomm papers
+<ul>
+<li>Not much <b>new</b> that's relevant for ePPing</li>
+
+</ul></li>
+<li>Think I've discovered issue with TSval/TSecr matching</li>
+<li>Minor ePPing fixes
+<ul>
+<li>Ensure TSval increasing <a href="https://github.com/xdp-project/bpf-examples/pull/54">PR#54</a></li>
+<li>Optionally ignore SYN packets <a href="https://github.com/xdp-project/bpf-examples/pull/55">PR#55</a></li>
+<li>Minor userspace fixes <a href="https://github.com/xdp-project/bpf-examples/pull/57">PR#57</a></li>
+<li>Handle RST without timestamp (WIP)</li>
+
+</ul></li>
+<li>Courses and other stuff</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org6d1e43e">
+<h2 id="org6d1e43e"><span class="section-number-2">2</span> IMC rejection</h2>
+<ul>
+<li>Main reviewers complained at:
+<ul>
+<li>Lackluster performance, limited testing, unclear use cases</li>
+
+</ul></li>
+<li>Shadow TPC complained at:
+<ul>
+<li>Lacking novelty</li>
+
+</ul></li>
+<li>Idea was to resubmit paper soon-ish but&#x2026;
+<ul>
+<li>can I really address all these points with "minor" rewrites?</li>
+<li>can I really fit it all in a short paper?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf5b0d2c">
+<h2 id="orgf5b0d2c"><span class="section-number-2">3</span> Red Hat Research Day Brno</h2>
+<ul>
+<li>Sent in slides
+<ul>
+<li>Similar to the updated ones in sent on the PNL list</li>
+<li>Added a couple of minor tweakes based on Simone's comments</li>
+
+</ul></li>
+<li>Presentation is 15/9
+<ul>
+<li>Bolaji will also attend</li>
+<li>With travel days will be gone 14-16/9</li>
+<li>My travel plan to Brno is hilariously bad</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org4015c85">
+<h2 id="org4015c85"><span class="section-number-2">4</span> Sigcomm papers</h2>
+<ul>
+<li>Retina - passively monitor traffic at high rates
+<ul>
+<li>DPDK based</li>
+<li>Largely builds on early discarding non-relevant packets</li>
+<li>(e)PPing needs to see every packet within a flow</li>
+
+</ul></li>
+<li>P4 Dart
+<ul>
+<li>Simone shared pre-print of this some time ago</li>
+<li>Good idea for detecting stale timestamp entries</li>
+<li>Ignore SYN packets to handle SYN-floods - added as option for ePPing</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org4494154">
+<h3 id="org4494154"><span class="section-number-3">4.1</span> How P4 Dart discards stale timestamps</h3>
+<ul>
+<li>Keeps window of outstanding packets per flow
+<ul>
+<li>Track last seen SEQ and ACK in reverse</li>
+<li>If any timestamp has lower eACK than last seen ACK -&gt; safe to discard</li>
+
+</ul></li>
+<li>For ePPing we could track outstanding TSvals
+<ul>
+<li>Need to add last seen TSecr in reverse direction</li>
+<li>Any timestamp with TSval &lt;= last seen TSecr can be deleted</li>
+<li>Faster and safer than guessing based on RTT</li>
+<li>&#x2026;but periodical cleanup process slow anyways</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org3feac2f">
+<h2 id="org3feac2f"><span class="section-number-2">5</span> Issues with TSval/TSecr matching</h2>
+<ul>
+<li><p>
+RFC 7323 algorithm for how TSvals are echoed:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-c" ><code trim><span style="color: #a020f0;">if</span> (SEG.TSval &gt; TS.Recent &amp;&amp; SEG.SEQ &lt;= Last.ACK.sent)
+    TS.Recent = SEQ.TSval;
+</code></pre>
+</div></li>
+<li>Have discovered 4 scenarios where matching first TSval with first TSecr may produce incorrect RTT</li>
+
+</ul>
+
+</section>
+<section id="slide-orgac8f0f9">
+<h3 id="orgac8f0f9"><span class="section-number-3">5.1</span> Retransmission shorter than TSval update rate</h3>
+
+<div id="orgb611f61" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_retrans.drawio.png" alt="TSval_RTTerr_retrans.drawio.png" style="width: 1400px;" />
+</p>
+</div>
+<ul>
+<li>Could be solved by tracking retransmissions</li>
+
+</ul>
+
+</section>
+<section id="slide-org9dba658">
+<h3 id="org9dba658"><span class="section-number-3">5.2</span> First TSecr is lost</h3>
+
+<div id="org9b29cfe" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_lostTSecr.drawio.png" alt="TSval_RTTerr_lostTSecr.drawio.png" style="width: 700px;" />
+</p>
+</div>
+<ul>
+<li>Maybe not an issue?</li>
+
+</ul>
+
+</section>
+<section id="slide-org26922a6">
+<h3 id="org26922a6"><span class="section-number-3">5.3</span> TSval updated between ACKs</h3>
+
+<div id="orgb2f693d" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_unsync_update.drawio.png" alt="TSval_RTTerr_unsync_update.drawio.png" style="width: 700px;" />
+</p>
+</div>
+<ul>
+<li>This one has me very concerened</li>
+
+</ul>
+
+</section>
+<section id="slide-orge545222">
+<h3 id="orge545222"><span class="section-number-3">5.4</span> Start monitoring in the middle of a flow</h3>
+
+<div id="orgb2a354d" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_missStart.drawio.png" alt="TSval_RTTerr_missStart.drawio.png" style="width: 700px;" />
+</p>
+</div>
+<ul>
+<li>Could be solved by waiting for first change in TSval before timestamping</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org02f8814">
+<h2 id="org02f8814"><span class="section-number-2">6</span> ePPing</h2>
+<ul>
+<li>Been writing down some different idea for how to aggregate samples</li>
+<li>Have not heard any more from Danish ISP or LibreQoS guys</li>
+<li>Made some smaller fixes</li>
+
+</ul>
+
+</section>
+<section id="slide-orge1a298c">
+<h3 id="orge1a298c"><span class="section-number-3">6.1</span> Ensure new TSval is increasing</h3>
+<ul>
+<li>Check for duplicate TSval was simply TSval != last-seen-TSval</li>
+<li>Reordered packets could cause large issues with this check
+<ul>
+<li>Ex. packets arriving with TS=1, TS=2, TS=1, TS=2&#x2026;</li>
+<li>Mainly issue if RTT &lt; 1ms (otherwise key-collision will block new entry)</li>
+
+</ul></li>
+<li>Fix by requiring TSval &gt; last-seen-TSval (considering wrap-around)</li>
+
+</ul>
+
+</section>
+<section id="slide-org3f92dbf">
+<h3 id="org3f92dbf"><span class="section-number-3">6.2</span> Option to ignore SYN-packets</h3>
+<ul>
+<li>Currently ePPing vulnerable to SYN-flood
+<ul>
+<li>ePPing will open flow state for every SYN - SYN-ACK pair</li>
+<li>Due to lack of FIN/RST, will only close on timing out (5 min)</li>
+
+</ul></li>
+<li>Easy solution (stolen from P4 Dart)
+<ul>
+<li>Ignore SYN-packets</li>
+<li>Miss RTTs during initial handshake</li>
+
+</ul></li>
+<li>Made it optional to skip SYN (not skipped by default)</li>
+<li>Alternative harder solution
+<ul>
+<li>Do proper TCP state tracking (detect full 3-way handshake)</li>
+<li>Protocol specific</li>
+<li>Still needs to keep flow state before handshake is complete&#x2026;</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orga23f4ed">
+<h3 id="orga23f4ed"><span class="section-number-3">6.3</span> Minor userspace fixes</h3>
+<ul>
+<li>Fixed clsact qdisc not beeing cleaned up if running tc ingress</li>
+<li>Added more descriptive/suggestive error message if XDP fails</li>
+<li>Close bpf_object on shutdown/error
+<ul>
+<li>Unsure if this is needed?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgcd0a612">
+<h3 id="orgcd0a612"><span class="section-number-3">6.4</span> Handle RST without timestamps</h3>
+<ul>
+<li>ePPing normally ignores TCP packets without timestamps
+<ul>
+<li>Exit early to save performance</li>
+
+</ul></li>
+<li>RST packets (for flow that had TCP timestamps) may not have TCP timestamps
+<ul>
+<li>Could fail automatically cleaning up some flows (if ended with RST without timestamp)</li>
+<li>Would eventually time out (5 min)</li>
+
+</ul></li>
+<li>Allow RST packets to be processed as normal even if they lack timestamps</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org5deba72">
+<h2 id="org5deba72"><span class="section-number-2">7</span> Courses</h2>
+<ul>
+<li>CS Colloquium (1.5 ECTS)</li>
+<li>Peer reviewing in CS (2 ECTS)</li>
+<li>Litterature study (5 ECTS)</li>
+<li>Linux kernel programming (7.5 ECTS)
+<ul>
+<li>Still no announcement/registration?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org44be5cc">
+<h2 id="org44be5cc"><span class="section-number-2">8</span> Other</h2>
+<ul>
+<li>ISP update was accepted</li>
+<li>Salary ladder 25% point - reminder</li>
+<li>DAMI workshop 13/9 (unsure if going - close to Brno journey)</li>
+<li>eBPF summit 28-29/9</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
