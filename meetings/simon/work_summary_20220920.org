@@ -1,0 +1,113 @@
+#+TITLE: Progress update 2022-09-20
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Overview
+- Red Hat Research Day in Brno
+- Issues with TCP timestamp matching
+  - I've now experimentally verified them
+  - How to proceed?
+- Minor ePPing fixes still pending review
+- Courses and other stuff
+
+* Red Hat Research Day Brno
+- Took up 3 days last week
+- Think presentation itself went alright
+  - Screwed up time management
+  - Decent amount of sensible questions afterwards
+- While some other talks were interesting, not relevant for ePPing
+- Presentations were recorded and will be published
+- Networking
+  - One Red Hatter was interested in trying ePPing out, had not clear use case
+  - Talked with some other people about eBPF, but not so much about ePPing
+
+* Issues with TSval/TSecr matching
+- RFC 7323 algorithm for how TSvals are echoed:
+  #+BEGIN_SRC c
+  if (SEG.TSval > TS.Recent && SEG.SEQ <= Last.ACK.sent)
+      TS.Recent = SEQ.TSval;
+  #+END_SRC
+- Have discovered 4 scenarios where matching first TSval with first TSecr may produce incorrect RTT
+- Have experimentally verified the two most concerning ones
+
+** Retransmission shorter than TSval update rate
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220906/TSval_RTTerr_retrans.drawio.png]]
+
+*** Example from packet trace
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220920/retrans_example_flowview_annotated.png]]
+
+*** Example impact on RTTs
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220920/retrans_rtts_comparison.png]]
+        
+*** Comments
+- Can only occur if RTT < TCP timestamp update rate
+- Error could be upwards of TCP timestamp update rate
+- TCP retransmission ambiguty, we cannot know the correct RTT
+  - Need to discard sample
+- To solve need to track retransmissions and clear related TSval
+
+** TSval updated between ACKs
+#+ATTR_HTML: :style width: 600px;
+[[file:./images/20220920/unsync_update_stretch.drawio.png]]
+
+*** Example from packet trace
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220920/unsync_example_flowview_annotated.png]]
+
+*** Example impact on RTTs
+#+ATTR_HTML: :style width: 1400px;
+[[file:./images/20220920/unsync_rtts_comparison.png]]
+
+*** Comments    
+- May occur any time there's delayed ACKs
+- Error could be upwards of TCP timestamp update rate
+- Don't see any way to solve without tracking seq + ACK for each TSval...
+  - Seems more complicated than just matching on seq/ACK to begin with
+
+** First TSecr is lost
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/20220906/TSval_RTTerr_lostTSecr.drawio.png]]
+- Don't think this is a big issue
+- Consistent with how it would behave for delayed ACK
+   
+** Start monitoring in the middle of a flow
+#+ATTR_HTML: :style width: 700px;
+[[file:./images/20220906/TSval_RTTerr_missStart.drawio.png]]
+- Limited to first RTT of flow
+- Could be solved by waiting for first change in TSval before timestamping   
+  
+* ePPing
+- Heard from one of the LibreQoS guys today
+  - Wanted help with adding IPv6 support to xdp-cpumap-tc (declined)
+  - Still working on intergrating ePPing apparently
+- Minor fixes from previous meeting
+  - Ensure TSval increasing [[https://github.com/xdp-project/bpf-examples/pull/54][PR#54]]
+  - Optionally ignore SYN packets [[https://github.com/xdp-project/bpf-examples/pull/55][PR#55]]
+  - Minor userspace fixes [[https://github.com/xdp-project/bpf-examples/pull/57][PR#57]]
+  - Handle RST without timestamp (WIP)
+- Has not heard anything from Toke, will ping him    
+  
+* Courses
+- CS Colloquium (1.5 ECTS)
+- Peer reviewing in CS (2 ECTS)
+- Litterature study (5 ECTS)
+- Linux kernel programming (7.5 ECTS)
+  - Likely LP5, apparently some issues with finding time for Per
+
+    
+- Except kernel course, I can do the courses "whenever"
+
+* Other
+- Red Hat report  
+- ISP update was accepted
+- Salary ladder 25% point - reminder
+
+- Attended first half of DAMI workshop
+- Plan to go through LPC eBPF track
+- eBPF summit 28-29/9  

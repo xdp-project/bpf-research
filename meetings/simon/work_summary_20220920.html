@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-09-20</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-09-20</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-09-20 tis 14:57</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org4bb011a">1. Overview</a></li>
+<li><a href="#/slide-orgf79514f">2. Red Hat Research Day Brno</a></li>
+<li><a href="#/slide-orgc9caf3c">3. Issues with TSval/TSecr matching</a>
+<ul>
+<li><a href="#/slide-org25e2b5f">3.1. Retransmission shorter than TSval update rate</a>
+<ul>
+<li><a href="#/slide-org3d9d170">3.1.1. Example from packet trace</a></li>
+<li><a href="#/slide-org3cdf902">3.1.2. Example impact on RTTs</a></li>
+<li><a href="#/slide-org7763b53">3.1.3. Comments</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org961bc15">3.2. TSval updated between ACKs</a>
+<ul>
+<li><a href="#/slide-org2bb2e74">3.2.1. Example from packet trace</a></li>
+<li><a href="#/slide-org1d58695">3.2.2. Example impact on RTTs</a></li>
+<li><a href="#/slide-org2c7aa49">3.2.3. Comments</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgfb994e3">3.3. First TSecr is lost</a></li>
+<li><a href="#/slide-org544632a">3.4. Start monitoring in the middle of a flow</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgf6ad896">4. ePPing</a></li>
+<li><a href="#/slide-org99193bf">5. Courses</a></li>
+<li><a href="#/slide-org0a64c2c">6. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-org4bb011a">
+<h2 id="org4bb011a"><span class="section-number-2">1</span> Overview</h2>
+<ul>
+<li>Red Hat Research Day in Brno</li>
+<li>Issues with TCP timestamp matching
+<ul>
+<li>I've now experimentally verified them</li>
+<li>How to proceed?</li>
+
+</ul></li>
+<li>Minor ePPing fixes still pending review</li>
+<li>Courses and other stuff</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf79514f">
+<h2 id="orgf79514f"><span class="section-number-2">2</span> Red Hat Research Day Brno</h2>
+<ul>
+<li>Took up 3 days last week</li>
+<li>Think presentation itself went alright
+<ul>
+<li>Screwed up time management</li>
+<li>Decent amount of sensible questions afterwards</li>
+
+</ul></li>
+<li>While some other talks were interesting, not relevant for ePPing</li>
+<li>Presentations were recorded and will be published</li>
+<li>Networking
+<ul>
+<li>One Red Hatter was interested in trying ePPing out, had not clear use case</li>
+<li>Talked with some other people about eBPF, but not so much about ePPing</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgc9caf3c">
+<h2 id="orgc9caf3c"><span class="section-number-2">3</span> Issues with TSval/TSecr matching</h2>
+<ul>
+<li><p>
+RFC 7323 algorithm for how TSvals are echoed:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-c" ><code trim><span style="color: #a020f0;">if</span> (SEG.TSval &gt; TS.Recent &amp;&amp; SEG.SEQ &lt;= Last.ACK.sent)
+    TS.Recent = SEQ.TSval;
+</code></pre>
+</div></li>
+<li>Have discovered 4 scenarios where matching first TSval with first TSecr may produce incorrect RTT</li>
+<li>Have experimentally verified the two most concerning ones</li>
+
+</ul>
+
+</section>
+<section id="slide-org25e2b5f">
+<h3 id="org25e2b5f"><span class="section-number-3">3.1</span> Retransmission shorter than TSval update rate</h3>
+
+<div id="orge3f2ef2" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_retrans.drawio.png" alt="TSval_RTTerr_retrans.drawio.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org3d9d170">
+<h4 id="org3d9d170"><span class="section-number-4">3.1.1</span> Example from packet trace</h4>
+
+<div id="org01888af" class="figure">
+<p><img src="./images/20220920/retrans_example_flowview_annotated.png" alt="retrans_example_flowview_annotated.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org3cdf902">
+<h4 id="org3cdf902"><span class="section-number-4">3.1.2</span> Example impact on RTTs</h4>
+
+<div id="orgb127c7a" class="figure">
+<p><img src="./images/20220920/retrans_rtts_comparison.png" alt="retrans_rtts_comparison.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org7763b53">
+<h4 id="org7763b53"><span class="section-number-4">3.1.3</span> Comments</h4>
+<ul>
+<li>Can only occur if RTT &lt; TCP timestamp update rate</li>
+<li>Error could be upwards of TCP timestamp update rate</li>
+<li>TCP retransmission ambiguty, we cannot know the correct RTT
+<ul>
+<li>Need to discard sample</li>
+
+</ul></li>
+<li>To solve need to track retransmissions and clear related TSval</li>
+
+</ul>
+
+</section>
+<section id="slide-org961bc15">
+<h3 id="org961bc15"><span class="section-number-3">3.2</span> TSval updated between ACKs</h3>
+
+<div id="org10cbc34" class="figure">
+<p><img src="./images/20220920/unsync_update_stretch.drawio.png" alt="unsync_update_stretch.drawio.png" style="width: 600px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org2bb2e74">
+<h4 id="org2bb2e74"><span class="section-number-4">3.2.1</span> Example from packet trace</h4>
+
+<div id="orgae3ddee" class="figure">
+<p><img src="./images/20220920/unsync_example_flowview_annotated.png" alt="unsync_example_flowview_annotated.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org1d58695">
+<h4 id="org1d58695"><span class="section-number-4">3.2.2</span> Example impact on RTTs</h4>
+
+<div id="org40fd3e8" class="figure">
+<p><img src="./images/20220920/unsync_rtts_comparison.png" alt="unsync_rtts_comparison.png" style="width: 1400px;" />
+</p>
+</div>
+
+</section>
+<section id="slide-org2c7aa49">
+<h4 id="org2c7aa49"><span class="section-number-4">3.2.3</span> Comments</h4>
+<ul>
+<li>May occur any time there's delayed ACKs</li>
+<li>Error could be upwards of TCP timestamp update rate</li>
+<li>Don't see any way to solve without tracking seq + ACK for each TSval&#x2026;
+<ul>
+<li>Seems more complicated than just matching on seq/ACK to begin with</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgfb994e3">
+<h3 id="orgfb994e3"><span class="section-number-3">3.3</span> First TSecr is lost</h3>
+
+<div id="orgfe91dfa" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_lostTSecr.drawio.png" alt="TSval_RTTerr_lostTSecr.drawio.png" style="width: 700px;" />
+</p>
+</div>
+<ul>
+<li>Don't think this is a big issue</li>
+<li>Consistent with how it would behave for delayed ACK</li>
+
+</ul>
+
+</section>
+<section id="slide-org544632a">
+<h3 id="org544632a"><span class="section-number-3">3.4</span> Start monitoring in the middle of a flow</h3>
+
+<div id="org812e359" class="figure">
+<p><img src="./images/20220906/TSval_RTTerr_missStart.drawio.png" alt="TSval_RTTerr_missStart.drawio.png" style="width: 700px;" />
+</p>
+</div>
+<ul>
+<li>Limited to first RTT of flow</li>
+<li>Could be solved by waiting for first change in TSval before timestamping</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf6ad896">
+<h2 id="orgf6ad896"><span class="section-number-2">4</span> ePPing</h2>
+<ul>
+<li>Heard from one of the LibreQoS guys today
+<ul>
+<li>Wanted help with adding IPv6 support to xdp-cpumap-tc (declined)</li>
+<li>Still working on intergrating ePPing apparently</li>
+
+</ul></li>
+<li>Minor fixes from previous meeting
+<ul>
+<li>Ensure TSval increasing <a href="https://github.com/xdp-project/bpf-examples/pull/54">PR#54</a></li>
+<li>Optionally ignore SYN packets <a href="https://github.com/xdp-project/bpf-examples/pull/55">PR#55</a></li>
+<li>Minor userspace fixes <a href="https://github.com/xdp-project/bpf-examples/pull/57">PR#57</a></li>
+<li>Handle RST without timestamp (WIP)</li>
+
+</ul></li>
+<li>Has not heard anything from Toke, will ping him</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org99193bf">
+<h2 id="org99193bf"><span class="section-number-2">5</span> Courses</h2>
+<ul>
+<li>CS Colloquium (1.5 ECTS)</li>
+<li>Peer reviewing in CS (2 ECTS)</li>
+<li>Litterature study (5 ECTS)</li>
+<li>Linux kernel programming (7.5 ECTS)
+<ul>
+<li>Likely LP5, apparently some issues with finding time for Per</li>
+
+</ul></li>
+
+</ul>
+
+
+<ul>
+<li>Except kernel course, I can do the courses "whenever"</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org0a64c2c">
+<h2 id="org0a64c2c"><span class="section-number-2">6</span> Other</h2>
+<ul>
+<li>Red Hat report</li>
+<li>ISP update was accepted</li>
+<li>Salary ladder 25% point - reminder</li>
+
+<li>Attended first half of DAMI workshop</li>
+<li>Plan to go through LPC eBPF track</li>
+<li>eBPF summit 28-29/9</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>
