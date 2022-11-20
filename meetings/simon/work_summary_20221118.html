@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-11-18</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-11-18</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-11-17 tor 19:31</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orge3d920c">1. Overview</a></li>
+<li><a href="#/slide-org2a8e959">2. LibreQoS</a>
+<ul>
+<li><a href="#/slide-orgd132d0c">2.1. More on the merge of ePPing with xdp-cpumap-tc</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org4070ccf">3. LibreQoS optimizations to ePPing</a>
+<ul>
+<li><a href="#/slide-org170a9e6">3.1. Only run on tc-egress</a></li>
+<li><a href="#/slide-org26659ab">3.2. Only handle TCP traffic</a></li>
+<li><a href="#/slide-orgc529359">3.3. Different report format</a></li>
+<li><a href="#/slide-org196ef45">3.4. Only sip the flow</a></li>
+<li><a href="#/slide-orgacf5ac5">3.5. No userspace daemon, LRU maps</a></li>
+<li><a href="#/slide-org5f0a69d">3.6. Have increased map sizes from 16k to 128k</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orga29bab5">4. Other points we discussed</a></li>
+<li><a href="#/slide-org0bfc84f">5. Interest from Varnish</a></li>
+<li><a href="#/slide-orgba36d8d">6. Other</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orge3d920c">
+<h2 id="orge3d920c"><span class="section-number-2">1</span> Overview</h2>
+<ul>
+<li>Not much progress
+<ul>
+<li>DRIVE, teaching assistance, meetings, following LibreQoS etc.</li>
+
+</ul></li>
+<li>Fixed an issue when ePPing was compiled with LLVM-15</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org2a8e959">
+<h2 id="org2a8e959"><span class="section-number-2">2</span> LibreQoS</h2>
+<ul>
+<li>System that is designed to run on middlebox and help ISPs avoid bufferbloat</li>
+<li>Largely based around CAKE</li>
+<li>Used Kathie's PPing as an optional feature to monitor TCP RTT
+<ul>
+<li>But generally found that it did not work well past 1Gbps</li>
+
+</ul></li>
+<li>They were therefore considering using ePPing as a replacement
+<ul>
+<li>&#x2026;but ended up simply taking parts of the ePPing source code and merging it with their program</li>
+
+</ul></li>
+<li>They now want a "monitor-only" mode, which is basically what ePPing on its own should be able to provide</li>
+
+</ul>
+
+</section>
+<section id="slide-orgd132d0c">
+<h3 id="orgd132d0c"><span class="section-number-3">2.1</span> More on the merge of ePPing with xdp-cpumap-tc</h3>
+<ul>
+<li><a href="https://github.com/xdp-project/xdp-cpumap-tc">xdp-cpumap-tc</a> is a program that is meant to distribute packets to different CPU cores</li>
+<li>They merged ePPing into this program, creating <a href="https://github.com/thebracket/cpumap-pping">cpumap-pping</a>
+<ul>
+<li>One of the main motivations was to avoid the unecessary overhead of parsing the packet multiple times
+<ul>
+<li>But this overhead is likely small compared to all the other work the the programs do</li>
+
+</ul></li>
+<li>There are also some challenges with running multiple XDP programs on the same interface
+<ul>
+<li>But ePPing does not have to run on XDP (and no longer does so by default)</li>
+
+</ul></li>
+
+</ul></li>
+<li>This work was done by Herbert "TheBracket" Wolverson
+<ul>
+<li>He has expressed a preference for this highly specialized approach over trying to get ePPing to function well for their use case</li>
+
+</ul></li>
+<li>Herbert made several tweaks to ePPing-portion to make it better fit their use case</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org4070ccf">
+<h2 id="org4070ccf"><span class="section-number-2">3</span> LibreQoS optimizations to ePPing</h2>
+<ul>
+<li>Only run on tc-egress</li>
+<li>Only handle TCP traffic</li>
+<li>Different report format (collect 60 first samples per customer)</li>
+<li>"Sip the flow", disable pping-component after first 60 samples</li>
+<li>No userspace daemon, maps changed to LRU</li>
+
+</ul>
+
+</section>
+<section id="slide-org170a9e6">
+<h3 id="org170a9e6"><span class="section-number-3">3.1</span> Only run on tc-egress</h3>
+<ul>
+<li>cpumap-pping only seems to run the pping part on egress traffic
+<ul>
+<li>Works because maps are pinned and shared between multiple interfaces</li>
+
+</ul></li>
+<li>It probably makes sense to have a "middlebox" mode for ePPing
+<ul>
+<li>Share state between multiple interfaces</li>
+<li>Only run on ingress XOR egress</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org26659ab">
+<h3 id="org26659ab"><span class="section-number-3">3.2</span> Only handle TCP traffic</h3>
+<ul>
+<li>ePPing only handles TCP traffic by default</li>
+<li>Overhead from ICMP-related code close to non-existant
+<ul>
+<li>Should be compiled away with dead-code elimination</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgc529359">
+<h3 id="orgc529359"><span class="section-number-3">3.3</span> Different report format</h3>
+<ul>
+<li>Does not report individual RTTs, but rather aggregates first N(=60) RTTs from each customer
+<ul>
+<li>ex. {"tc":"1:5", "avg": 2.64, "min": 0.38, "max": 2.39, "median": 2.03, "samples": 12}</li>
+
+</ul></li>
+<li>This report is done whenever a user runs the <a href="https://github.com/thebracket/cpumap-pping/blob/master/src/xdp_pping.c">xdp_pping.c</a> program (funny name as it doesn't use XDP&#x2026;)
+<ul>
+<li>Userspace loops through a per-customer map which contains up to 60 RTT samples (in an array) per customer</li>
+<li>Userspace aggregates these samples to the provided metrics</li>
+
+</ul></li>
+<li>This approach is definitley better than reporting individual RTT values
+<ul>
+<li>But still has to send a lot of RTT values to user space</li>
+<li>Is unable to collect very large amounts of RTT samples</li>
+<li>Collecting in histograms gives less precise metrics, but can efficently aggregate arbitrarily large amount of samples</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org196ef45">
+<h3 id="org196ef45"><span class="section-number-3">3.4</span> Only sip the flow</h3>
+<ul>
+<li>The per-customer buffer of N(=60) RTT values is reset every 30 seconds</li>
+<li>If buffer fills up, will not perform pping part for that customer until buffer resets
+<ul>
+<li>Can do a single lookup of customer RTT buffer, and then avoid all pping-related overhead</li>
+
+</ul></li>
+<li>This apparently lead to better distribution of flows being sampled
+<ul>
+<li>We assume this is because monitoring of customer is quickly disabled, giving other customers a better chance of being included
+<ul>
+<li>But this is not synced with the flow-state map, so some customers may still not be monitored</li>
+
+</ul></li>
+<li>Likely to give terrible distribution within customer (single bulk flow can eat up all RTTs in ~60 ms)</li>
+
+</ul></li>
+<li>It may be worth adding some flow-limit per customer (or IP-prefix) for ePPing
+<ul>
+<li>Could relativly easily be achieved after per-IP-prefix aggregation has been added by simply adding a flow-counter</li>
+
+</ul></li>
+<li>Toke also though it may be interesting to add random chance to sample packet/add flow state</li>
+
+</ul>
+
+</section>
+<section id="slide-orgacf5ac5">
+<h3 id="orgacf5ac5"><span class="section-number-3">3.5</span> No userspace daemon, LRU maps</h3>
+<ul>
+<li>cpumap-pping does not keep a userspace process around after setting up the BPF programs
+<ul>
+<li>The RTT measurements are provided only when user runs xdp_pping.c</li>
+
+</ul></li>
+<li>Uses LRU maps instead of periodically clearing maps
+<ul>
+<li>Avoids overhead from the periodical cleanup</li>
+<li>At high load may get stuck in a churning behavior where it overwrites entries before they're used</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org5f0a69d">
+<h3 id="org5f0a69d"><span class="section-number-3">3.6</span> Have increased map sizes from 16k to 128k</h3>
+<ul>
+<li>A very sensible change, current default of 16k is very small</li>
+<li>In my own testing I've upped the packet map to 64k</li>
+<li>Positive impacts:  
+<ul>
+<li>Larger flow map -&gt; track more concurrent flows</li>
+<li>Larger packet map -&gt; less likely to not be able to timestamp packet</li>
+
+</ul></li>
+<li>Negative impacts
+<ul>
+<li>Requires more memory (not very problematic, in the order of 100 bytes per entry)</li>
+<li>Potentially worse cache performance</li>
+<li>For ePPing the cleanup can get slower (loops through all entries)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orga29bab5">
+<h2 id="orga29bab5"><span class="section-number-2">4</span> Other points we discussed</h2>
+<ul>
+<li>Using hash-indexed array instead of hashmap
+<ul>
+<li>Probably better lookup performance if using Jesper's super fast hash</li>
+<li>Can do lazy expiry (no need for periodical cleanup, just overwrite old entries on collision)</li>
+<li>Collisions more likely, may be unable to track all flows even if few flows with bad luck</li>
+
+</ul></li>
+<li>What functionality should ePPing actually have
+<ul>
+<li>Should it actually track sent packets/bytes, and how should these be used?</li>
+<li>Do we really need to notify about flow opening/closing?</li>
+<li>"Middlebox tcptrace" could be nice, but should maybe be a separate tool</li>
+<li>Maybe best to focus on just latency to make it easier to support various protocols?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org0bfc84f">
+<h2 id="org0bfc84f"><span class="section-number-2">5</span> Interest from Varnish</h2>
+<ul>
+<li>Fredrik and Niklas from Varnished seemed very intresting in using ePPing</li>
+<li>If I understood their use case correctly, they wanted to monitor RTT between their cache and clients
+<ul>
+<li>This could then be used to route clients to closest cache</li>
+
+</ul></li>
+<li>Their current setup can handle 500 Gbps, and working on setup to handle 1 Tbps
+<ul>
+<li>While they want to test ePPing on these devices, it doesn't necessarily have to be able to handle these rates</li>
+<li>Can run on subset of traffic</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgba36d8d">
+<h2 id="orgba36d8d"><span class="section-number-2">6</span> Other</h2>
+<ul>
+<li>Am I really going to do the litterature study and colloqium course this semester?
+<ul>
+<li>If so, when?</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+
+
+</script>
+</body>
+</html>

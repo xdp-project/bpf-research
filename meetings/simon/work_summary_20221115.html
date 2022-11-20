@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Progress update 2022-11-15</title>
+<meta name="author" content="(Simon Sundberg)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Progress update 2022-11-15</h1><h2 class="author">Simon Sundberg</h2><p class="date">Created: 2022-11-20 sön 21:39</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgc2d40e2">1. Only handle TCP traffic</a>
+<ul>
+<li><a href="#/slide-org99ec35e">1.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgee8ecb5">2. "Sip the flow"</a>
+<ul>
+<li><a href="#/slide-org7db86f8">2.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org7da2e8d">3. Per-TC handle "ringbuffer"</a>
+<ul>
+<li><a href="#/slide-org06a45c2">3.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orge059354">4. No userspace daemon</a>
+<ul>
+<li><a href="#/slide-org9576311">4.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org73554e8">5. Only run on tc-egress</a>
+<ul>
+<li><a href="#/slide-org6b5535c">5.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org119a880">6. Map flows to tc-handle</a>
+<ul>
+<li><a href="#/slide-orgc2d30f9">6.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org8b1bd5e">7. Remove a lot of flowstate</a>
+<ul>
+<li><a href="#/slide-org087ee83">7.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orge623be0">8. Change to LRU maps</a>
+<ul>
+<li><a href="#/slide-org1f5e247">8.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org5740663">9. Upped mapsize from 16k to 128k</a>
+<ul>
+<li><a href="#/slide-orgb4bfa3c">9.1. Notes from discussion</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org479a0f1">10. Changed IPv4 prefix</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgc2d40e2">
+<h2 id="orgc2d40e2"><span class="section-number-2">1</span> Only handle TCP traffic</h2>
+<ul>
+<li>What ePPing already does by default</li>
+<li>Overhead from ICMP should be minimal if not tracking ICMP</li>
+<li>Overall code complexity may be a bit higher though - harder to optimize for protocol specific aspects</li>
+
+</ul>
+
+</section>
+<section id="slide-org99ec35e">
+<h3 id="org99ec35e"><span class="section-number-3">1.1</span> Notes from discussion</h3>
+<ul>
+<li>Yes, ICMP code should in practice be compiled out (dead code elimination) if config does not track ICMP</li>
+<li>We should maybe be a bit careful about adding features like ex. TCP retransmission tracking to ePPing
+<ul>
+<li>Keep ePPing focused on network latency for different protocols</li>
+<li>While "middlebox tcptrace" would be nice to have, can be separate project</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgee8ecb5">
+<h2 id="orgee8ecb5"><span class="section-number-2">2</span> "Sip the flow"</h2>
+<ul>
+<li>First hardcoded rate limit to 1000 ms (one sample per second)</li>
+<li>Removed rate limit, instead run at full speed for the first N(=60) samples per customer (tc-handle), and then don't sample at all</li>
+<li>"Refresh" the buffer once every 30s
+<ul>
+<li>While buffer is full the pping part stops tracking the handle until it's refreshed</li>
+
+</ul></li>
+<li>Claims this somehow is much more likely to sample wide variety of flows instead of top producers?
+<ul>
+<li>May better track flows from different customers&#x2026;</li>
+<li>&#x2026;but will likely mainly sample top producer within each customer</li>
+<li>In ePPing we could ex. limit tracking of flows per aggregation IP</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org7db86f8">
+<h3 id="org7db86f8"><span class="section-number-3">2.1</span> Notes from discussion</h3>
+<ul>
+<li>The way cpumap-pping does it does not seem optimal (short burst of RTTs every 30s)</li>
+<li>In cpumap-pping the flowstate map is not synced to this in any way, so may still not be able to track all users (even if it becomes less likely that a single user uses up a lot of flow states)</li>
+<li>May be nice to limit how many flows ePPing can track per IP-subrange
+<ul>
+<li>Could either divide flowmap into per-subrange flowmap by using map-in-map</li>
+<li>Or simply keep a flow counter per IP-subrange, and prevent tracking of new flows if counter &gt;= X
+<ul>
+<li>This should be more flexible (easier to disable/configure, does not waste massive amount of memory)</li>
+
+</ul></li>
+
+</ul></li>
+<li>On a related note, it may be worth considering dropping flowstate once they have no outstanding timestamps
+<ul>
+<li>Would face some issues with some per-flow stats (packet/byte counts, min RTT etc)</li>
+<li>Would allow free up new flow states faster, giving new flows ability to competete</li>
+
+</ul></li>
+<li>We could also do some random chance to track new flow for every packet we see from it
+<ul>
+<li>But this would cause bias towards elephant flows?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org7da2e8d">
+<h2 id="org7da2e8d"><span class="section-number-2">3</span> Per-TC handle "ringbuffer"</h2>
+<ul>
+<li>Stores the first N(=60) RTT samples from a tc-handle in a "ringbuffer"</li>
+<li>Loops through map in userspace and aggregates values (when running xdp_pping.c program)</li>
+<li>Now automatically recycled every 30s</li>
+<li>Sidenote: Think his synchronization guards for rtt_tracker may be busted
+<ul>
+<li>Could add (not overwirte) multiple RTT-values to same slot in data race scenario</li>
+<li>Will multiple packets from same tc-handle ever be processed in parallel?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org06a45c2">
+<h3 id="org06a45c2"><span class="section-number-3">3.1</span> Notes from discussion</h3>
+<ul>
+<li>By directly aggregating in kernel (as we plan to do) we can keep a much higher number of samples</li>
+<li>Only sampling for a very short time and then not tracking anymore has some performance benefits
+<ul>
+<li>Those would be much more limited in ePPing as we would still need to parse packet and potentially look up flow state</li>
+<li>In cpumap-pping it needs to parse packet anyways, so just a lookup of tc-handle</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orge059354">
+<h2 id="orge059354"><span class="section-number-2">4</span> No userspace daemon</h2>
+<ul>
+<li>Instead report RTTs whenever xdp_pping.c is run</li>
+<li>This also used to cleanup maps from userspace (looping through all entries and deleting them)
+<ul>
+<li>No longer necessary for that (relies on LRU maps), only for reporting</li>
+
+</ul></li>
+<li>Could make sense to add this as an option for ePPing (especially if shared across multiple interfaces)
+<ul>
+<li>but what about map cleanup then?</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org9576311">
+<h3 id="org9576311"><span class="section-number-3">4.1</span> Notes from discussion</h3>
+<ul>
+<li>Yes, this would probably be nice to have for ex. the aggregated mode</li>
+<li>Could just have a simple program that once run pulls the maps and reports some aggregated stats (similar to cpumap-pping)</li>
+<li>Cleanup could be solved by either using BPF-timers or having lazy-cleaning (overwrite existing entries on collision)</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org73554e8">
+<h2 id="org73554e8"><span class="section-number-2">5</span> Only run on tc-egress</h2>
+<ul>
+<li>Not running on XDP makes sense if XDP program may be handled by a single core</li>
+<li>If maps are shared between multiple interfaces, it's unecessary to run on both ingress and egress</li>
+<li>May be worth considering adding as an option to ePPing
+<ul>
+<li>Share maps between multiple instances (by pinning them)</li>
+<li>Only run on egress (or ingress)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org6b5535c">
+<h3 id="org6b5535c"><span class="section-number-3">5.1</span> Notes from discussion</h3>
+<ul>
+<li>This makes sense to have for a middlebox config</li>
+<li>Could potentially have a &#x2013;middlebox option that automatically sets ePPing up on all interfaces</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org119a880">
+<h2 id="org119a880"><span class="section-number-2">6</span> Map flows to tc-handle</h2>
+<ul>
+<li>This is the job that xdp-cpumap performs</li>
+<li>Not sure if there's an easy and efficient way to add this to ePPing?</li>
+
+</ul>
+
+</section>
+<section id="slide-orgc2d30f9">
+<h3 id="orgc2d30f9"><span class="section-number-3">6.1</span> Notes from discussion</h3>
+<ul>
+<li>If we add support for custom labels for subranges we could get this from the cpumap-config</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org8b1bd5e">
+<h2 id="org8b1bd5e"><span class="section-number-2">7</span> Remove a lot of flowstate</h2>
+<ul>
+<li>Removes packet and byte counts, RTT-tracking (min, sRTT)</li>
+
+</ul>
+
+</section>
+<section id="slide-org087ee83">
+<h3 id="org087ee83"><span class="section-number-3">7.1</span> Notes from discussion</h3>
+<ul>
+<li>May affect performance if they cause flowstate to go cross cache line
+<ul>
+<li>But overhead from updating these counters should be minimal</li>
+
+</ul></li>
+<li>Nice to have, but for now mainly used for JSON output mode</li>
+<li>Could be nice to include some of these stats in aggregated mode</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orge623be0">
+<h2 id="orge623be0"><span class="section-number-2">8</span> Change to LRU maps</h2>
+<ul>
+<li>No longer needs any cleanup, but may overwrite valid flow/timestamp/tc-handle</li>
+
+</ul>
+
+</section>
+<section id="slide-org1f5e247">
+<h3 id="org1f5e247"><span class="section-number-3">8.1</span> Notes from discussion</h3>
+<ul>
+<li>We've talked about this previously, but avoided it due to lack of control over if it should overwrite
+<ul>
+<li>During high load we may constantly overwrite old state before it has any time to be used</li>
+
+</ul></li>
+<li>Could maybe switch to hash-index array map instead
+<ul>
+<li>Could use some set-associative hashing to combat high collision rates (used in ex. cake)</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org5740663">
+<h2 id="org5740663"><span class="section-number-2">9</span> Upped mapsize from 16k to 128k</h2>
+<ul>
+<li>In my own testing I've already used 64k</li>
+<li>Probably makes sense to use more than 16k (very small default)</li>
+<li>Could be made user-configurable</li>
+<li>Could also no pre-allocate, although that might have some performance impact?</li>
+
+</ul>
+
+</section>
+<section id="slide-orgb4bfa3c">
+<h3 id="orgb4bfa3c"><span class="section-number-3">9.1</span> Notes from discussion</h3>
+<ul>
+<li>Biggest problem with upsizing maps right now is the periodical cleanup
+<ul>
+<li>Has to loop through all entries, so becomes slow if there's a very many entries</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org479a0f1">
+<h2 id="org479a0f1"><span class="section-number-2">10</span> Changed IPv4 prefix</h2>
+<ul>
+<li>Changed to all-0 prefix instead of 10 0x00 followed by 2 0xFF</li>
+<li>Actually first zeros all 128 bits, before filling in the last 32 bits</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+width:1600, height:1000, slideNumber:"c/t",
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+
+});
+
+</script>
+</body>
+</html>

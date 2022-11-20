@@ -1,0 +1,118 @@
+#+TITLE: Progress update 2022-11-15
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Only handle TCP traffic
+- What ePPing already does by default
+- Overhead from ICMP should be minimal if not tracking ICMP
+- Overall code complexity may be a bit higher though - harder to optimize for protocol specific aspects
+
+** Notes from discussion
+- Yes, ICMP code should in practice be compiled out (dead code elimination) if config does not track ICMP
+- We should maybe be a bit careful about adding features like ex. TCP retransmission tracking to ePPing
+  - Keep ePPing focused on network latency for different protocols
+  - While "middlebox tcptrace" would be nice to have, can be separate project
+
+* "Sip the flow"
+- First hardcoded rate limit to 1000 ms (one sample per second)
+- Removed rate limit, instead run at full speed for the first N(=60) samples per customer (tc-handle), and then don't sample at all
+- "Refresh" the buffer once every 30s
+  - While buffer is full the pping part stops tracking the handle until it's refreshed
+- Claims this somehow is much more likely to sample wide variety of flows instead of top producers?
+  - May better track flows from different customers...
+  - ...but will likely mainly sample top producer within each customer  
+  - In ePPing we could ex. limit tracking of flows per aggregation IP
+
+** Notes from discussion
+- The way cpumap-pping does it does not seem optimal (short burst of RTTs every 30s)
+- In cpumap-pping the flowstate map is not synced to this in any way, so may still not be able to track all users (even if it becomes less likely that a single user uses up a lot of flow states)
+- May be nice to limit how many flows ePPing can track per IP-subrange
+  - Could either divide flowmap into per-subrange flowmap by using map-in-map
+  - Or simply keep a flow counter per IP-subrange, and prevent tracking of new flows if counter >= X
+    - This should be more flexible (easier to disable/configure, does not waste massive amount of memory)
+- On a related note, it may be worth considering dropping flowstate once they have no outstanding timestamps
+  - Would face some issues with some per-flow stats (packet/byte counts, min RTT etc)
+  - Would allow free up new flow states faster, giving new flows ability to competete
+- We could also do some random chance to track new flow for every packet we see from it
+  - But this would cause bias towards elephant flows?
+
+* Per-TC handle "ringbuffer"
+- Stores the first N(=60) RTT samples from a tc-handle in a "ringbuffer"
+- Loops through map in userspace and aggregates values (when running xdp_pping.c program)
+- Now automatically recycled every 30s  
+- Sidenote: Think his synchronization guards for rtt_tracker may be busted
+  - Could add (not overwirte) multiple RTT-values to same slot in data race scenario
+  - Will multiple packets from same tc-handle ever be processed in parallel?
+
+** Notes from discussion
+- By directly aggregating in kernel (as we plan to do) we can keep a much higher number of samples
+- Only sampling for a very short time and then not tracking anymore has some performance benefits
+  - Those would be much more limited in ePPing as we would still need to parse packet and potentially look up flow state
+  - In cpumap-pping it needs to parse packet anyways, so just a lookup of tc-handle
+      
+* No userspace daemon
+- Instead report RTTs whenever xdp_pping.c is run
+- This also used to cleanup maps from userspace (looping through all entries and deleting them)
+  - No longer necessary for that (relies on LRU maps), only for reporting
+- Could make sense to add this as an option for ePPing (especially if shared across multiple interfaces)
+  - but what about map cleanup then?
+
+** Notes from discussion
+- Yes, this would probably be nice to have for ex. the aggregated mode
+- Could just have a simple program that once run pulls the maps and reports some aggregated stats (similar to cpumap-pping)
+- Cleanup could be solved by either using BPF-timers or having lazy-cleaning (overwrite existing entries on collision)
+
+* Only run on tc-egress
+- Not running on XDP makes sense if XDP program may be handled by a single core  
+- If maps are shared between multiple interfaces, it's unecessary to run on both ingress and egress
+- May be worth considering adding as an option to ePPing
+  - Share maps between multiple instances (by pinning them)
+  - Only run on egress (or ingress)
+
+** Notes from discussion
+- This makes sense to have for a middlebox config
+- Could potentially have a --middlebox option that automatically sets ePPing up on all interfaces
+
+* Map flows to tc-handle
+- This is the job that xdp-cpumap performs
+- Not sure if there's an easy and efficient way to add this to ePPing?
+
+** Notes from discussion
+- If we add support for custom labels for subranges we could get this from the cpumap-config
+
+* Remove a lot of flowstate
+- Removes packet and byte counts, RTT-tracking (min, sRTT)
+
+** Notes from discussion
+- May affect performance if they cause flowstate to go cross cache line
+  - But overhead from updating these counters should be minimal
+- Nice to have, but for now mainly used for JSON output mode
+- Could be nice to include some of these stats in aggregated mode
+
+* Change to LRU maps
+- No longer needs any cleanup, but may overwrite valid flow/timestamp/tc-handle
+
+** Notes from discussion
+- We've talked about this previously, but avoided it due to lack of control over if it should overwrite
+  - During high load we may constantly overwrite old state before it has any time to be used
+- Could maybe switch to hash-index array map instead
+  - Could use some set-associative hashing to combat high collision rates (used in ex. cake)
+
+* Upped mapsize from 16k to 128k
+- In my own testing I've already used 64k
+- Probably makes sense to use more than 16k (very small default)
+- Could be made user-configurable
+- Could also no pre-allocate, although that might have some performance impact?
+
+** Notes from discussion
+- Biggest problem with upsizing maps right now is the periodical cleanup
+  - Has to loop through all entries, so becomes slow if there's a very many entries
+
+* Changed IPv4 prefix
+- Changed to all-0 prefix instead of 10 0x00 followed by 2 0xFF
+- Actually first zeros all 128 bits, before filling in the last 32 bits
+  
+  

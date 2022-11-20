@@ -1,0 +1,116 @@
+#+TITLE: Progress update 2022-11-18
+#+AUTHOR: Simon Sundberg
+
+#+OPTIONS: ^:nil
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_INIT_OPTIONS: width:1600, height:1000, slideNumber:"c/t"
+
+* Overview
+- Not much progress
+  - DRIVE, teaching assistance, meetings, following LibreQoS etc.
+- Fixed an issue when ePPing was compiled with LLVM-15
+
+* LibreQoS
+- System that is designed to run on middlebox and help ISPs avoid bufferbloat
+- Largely based around CAKE
+- Used Kathie's PPing as an optional feature to monitor TCP RTT
+  - But generally found that it did not work well past 1Gbps
+- They were therefore considering using ePPing as a replacement
+  - ...but ended up simply taking parts of the ePPing source code and merging it with their program
+- They now want a "monitor-only" mode, which is basically what ePPing on its own should be able to provide
+
+** More on the merge of ePPing with xdp-cpumap-tc
+- [[https://github.com/xdp-project/xdp-cpumap-tc][xdp-cpumap-tc]] is a program that is meant to distribute packets to different CPU cores
+- They merged ePPing into this program, creating [[https://github.com/thebracket/cpumap-pping][cpumap-pping]]
+  - One of the main motivations was to avoid the unecessary overhead of parsing the packet multiple times
+    - But this overhead is likely small compared to all the other work the the programs do
+  - There are also some challenges with running multiple XDP programs on the same interface
+    - But ePPing does not have to run on XDP (and no longer does so by default)
+- This work was done by Herbert "TheBracket" Wolverson
+  - He has expressed a preference for this highly specialized approach over trying to get ePPing to function well for their use case
+- Herbert made several tweaks to ePPing-portion to make it better fit their use case
+
+* LibreQoS optimizations to ePPing
+- Only run on tc-egress
+- Only handle TCP traffic  
+- Different report format (collect 60 first samples per customer)
+- "Sip the flow", disable pping-component after first 60 samples
+- No userspace daemon, maps changed to LRU  
+
+** Only run on tc-egress
+- cpumap-pping only seems to run the pping part on egress traffic
+  - Works because maps are pinned and shared between multiple interfaces
+- It probably makes sense to have a "middlebox" mode for ePPing
+  - Share state between multiple interfaces
+  - Only run on ingress XOR egress
+
+** Only handle TCP traffic
+- ePPing only handles TCP traffic by default
+- Overhead from ICMP-related code close to non-existant
+  - Should be compiled away with dead-code elimination
+
+** Different report format
+- Does not report individual RTTs, but rather aggregates first N(=60) RTTs from each customer
+  - ex. {"tc":"1:5", "avg": 2.64, "min": 0.38, "max": 2.39, "median": 2.03, "samples": 12}
+- This report is done whenever a user runs the [[https://github.com/thebracket/cpumap-pping/blob/master/src/xdp_pping.c][xdp_pping.c]] program (funny name as it doesn't use XDP...)
+  - Userspace loops through a per-customer map which contains up to 60 RTT samples (in an array) per customer
+  - Userspace aggregates these samples to the provided metrics
+- This approach is definitley better than reporting individual RTT values
+  - But still has to send a lot of RTT values to user space
+  - Is unable to collect very large amounts of RTT samples
+  - Collecting in histograms gives less precise metrics, but can efficently aggregate arbitrarily large amount of samples
+
+** Only sip the flow
+- The per-customer buffer of N(=60) RTT values is reset every 30 seconds
+- If buffer fills up, will not perform pping part for that customer until buffer resets
+  - Can do a single lookup of customer RTT buffer, and then avoid all pping-related overhead
+- This apparently lead to better distribution of flows being sampled
+  - We assume this is because monitoring of customer is quickly disabled, giving other customers a better chance of being included
+    - But this is not synced with the flow-state map, so some customers may still not be monitored
+  - Likely to give terrible distribution within customer (single bulk flow can eat up all RTTs in ~60 ms)
+- It may be worth adding some flow-limit per customer (or IP-prefix) for ePPing
+  - Could relativly easily be achieved after per-IP-prefix aggregation has been added by simply adding a flow-counter
+- Toke also though it may be interesting to add random chance to sample packet/add flow state
+
+** No userspace daemon, LRU maps
+- cpumap-pping does not keep a userspace process around after setting up the BPF programs
+  - The RTT measurements are provided only when user runs xdp_pping.c
+- Uses LRU maps instead of periodically clearing maps
+  - Avoids overhead from the periodical cleanup
+  - At high load may get stuck in a churning behavior where it overwrites entries before they're used
+
+** Have increased map sizes from 16k to 128k
+- A very sensible change, current default of 16k is very small
+- In my own testing I've upped the packet map to 64k
+- Positive impacts:  
+  - Larger flow map -> track more concurrent flows
+  - Larger packet map -> less likely to not be able to timestamp packet
+- Negative impacts
+  - Requires more memory (not very problematic, in the order of 100 bytes per entry)
+  - Potentially worse cache performance
+  - For ePPing the cleanup can get slower (loops through all entries)
+
+* Other points we discussed
+- Using hash-indexed array instead of hashmap
+  - Probably better lookup performance if using Jesper's super fast hash
+  - Can do lazy expiry (no need for periodical cleanup, just overwrite old entries on collision)
+  - Collisions more likely, may be unable to track all flows even if few flows with bad luck
+- What functionality should ePPing actually have
+  - Should it actually track sent packets/bytes, and how should these be used?
+  - Do we really need to notify about flow opening/closing?
+  - "Middlebox tcptrace" could be nice, but should maybe be a separate tool
+  - Maybe best to focus on just latency to make it easier to support various protocols?
+
+* Interest from Varnish
+- Fredrik and Niklas from Varnished seemed very intresting in using ePPing
+- If I understood their use case correctly, they wanted to monitor RTT between their cache and clients
+  - This could then be used to route clients to closest cache
+- Their current setup can handle 500 Gbps, and working on setup to handle 1 Tbps
+  - While they want to test ePPing on these devices, it doesn't necessarily have to be able to handle these rates
+  - Can run on subset of traffic
+
+* Other
+- Am I really going to do the litterature study and colloqium course this semester?
+  - If so, when?
+
+    
